@@ -2,6 +2,8 @@
 
 A comprehensive iOS SDK for displaying image, video, and native ads in iOS applications. The SDK supports various ad formats and positions with easy integration.
 
+**Repository:** [https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS](https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS)
+
 ## Features
 
 - **Image, Video, and Native ad support**
@@ -18,14 +20,6 @@ A comprehensive iOS SDK for displaying image, video, and native ads in iOS appli
 - CocoaPods 1.10.0+ or Swift Package Manager
 
 ## Installation
-### Swift Package Manager (recommended)
-1. File → **Add Package Dependencies** → `https://github.com/bidscube/bidscube-sdk-ios.git`
-2. Pick version `1.0.0` (or `from: "1.0.0"` in `Package.swift`)
-```swift
-dependencies: [
-    .package(url: "https://github.com/bidscube/bidscube-sdk-ios.git", from: "1.0.0")
-]
-```
 
 ### CocoaPods
 ```ruby
@@ -161,15 +155,7 @@ NSLayoutConstraint.activate([
 
 ## Placement IDs
 
-The SDK supports different placement IDs for various ad types and positions:
-
-### Test Placement IDs
-
-| Placement ID | Ad Type | Description |
-|--------------|---------|-------------|
-| `20213` | Video | Test video ad with VAST response |
-| `20212` | Image | Test image ad |
-| `20214` | Native | Test native ad |
+The SDK supports different placement IDs for various ad types and positions.
 
 ### Production Placement IDs
 
@@ -256,7 +242,6 @@ let config = SDKConfig.Builder()
 ## Ads, positions, and rendering override
 
 - **Ad types**: image, video, native.
-- **Test placements**: `20212` (image/banner), `20213` (video), `20214` (native).
 - **Positions** (`AdPosition` raw values): `unknown` (0), `aboveTheFold` (1), `dependOnScreenSize` (2), `belowTheFold` (3), `header` (4), `footer` (5), `sidebar` (6), `fullScreen` (7).
 - You can set a manual position before requesting with `BidscubeSDK.setAdPosition(_:)`; SDK falls back to server `position`, then `unknown`.
 - If the ad response contains both `adm` (ad markup) and `position`, the SDK triggers `onAdRenderOverride(adm:position:)` and skips built-in rendering so you can render the markup yourself.
