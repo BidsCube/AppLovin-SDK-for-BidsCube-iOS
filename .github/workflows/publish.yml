@@ -1,0 +1,250 @@
+name: Publish SDK
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish-cocoapods:
+    name: Publish to CocoaPods
+    runs-on: ubuntu-22.04
+    environment: bidscube_env
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.0'
+          bundler-cache: true
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libcurl4-openssl-dev pkg-config python3-lldb-13
+
+      - name: Setup Swift
+        run: |
+          set -euo pipefail
+          curl -fL --retry 5 --retry-all-errors --retry-delay 3 \
+            -O "https://download.swift.org/swiftly/linux/swiftly-$(uname -m).tar.gz"
+          tar zxf "swiftly-$(uname -m).tar.gz"
+          ./swiftly init --skip-install --no-modify-profile --quiet-shell-followup
+          source "${SWIFTLY_HOME_DIR:-$HOME/.local/share/swiftly}/env.sh"
+          installed=false
+          for attempt in 1 2 3 4 5; do
+            if swiftly install 6.0; then
+              installed=true
+              break
+            fi
+            echo "Swift install attempt ${attempt} failed, retrying..."
+            sleep $((attempt * 5))
+          done
+          if [ "$installed" = false ]; then
+            echo "Failed to install Swift 6.0 after retries"
+            exit 1
+          fi
+          swiftly use 6.0
+          swift --version
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            VERSION=${GITHUB_REF#refs/tags/v}
+          else
+            # For manual dispatch, use a default version or extract from git
+            VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo "0.0.3")
+            # Remove 'v' prefix if present
+            VERSION=${VERSION#v}
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Extracted version: $VERSION"
+
+      - name: Update podspec version
+        run: |
+          # Update the version in podspec
+          sed -i "s|spec.version.*=.*|spec.version      = \"${{ steps.version.outputs.version }}\"|" bidscubeSdk.podspec
+          echo "Updated podspec version to ${{ steps.version.outputs.version }}"
+          
+      - name: Remove .swift-version file
+        run: |
+          # Remove .swift-version file to avoid conflicts with podspec
+          if [ -f ".swift-version" ]; then
+            rm .swift-version
+            echo "Removed .swift-version file"
+          fi
+
+      - name: Check if CocoaPods version exists
+        id: check_cocoapods
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          echo "Checking if CocoaPods version $VERSION already exists..."
+          
+          # Install cocoapods first
+          gem install cocoapods
+          
+          # Check if the version exists in CocoaPods trunk
+          if pod search bidscubeSdk --simple | grep -q "bidscubeSdk ($VERSION)"; then
+            echo "CocoaPods version $VERSION already exists"
+            echo "skip_cocoapods=true" >> $GITHUB_OUTPUT
+            echo "cocoapods_exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "CocoaPods version $VERSION does not exist, will publish"
+            echo "skip_cocoapods=false" >> $GITHUB_OUTPUT
+            echo "cocoapods_exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Update Constants.swift version
+        run: |
+          # Update SDK version in Constants.swift files
+          if [ -f "bidscubeSdk/Core/Constants.swift" ]; then
+            sed -i "s|public static let sdkVersion = \".*\"|public static let sdkVersion = \"${{ steps.version.outputs.version }}\"|" bidscubeSdk/Core/Constants.swift
+            echo "Updated bidscubeSdk/Core/Constants.swift"
+          fi
+          if [ -f "bidscubeSdk/Core/Constants.swift" ]; then
+            sed -i "s|public static let sdkVersion = \".*\"|public static let sdkVersion = \"${{ steps.version.outputs.version }}\"|" bidscubeSdk/Core/Constants.swift
+            echo "Updated bidscubeSdk/Core/Constants.swift"
+          fi
+
+      - name: Validate podspec
+        if: steps.check_cocoapods.outputs.skip_cocoapods == 'false'
+        run: |
+          gem install cocoapods
+          pod spec lint bidscubeSdk.podspec --allow-warnings
+
+      - name: Setup Git
+        if: steps.check_cocoapods.outputs.skip_cocoapods == 'false'
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+
+      - name: Commit version changes
+        if: steps.check_cocoapods.outputs.skip_cocoapods == 'false'
+        run: |
+          git add bidscubeSdk.podspec
+          git commit -m "Bump version to ${{ steps.version.outputs.version }}" || echo "No changes to commit"
+          # Skip pushing to avoid permission issues - the tag already contains the correct version
+
+      - name: Publish to CocoaPods
+        if: steps.check_cocoapods.outputs.skip_cocoapods == 'false'
+        env:
+          COCOAPODS_TRUNK_TOKEN: ${{ secrets.COCOAPODS_TRUNK_TOKEN }}
+        run: |
+          gem install cocoapods
+          
+          # Try to publish to CocoaPods and capture output
+          echo "Attempting to publish to CocoaPods..."
+          if pod trunk push bidscubeSdk.podspec --allow-warnings 2>&1 | tee cocoapods_output.log; then
+            echo "✅ Successfully published to CocoaPods"
+          else
+            # Check if the error is due to duplicate entry
+            if grep -q "Unable to accept duplicate entry" cocoapods_output.log; then
+              echo "⚠️ Version already exists in CocoaPods - this is expected for duplicate versions"
+              echo "✅ Continuing workflow as version already exists"
+            elif grep -q "duplicate entry" cocoapods_output.log; then
+              echo "⚠️ Duplicate entry detected - version already exists in CocoaPods"
+              echo "✅ Continuing workflow as version already exists"
+            else
+              echo "❌ Failed to publish to CocoaPods for unknown reason"
+              echo "Error output:"
+              cat cocoapods_output.log
+              exit 1
+            fi
+          fi
+
+      - name: Skip CocoaPods (version already exists)
+        if: steps.check_cocoapods.outputs.skip_cocoapods == 'true'
+        run: |
+          echo "✅ CocoaPods version ${{ steps.version.outputs.version }} already exists - skipping CocoaPods publishing"
+          echo "🚀 Proceeding to SPM publishing..."
+
+  publish-spm:
+    name: Publish to Swift Package Manager
+    runs-on: macos-latest
+    needs: publish-cocoapods
+    if: always() && (needs.publish-cocoapods.result == 'success' || needs.publish-cocoapods.result == 'skipped')
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            VERSION=${GITHUB_REF#refs/tags/v}
+          else
+            # For manual dispatch, use a default version or extract from git
+            VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo "0.0.3")
+            # Remove 'v' prefix if present
+            VERSION=${VERSION#v}
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Extracted version: $VERSION"
+          git commit --amend --no-edit
+      - name: Validate Package.swift
+        run: |
+          swift package resolve
+          swift package describe --type json > /dev/null
+          echo "Package.swift validation successful"
+
+      - name: Validate package structure
+        run: |
+          # Validate package can be resolved and described
+          swift package resolve
+          swift package describe --type json > /dev/null
+          echo "✅ Package structure validation successful"
+
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          commitish: ${{ github.sha }}
+          release_name: Release ${{ steps.version.outputs.version }}
+          body: |
+            ## Bidscube iOS SDK v${{ steps.version.outputs.version }}
+            
+            ### Changes
+            - Automated release via GitHub Actions
+            
+            ### Installation
+            
+            #### Swift Package Manager
+            ```swift
+            .package(url: "https://github.com/bidscube/bidscube-sdk-ios.git", from: "${{ steps.version.outputs.version }}")
+            ```
+            
+            #### CocoaPods
+            ```ruby
+            pod 'bidscubeSdk', '~> ${{ steps.version.outputs.version }}'
+            ```
+          draft: false
+          prerelease: false
+
+  notify:
+    name: Notify completion
+    runs-on: ubuntu-latest
+    needs: [publish-cocoapods, publish-spm]
+    if: needs.publish-spm.result == 'success' && (needs.publish-cocoapods.result == 'success' || needs.publish-cocoapods.result == 'skipped')
+    steps:
+      - name: Notify success
+        run: |
+          if [[ "${{ needs.publish-cocoapods.result }}" == "success" ]]; then
+            echo "✅ Successfully published bidscubeSdk v${{ github.ref_name }} to both CocoaPods and SPM!"
+          elif [[ "${{ needs.publish-cocoapods.result }}" == "skipped" ]]; then
+            echo "✅ Successfully published bidscubeSdk v${{ github.ref_name }} to SPM! (CocoaPods version already existed)"
+          else
+            echo "✅ Successfully published bidscubeSdk v${{ github.ref_name }} to SPM! (CocoaPods had duplicate entry - version already exists)"
+          fi
