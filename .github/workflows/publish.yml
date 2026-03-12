@@ -85,10 +85,12 @@ jobs:
           fi
           SPEC_DIR=$(dirname "$PODSPEC")
           SPEC_NAME=$(basename "$PODSPEC")
+          POD_NAME=$(basename "$SPEC_NAME" .podspec)
           echo "spec_dir=$SPEC_DIR" >> $GITHUB_OUTPUT
           echo "spec_name=$SPEC_NAME" >> $GITHUB_OUTPUT
           sed -i "s|spec.version.*=.*|spec.version      = \"${{ steps.version.outputs.version }}\"|" "$PODSPEC"
-          echo "Updated $PODSPEC version to ${{ steps.version.outputs.version }}"
+          sed -i "s|spec.name.*=.*|spec.name         = \"$POD_NAME\"|" "$PODSPEC"
+          echo "Updated $PODSPEC version to ${{ steps.version.outputs.version }}, name to $POD_NAME (match file)"
           
       - name: Remove .swift-version file
         run: |
@@ -97,6 +99,16 @@ jobs:
             rm "$ROOT/.swift-version"
             echo "Removed .swift-version file"
           fi
+
+      - name: Rewrite podspec source to current repo
+        run: |
+          ROOT="${{ steps.update_podspec.outputs.spec_dir }}"
+          SPEC_FILE="$ROOT/${{ steps.update_podspec.outputs.spec_name }}"
+          REPO_URL="${{ github.server_url }}/${{ github.repository }}.git"
+          TAG="v${{ steps.version.outputs.version }}"
+          sed -i "s|:git => \"[^\"]*\"|:git => \"$REPO_URL\"|" "$SPEC_FILE"
+          sed -i "s|:tag => \"v[^\"]*\"|:tag => \"$TAG\"|" "$SPEC_FILE"
+          echo "Podspec source set to current repo: $REPO_URL tag $TAG"
 
       - name: Check if CocoaPods version exists
         id: check_cocoapods
