@@ -1,4 +1,4 @@
-# ``bidscubeSdk``
+# ``BidscubeSDK``
 
 A lightweight iOS SDK for displaying image, video, and native ads with optional consent handling. Mirrors the Android API for easy cross‑platform integration.
 
@@ -14,7 +14,7 @@ A lightweight iOS SDK for displaying image, video, and native ads with optional 
 ### Initialize
 
 ```swift
-import bidscubeSdk
+import BidscubeSDK
 
 let config = SDKConfig.Builder()
     .enableLogging(true)

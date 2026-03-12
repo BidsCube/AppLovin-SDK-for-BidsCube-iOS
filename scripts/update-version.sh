@@ -16,10 +16,10 @@ fi
 echo "Updating version to $VERSION..."
 
 # Update podspec
-if [ -f "bidscubeSdk.podspec" ]; then
-    sed -i.bak "s/spec.version.*=.*/spec.version      = \"$VERSION\"/" bidscubeSdk.podspec
-    rm -f bidscubeSdk.podspec.bak
-    echo "✅ Updated bidscubeSdk.podspec"
+if [ -f "BidscubeSDK.podspec" ]; then
+    sed -i.bak "s/spec.version.*=.*/spec.version      = \"$VERSION\"/" BidscubeSDK.podspec
+    rm -f BidscubeSDK.podspec.bak
+    echo "✅ Updated BidscubeSDK.podspec"
 fi
 
 # Update package.json if it exists

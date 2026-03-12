@@ -1,5 +1,5 @@
 import SwiftUI
-import bidscubeSdk
+import BidscubeSDK
 
 struct SKAdNetworkTestView: View {
     @State private var skAdNetworkIDs: [String] = []

@@ -75,7 +75,7 @@ jobs:
       - name: Update podspec version
         run: |
           # Update the version in podspec
-          sed -i "s|spec.version.*=.*|spec.version      = \"${{ steps.version.outputs.version }}\"|" bidscubeSdk.podspec
+          sed -i "s|spec.version.*=.*|spec.version      = \"${{ steps.version.outputs.version }}\"|" BidscubeSDK.podspec
           echo "Updated podspec version to ${{ steps.version.outputs.version }}"
           
       - name: Remove .swift-version file
@@ -96,7 +96,7 @@ jobs:
           gem install cocoapods
           
           # Check if the version exists in CocoaPods trunk
-          if pod search bidscubeSdk --simple | grep -q "bidscubeSdk ($VERSION)"; then
+          if pod search BidscubeSDK --simple | grep -q "BidscubeSDK ($VERSION)"; then
             echo "CocoaPods version $VERSION already exists"
             echo "skip_cocoapods=true" >> $GITHUB_OUTPUT
             echo "cocoapods_exists=true" >> $GITHUB_OUTPUT
@@ -122,7 +122,7 @@ jobs:
         if: steps.check_cocoapods.outputs.skip_cocoapods == 'false'
         run: |
           gem install cocoapods
-          pod spec lint bidscubeSdk.podspec --allow-warnings
+          pod spec lint BidscubeSDK.podspec --allow-warnings
 
       - name: Setup Git
         if: steps.check_cocoapods.outputs.skip_cocoapods == 'false'
@@ -133,7 +133,7 @@ jobs:
       - name: Commit version changes
         if: steps.check_cocoapods.outputs.skip_cocoapods == 'false'
         run: |
-          git add bidscubeSdk.podspec
+          git add BidscubeSDK.podspec
           git commit -m "Bump version to ${{ steps.version.outputs.version }}" || echo "No changes to commit"
           # Skip pushing to avoid permission issues - the tag already contains the correct version
 
@@ -146,7 +146,7 @@ jobs:
           
           # Try to publish to CocoaPods and capture output
           echo "Attempting to publish to CocoaPods..."
-          if pod trunk push bidscubeSdk.podspec --allow-warnings 2>&1 | tee cocoapods_output.log; then
+          if pod trunk push BidscubeSDK.podspec --allow-warnings 2>&1 | tee cocoapods_output.log; then
             echo "✅ Successfully published to CocoaPods"
           else
             # Check if the error is due to duplicate entry
@@ -229,7 +229,7 @@ jobs:
             
             #### CocoaPods
             ```ruby
-            pod 'bidscubeSdk', '~> ${{ steps.version.outputs.version }}'
+            pod 'BidscubeSDK', '~> ${{ steps.version.outputs.version }}'
             ```
           draft: false
           prerelease: false
@@ -243,9 +243,9 @@ jobs:
       - name: Notify success
         run: |
           if [[ "${{ needs.publish-cocoapods.result }}" == "success" ]]; then
-            echo "✅ Successfully published bidscubeSdk v${{ github.ref_name }} to both CocoaPods and SPM!"
+            echo "✅ Successfully published BidscubeSDK v${{ github.ref_name }} to both CocoaPods and SPM!"
           elif [[ "${{ needs.publish-cocoapods.result }}" == "skipped" ]]; then
-            echo "✅ Successfully published bidscubeSdk v${{ github.ref_name }} to SPM! (CocoaPods version already existed)"
+            echo "✅ Successfully published BidscubeSDK v${{ github.ref_name }} to SPM! (CocoaPods version already existed)"
           else
-            echo "✅ Successfully published bidscubeSdk v${{ github.ref_name }} to SPM! (CocoaPods had duplicate entry - version already exists)"
+            echo "✅ Successfully published BidscubeSDK v${{ github.ref_name }} to SPM! (CocoaPods had duplicate entry - version already exists)"
           fi

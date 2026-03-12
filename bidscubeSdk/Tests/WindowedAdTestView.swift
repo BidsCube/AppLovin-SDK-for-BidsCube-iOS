@@ -1,10 +1,10 @@
 import SwiftUI
-import bidscubeSdk
+import BidscubeSDK
 
 struct WindowedAdTestView: View {
     @State private var isSDKInitialized = false
     @State private var currentAdView: AnyView?
-    @State private var selectedPosition: bidscubeSdk.AdPosition = .unknown
+    @State private var selectedPosition: BidscubeSDK.AdPosition = .unknown
     @State private var showPositioningPanel = true
     
     private let delegate = TestAdDelegate()
@@ -72,7 +72,7 @@ struct WindowedAdTestView: View {
                             
                             // Ad Position Buttons
                             LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 2), spacing: 8) {
-                                ForEach([bidscubeSdk.AdPosition.unknown, .aboveTheFold, .dependOnScreenSize, .belowTheFold, .header, .footer, .sidebar, .fullScreen], id: \.self) { position in
+                                ForEach([BidscubeSDK.AdPosition.unknown, .aboveTheFold, .dependOnScreenSize, .belowTheFold, .header, .footer, .sidebar, .fullScreen], id: \.self) { position in
                                     Button(action: { testAdPositioning(position) }) {
                                         Text("Position: \(displayName(for: position))")
                                             .font(.caption)
@@ -328,7 +328,7 @@ struct WindowedAdTestView: View {
         }
     }
     
-    private func testAdPositioning(_ position: bidscubeSdk.AdPosition) {
+    private func testAdPositioning(_ position: BidscubeSDK.AdPosition) {
         guard currentAdView != nil else {
             showToast("Please create a test ad first")
             return
@@ -342,7 +342,7 @@ struct WindowedAdTestView: View {
         logPositionDetails(position)
     }
     
-    private func logPositionDetails(_ position: bidscubeSdk.AdPosition) {
+    private func logPositionDetails(_ position: BidscubeSDK.AdPosition) {
         let message: String
         switch position {
         case .unknown:
@@ -371,7 +371,7 @@ struct WindowedAdTestView: View {
         print("Layout validation completed. Check logs for details.")
     }
     
-    private func displayName(for position: bidscubeSdk.AdPosition) -> String {
+    private func displayName(for position: BidscubeSDK.AdPosition) -> String {
         switch position {
         case .unknown:
             return "UNKNOWN"

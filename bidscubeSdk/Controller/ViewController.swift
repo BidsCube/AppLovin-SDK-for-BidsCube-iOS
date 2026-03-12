@@ -1,5 +1,5 @@
 import UIKit
-import bidscubeSdk
+import BidscubeSDK
 
 final class ViewController: UIViewController, AdCallback, ConsentCallback {
     override func viewDidLoad() {

@@ -1,6 +1,6 @@
 import Testing
 import UIKit
-@testable import bidscubeSdk
+@testable import BidscubeSDK
 
 struct bidscubeSdkTests {
     final class Delegate: AdCallback, ConsentCallback {

@@ -1,4 +1,4 @@
-import bidscubeSdk
+import BidscubeSDK
 import StoreKit
 import SwiftUI
 

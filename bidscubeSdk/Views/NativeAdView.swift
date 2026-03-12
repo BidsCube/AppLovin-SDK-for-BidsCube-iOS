@@ -1,5 +1,5 @@
 import UIKit
-import bidscubeSdk
+import BidscubeSDK
 
 struct NativeAdData: Codable {
     let native: NativeAdContent
@@ -418,7 +418,7 @@ public final class NativeAdView: UIView {
                             print("NativeAdView: Found adm field in response")
                             
                             if let positionValue = json["position"] as? Int,
-                               let position = bidscubeSdk.AdPosition(rawValue: positionValue) {
+                               let position = BidscubeSDK.AdPosition(rawValue: positionValue) {
                                 print("NativeAdView: Received position from server: \(positionValue) - \(self.displayName(for: position))")
                                 DispatchQueue.main.async {
                                     BidscubeSDK.setResponseAdPosition(position)
@@ -802,7 +802,7 @@ public final class NativeAdView: UIView {
         }
     }
     
-    private func displayName(for position: bidscubeSdk.AdPosition) -> String {
+    private func displayName(for position: BidscubeSDK.AdPosition) -> String {
         switch position {
         case .unknown: return "UNKNOWN"
         case .aboveTheFold: return "ABOVE_THE_FOLD"

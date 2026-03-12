@@ -1,5 +1,5 @@
 import SwiftUI
-import bidscubeSdk
+import BidscubeSDK
 
 struct ConsentTestView: View {
     @State private var sdkStatus = "SDK Status: Not Initialized"

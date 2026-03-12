@@ -7,9 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		0472AAC92EDDF5E300C51A5A /* bidscubeSdk.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0472AAB42EDDF5E200C51A5A /* bidscubeSdk.framework */; };
-		0472AACA2EDDF5E300C51A5A /* bidscubeSdk.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 0472AAB42EDDF5E200C51A5A /* bidscubeSdk.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		4C1BE4B1161D424505468F9C /* Pods_bidscubeSdk.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 67C6905002F67C6941A0A3C5 /* Pods_bidscubeSdk.framework */; settings = {ATTRIBUTES = (Required, ); }; };
+		0472AAC92EDDF5E300C51A5A /* BidscubeSDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0472AAB42EDDF5E200C51A5A /* BidscubeSDK.framework */; };
+		0472AACA2EDDF5E300C51A5A /* BidscubeSDK.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 0472AAB42EDDF5E200C51A5A /* BidscubeSDK.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		4C1BE4B1161D424505468F9C /* Pods_BidscubeSDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 67C6905002F67C6941A0A3C5 /* Pods_BidscubeSDK.framework */; settings = {ATTRIBUTES = (Required, ); }; };
 		83C597C3AACF24F90F93CF42 /* Pods_testApp_ios.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CCC1FF7AE42E6B912D9D4CBF /* Pods_testApp_ios.framework */; };
 /* End PBXBuildFile section */
 
@@ -19,7 +19,7 @@
 			containerPortal = 04A38F652E69C68500FC2662 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 0472AAB32EDDF5E200C51A5A;
-			remoteInfo = bidscubeSdk;
+			remoteInfo = BidscubeSDK;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -30,7 +30,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				0472AACA2EDDF5E300C51A5A /* bidscubeSdk.framework in Embed Frameworks */,
+				0472AACA2EDDF5E300C51A5A /* BidscubeSDK.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -39,17 +39,17 @@
 
 /* Begin PBXFileReference section */
 		0472AA882EDDF3DA00C51A5A /* testApp-ios.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "testApp-ios.app"; sourceTree = BUILT_PRODUCTS_DIR; };
-		0472AAB42EDDF5E200C51A5A /* bidscubeSdk.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = bidscubeSdk.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		0472AAB42EDDF5E200C51A5A /* BidscubeSDK.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = BidscubeSDK.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		15C415F0AA61BF2D21006DE4 /* Pods-testApp-ios.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-testApp-ios.debug.xcconfig"; path = "Target Support Files/Pods-testApp-ios/Pods-testApp-ios.debug.xcconfig"; sourceTree = "<group>"; };
-		1B55B36A905074BAB6896980 /* Pods-bidscubeSdk.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-bidscubeSdk.release.xcconfig"; path = "Target Support Files/Pods-bidscubeSdk/Pods-bidscubeSdk.release.xcconfig"; sourceTree = "<group>"; };
+		1B55B36A905074BAB6896980 /* Pods-BidscubeSDK.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BidscubeSDK.release.xcconfig"; path = "Target Support Files/Pods-BidscubeSDK/Pods-BidscubeSDK.release.xcconfig"; sourceTree = "<group>"; };
 		464F057DEC84650EABE83A3E /* Pods-testApp-ios.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-testApp-ios.release.xcconfig"; path = "Target Support Files/Pods-testApp-ios/Pods-testApp-ios.release.xcconfig"; sourceTree = "<group>"; };
-		60C421EE7FD997AA3A2E3D9F /* Pods-bidscubeSdk.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-bidscubeSdk.debug.xcconfig"; path = "Target Support Files/Pods-bidscubeSdk/Pods-bidscubeSdk.debug.xcconfig"; sourceTree = "<group>"; };
-		67C6905002F67C6941A0A3C5 /* Pods_bidscubeSdk.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_bidscubeSdk.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		60C421EE7FD997AA3A2E3D9F /* Pods-BidscubeSDK.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BidscubeSDK.debug.xcconfig"; path = "Target Support Files/Pods-BidscubeSDK/Pods-BidscubeSDK.debug.xcconfig"; sourceTree = "<group>"; };
+		67C6905002F67C6941A0A3C5 /* Pods_BidscubeSDK.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_BidscubeSDK.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		CCC1FF7AE42E6B912D9D4CBF /* Pods_testApp_ios.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_testApp_ios.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		044C5A072EDE40540030D8C4 /* Exceptions for "bidscubeSdk" folder in "bidscubeSdk" target */ = {
+		044C5A072EDE40540030D8C4 /* Exceptions for "bidscubeSdk" folder in "BidscubeSDK" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Controller/ViewController.swift,
@@ -60,15 +60,15 @@
 				Views/SDKTestView.swift,
 				Views/VideoAdView.swift,
 			);
-			target = 0472AAB32EDDF5E200C51A5A /* bidscubeSdk */;
+			target = 0472AAB32EDDF5E200C51A5A /* BidscubeSDK */;
 		};
-		044C5A092EDE40700030D8C4 /* Exceptions for "testApp-ios" folder in "bidscubeSdk" target */ = {
+		044C5A092EDE40700030D8C4 /* Exceptions for "testApp-ios" folder in "BidscubeSDK" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				testApp_iosApp.swift,
 				UIViewRepresentableWrapper.swift,
 			);
-			target = 0472AAB32EDDF5E200C51A5A /* bidscubeSdk */;
+			target = 0472AAB32EDDF5E200C51A5A /* BidscubeSDK */;
 		};
 		044C5A1D2EDE41650030D8C4 /* Exceptions for "bidscubeSdk" folder in "testApp-ios" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
@@ -84,38 +84,50 @@
 		041A51DF2E7013FA00DC462A /* testApp-ios */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				044C5A092EDE40700030D8C4 /* Exceptions for "testApp-ios" folder in "bidscubeSdk" target */,
+				044C5A092EDE40700030D8C4 /* Exceptions for "testApp-ios" folder in "BidscubeSDK" target */,
 			);
 			path = "testApp-ios";
 			sourceTree = "<group>";
 		};
 		041A51FA2E7013FC00DC462A /* testApp-iosUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
 			path = "testApp-iosUITests";
 			sourceTree = "<group>";
 		};
 		0472AA892EDDF3DA00C51A5A /* testApp */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
 			path = testApp;
 			sourceTree = "<group>";
 		};
 		0472AA972EDDF3DD00C51A5A /* testAppTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
 			path = testAppTests;
 			sourceTree = "<group>";
 		};
 		0472AAA12EDDF3DD00C51A5A /* testAppUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
 			path = testAppUITests;
 			sourceTree = "<group>";
 		};
 		0472AAB52EDDF5E200C51A5A /* bidscubeSdk */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
 			path = bidscubeSdk;
 			sourceTree = "<group>";
 		};
 		0472AAC42EDDF5E300C51A5A /* bidscubeSdkTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
 			path = bidscubeSdkTests;
 			sourceTree = "<group>";
 		};
@@ -123,13 +135,15 @@
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				044C5A1D2EDE41650030D8C4 /* Exceptions for "bidscubeSdk" folder in "testApp-ios" target */,
-				044C5A072EDE40540030D8C4 /* Exceptions for "bidscubeSdk" folder in "bidscubeSdk" target */,
+				044C5A072EDE40540030D8C4 /* Exceptions for "bidscubeSdk" folder in "BidscubeSDK" target */,
 			);
 			path = bidscubeSdk;
 			sourceTree = "<group>";
 		};
 		04A38F7C2E69C68500FC2662 /* bidscubeSdkTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
 			path = bidscubeSdkTests;
 			sourceTree = "<group>";
 		};
@@ -140,7 +154,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0472AAC92EDDF5E300C51A5A /* bidscubeSdk.framework in Frameworks */,
+				0472AAC92EDDF5E300C51A5A /* BidscubeSDK.framework in Frameworks */,
 				83C597C3AACF24F90F93CF42 /* Pods_testApp_ios.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -149,7 +163,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4C1BE4B1161D424505468F9C /* Pods_bidscubeSdk.framework in Frameworks */,
+				4C1BE4B1161D424505468F9C /* Pods_BidscubeSDK.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -178,7 +192,7 @@
 			isa = PBXGroup;
 			children = (
 				0472AA882EDDF3DA00C51A5A /* testApp-ios.app */,
-				0472AAB42EDDF5E200C51A5A /* bidscubeSdk.framework */,
+				0472AAB42EDDF5E200C51A5A /* BidscubeSDK.framework */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -187,7 +201,7 @@
 			isa = PBXGroup;
 			children = (
 				CCC1FF7AE42E6B912D9D4CBF /* Pods_testApp_ios.framework */,
-				67C6905002F67C6941A0A3C5 /* Pods_bidscubeSdk.framework */,
+				67C6905002F67C6941A0A3C5 /* Pods_BidscubeSDK.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -197,8 +211,8 @@
 			children = (
 				15C415F0AA61BF2D21006DE4 /* Pods-testApp-ios.debug.xcconfig */,
 				464F057DEC84650EABE83A3E /* Pods-testApp-ios.release.xcconfig */,
-				60C421EE7FD997AA3A2E3D9F /* Pods-bidscubeSdk.debug.xcconfig */,
-				1B55B36A905074BAB6896980 /* Pods-bidscubeSdk.release.xcconfig */,
+				60C421EE7FD997AA3A2E3D9F /* Pods-BidscubeSDK.debug.xcconfig */,
+				1B55B36A905074BAB6896980 /* Pods-BidscubeSDK.release.xcconfig */,
 			);
 			path = Pods;
 			sourceTree = "<group>";
@@ -240,9 +254,9 @@
 			productReference = 0472AA882EDDF3DA00C51A5A /* testApp-ios.app */;
 			productType = "com.apple.product-type.application";
 		};
-		0472AAB32EDDF5E200C51A5A /* bidscubeSdk */ = {
+		0472AAB32EDDF5E200C51A5A /* BidscubeSDK */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 0472AACB2EDDF5E300C51A5A /* Build configuration list for PBXNativeTarget "bidscubeSdk" */;
+			buildConfigurationList = 0472AACB2EDDF5E300C51A5A /* Build configuration list for PBXNativeTarget "BidscubeSDK" */;
 			buildPhases = (
 				6AEEE7DACBFD098A650FB90A /* [CP] Check Pods Manifest.lock */,
 				0472AAAF2EDDF5E200C51A5A /* Headers */,
@@ -257,9 +271,9 @@
 			fileSystemSynchronizedGroups = (
 				0472AAB52EDDF5E200C51A5A /* bidscubeSdk */,
 			);
-			name = bidscubeSdk;
-			productName = bidscubeSdk;
-			productReference = 0472AAB42EDDF5E200C51A5A /* bidscubeSdk.framework */;
+			name = BidscubeSDK;
+			productName = BidscubeSDK;
+			productReference = 0472AAB42EDDF5E200C51A5A /* BidscubeSDK.framework */;
 			productType = "com.apple.product-type.framework";
 		};
 /* End PBXNativeTarget section */
@@ -299,7 +313,7 @@
 			projectRoot = "";
 			targets = (
 				0472AA872EDDF3DA00C51A5A /* testApp-ios */,
-				0472AAB32EDDF5E200C51A5A /* bidscubeSdk */,
+				0472AAB32EDDF5E200C51A5A /* BidscubeSDK */,
 			);
 		};
 /* End PBXProject section */
@@ -352,13 +366,9 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-testApp-ios/Pods-testApp-ios-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
-			inputPaths = (
-			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-testApp-ios/Pods-testApp-ios-frameworks-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -380,7 +390,7 @@
 			outputFileListPaths = (
 			);
 			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-bidscubeSdk-checkManifestLockResult.txt",
+				"$(DERIVED_FILE_DIR)/Pods-BidscubeSDK-checkManifestLockResult.txt",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -409,7 +419,7 @@
 /* Begin PBXTargetDependency section */
 		0472AAC82EDDF5E300C51A5A /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 0472AAB32EDDF5E200C51A5A /* bidscubeSdk */;
+			target = 0472AAB32EDDF5E200C51A5A /* BidscubeSDK */;
 			targetProxy = 0472AAC72EDDF5E300C51A5A /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -487,7 +497,7 @@
 		};
 		0472AACC2EDDF5E300C51A5A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 60C421EE7FD997AA3A2E3D9F /* Pods-bidscubeSdk.debug.xcconfig */;
+			baseConfigurationReference = 60C421EE7FD997AA3A2E3D9F /* Pods-BidscubeSDK.debug.xcconfig */;
 			buildSettings = {
 				BUILD_LIBRARY_FOR_DISTRIBUTION = YES;
 				CODE_SIGN_IDENTITY = "";
@@ -510,7 +520,7 @@
 				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
 				ONLY_ACTIVE_ARCH = YES;
-				PRODUCT_BUNDLE_IDENTIFIER = com.bidscube.ios.bidscubeSdk;
+				PRODUCT_BUNDLE_IDENTIFIER = com.bidscube.ios.BidscubeSDK;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
@@ -527,7 +537,7 @@
 		};
 		0472AACD2EDDF5E300C51A5A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 1B55B36A905074BAB6896980 /* Pods-bidscubeSdk.release.xcconfig */;
+			baseConfigurationReference = 1B55B36A905074BAB6896980 /* Pods-BidscubeSDK.release.xcconfig */;
 			buildSettings = {
 				BUILD_LIBRARY_FOR_DISTRIBUTION = YES;
 				CODE_SIGN_IDENTITY = "";
@@ -549,7 +559,7 @@
 				MARKETING_VERSION = 1.0;
 				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
-				PRODUCT_BUNDLE_IDENTIFIER = com.bidscube.ios.bidscubeSdk;
+				PRODUCT_BUNDLE_IDENTIFIER = com.bidscube.ios.BidscubeSDK;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
@@ -708,7 +718,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		0472AACB2EDDF5E300C51A5A /* Build configuration list for PBXNativeTarget "bidscubeSdk" */ = {
+		0472AACB2EDDF5E300C51A5A /* Build configuration list for PBXNativeTarget "BidscubeSDK" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				0472AACC2EDDF5E300C51A5A /* Debug */,

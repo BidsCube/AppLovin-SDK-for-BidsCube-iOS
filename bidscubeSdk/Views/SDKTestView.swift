@@ -1,5 +1,5 @@
 import SwiftUI
-import bidscubeSdk
+import BidscubeSDK
 
 struct SDKTestView: View {
     @State private var sdkStatus = "SDK Status: Not Initialized"
@@ -444,7 +444,7 @@ struct SDKTestView: View {
         SDKLogger.d("SDKTestView", "Logging test completed - check if SDKLogger messages are filtered")
     }
     
-    private func displayName(for position: bidscubeSdk.AdPosition) -> String {
+    private func displayName(for position: BidscubeSDK.AdPosition) -> String {
         switch position {
         case .unknown:
             return "UNKNOWN"

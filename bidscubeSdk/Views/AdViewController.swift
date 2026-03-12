@@ -1,5 +1,5 @@
 import UIKit
-import bidscubeSdk
+import BidscubeSDK
 
 
 private class AdCallbackWrapper: AdCallback {

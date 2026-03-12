@@ -6,7 +6,7 @@
 //
 
 import SwiftUI
-import bidscubeSdk
+import BidscubeSDK
 
 @main
 struct testApp_iosApp: App {

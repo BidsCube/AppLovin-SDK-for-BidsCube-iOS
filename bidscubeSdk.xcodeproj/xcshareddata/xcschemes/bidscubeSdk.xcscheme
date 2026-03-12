@@ -15,8 +15,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "0472AAB32EDDF5E200C51A5A"
-               BuildableName = "bidscubeSdk.framework"
-               BlueprintName = "bidscubeSdk"
+               BuildableName = "BidscubeSDK.framework"
+               BlueprintName = "BidscubeSDK"
                ReferencedContainer = "container:bidscubeSdk.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -31,8 +31,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "0472AAB32EDDF5E200C51A5A"
-            BuildableName = "bidscubeSdk.framework"
-            BlueprintName = "bidscubeSdk"
+            BuildableName = "BidscubeSDK.framework"
+            BlueprintName = "BidscubeSDK"
             ReferencedContainer = "container:bidscubeSdk.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -73,8 +73,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "0472AAB32EDDF5E200C51A5A"
-            BuildableName = "bidscubeSdk.framework"
-            BlueprintName = "bidscubeSdk"
+            BuildableName = "BidscubeSDK.framework"
+            BlueprintName = "BidscubeSDK"
             ReferencedContainer = "container:bidscubeSdk.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -89,8 +89,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "0472AAB32EDDF5E200C51A5A"
-            BuildableName = "bidscubeSdk.framework"
-            BlueprintName = "bidscubeSdk"
+            BuildableName = "BidscubeSDK.framework"
+            BlueprintName = "BidscubeSDK"
             ReferencedContainer = "container:bidscubeSdk.xcodeproj">
          </BuildableReference>
       </MacroExpansion>

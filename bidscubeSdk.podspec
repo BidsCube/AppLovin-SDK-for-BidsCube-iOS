@@ -1,6 +1,6 @@
 Pod::Spec.new do |spec|
-  spec.name         = "bidscubeSdk"
-  spec.version      = "1.2.2"
+  spec.name         = "BidscubeSDK"
+  spec.version      = "1.0.0"
   spec.summary      = "BidsCube iOS SDK for displaying ads"
   spec.description  = <<-DESC
                       BidsCube iOS SDK provides a comprehensive solution for displaying image, video, and native ads in iOS applications.
@@ -25,6 +25,7 @@ Pod::Spec.new do |spec|
   
   spec.documentation_url = "https://github.com/bidscube/bidscube-sdk-ios"
   
+  # Tag must exist on remote before pod spec lint / trunk push (e.g. git tag v1.0.0 && git push origin v1.0.0)
   spec.source       = { :git => "https://github.com/bidscube/bidscube-sdk-ios.git", :tag => "v#{spec.version}" }
   
   spec.source_files = "bidscubeSdk/**/*.{swift,h}"
@@ -37,12 +38,10 @@ Pod::Spec.new do |spec|
   spec.requires_arc = true
   
   spec.pod_target_xcconfig = {
-    'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'arm64',
     'SWIFT_STRICT_CONCURRENCY' => 'off'
   }
   
   spec.user_target_xcconfig = {
-    'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'arm64',
     'SWIFT_STRICT_CONCURRENCY' => 'off'
   }
   

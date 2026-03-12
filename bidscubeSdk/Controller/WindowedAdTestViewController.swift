@@ -1,5 +1,5 @@
 import UIKit
-import bidscubeSdk
+import BidscubeSDK
 
 final class WindowedAdTestViewController: UIViewController, AdCallback, ConsentCallback {
     private var currentAdView: UIView?
@@ -14,7 +14,7 @@ final class WindowedAdTestViewController: UIViewController, AdCallback, ConsentC
         stack.spacing = 8
         stack.translatesAutoresizingMaskIntoConstraints = false
 
-        let positions: [bidscubeSdk.AdPosition] = [.unknown, .aboveTheFold, .dependOnScreenSize, .belowTheFold, .header, .footer, .sidebar, .fullScreen]
+        let positions: [BidscubeSDK.AdPosition] = [.unknown, .aboveTheFold, .dependOnScreenSize, .belowTheFold, .header, .footer, .sidebar, .fullScreen]
         for p in positions {
             let b = UIButton(type: .system)
             b.setTitle("Position: \(p)", for: .normal)
@@ -93,7 +93,7 @@ final class WindowedAdTestViewController: UIViewController, AdCallback, ConsentC
         currentAdView = viewToAdd
     }
 
-    private func testPosition(_ position: bidscubeSdk.AdPosition) {
+    private func testPosition(_ position: BidscubeSDK.AdPosition) {
         BidscubeSDK.setAdPosition(position)
     }
 

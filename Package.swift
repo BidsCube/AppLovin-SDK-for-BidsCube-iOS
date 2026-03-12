@@ -3,14 +3,14 @@
 import PackageDescription
 
 let package = Package(
-    name: "bidscubeSdk",
+    name: "BidscubeSDK",
     platforms: [
         .iOS(.v13)
     ],
     products: [
         .library(
-            name: "bidscubeSdk",
-            targets: ["bidscubeSdk"]
+            name: "BidscubeSDK",
+            targets: ["BidscubeSDK"]
         ),
     ],
     dependencies: [
@@ -21,7 +21,7 @@ let package = Package(
     ],
     targets: [
         .target(
-            name: "bidscubeSdk",
+            name: "BidscubeSDK",
             dependencies: [
                 .product(
                     name: "GoogleInteractiveMediaAds",
@@ -43,7 +43,7 @@ let package = Package(
         ),
         .testTarget(
             name: "bidscubeSdkTests",
-            dependencies: ["bidscubeSdk"],
+            dependencies: ["BidscubeSDK"],
             path: "Tests/bidscubeSdkTests"
         )
     ],

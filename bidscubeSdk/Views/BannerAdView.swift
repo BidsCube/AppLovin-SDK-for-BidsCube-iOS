@@ -1,6 +1,6 @@
 import UIKit
 import WebKit
-import bidscubeSdk
+import BidscubeSDK
 
 public final class BannerAdView: UIView {
     private let webView = WKWebView()
@@ -142,7 +142,7 @@ public final class BannerAdView: UIView {
                          print("Banner Adm: \(adm)")
                         
                         if let positionValue = json["position"] as? Int,
-                           let position = bidscubeSdk.AdPosition(rawValue: positionValue) {
+                           let position = BidscubeSDK.AdPosition(rawValue: positionValue) {
                             print("BannerAdView: Received position from server: \(positionValue) - \(self.displayName(for: position))")
                             DispatchQueue.main.async {
                                 BidscubeSDK.setResponseAdPosition(position)
@@ -325,7 +325,7 @@ public final class BannerAdView: UIView {
     
     
     
-    private func displayName(for position: bidscubeSdk.AdPosition) -> String {
+    private func displayName(for position: BidscubeSDK.AdPosition) -> String {
         switch position {
         case .unknown: return "UNKNOWN"
         case .aboveTheFold: return "ABOVE_THE_FOLD"

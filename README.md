@@ -20,10 +20,10 @@ A comprehensive iOS SDK for displaying image, video, and native ads in iOS appli
 ## Installation
 ### Swift Package Manager (recommended)
 1. File → **Add Package Dependencies** → `https://github.com/bidscube/bidscube-sdk-ios.git`
-2. Pick version `1.2.2` (or `from: "1.2.2"` in `Package.swift`)
+2. Pick version `1.0.0` (or `from: "1.0.0"` in `Package.swift`)
 ```swift
 dependencies: [
-    .package(url: "https://github.com/bidscube/bidscube-sdk-ios.git", from: "1.2.2")
+    .package(url: "https://github.com/bidscube/bidscube-sdk-ios.git", from: "1.0.0")
 ]
 ```
 
@@ -33,20 +33,22 @@ platform :ios, '14.0'
 use_frameworks!
 
 target 'YourApp' do
-  pod 'bidscubeSdk', '~> 1.2.2'
+  pod 'BidscubeSDK', '~> 1.0.0'
 end
 ```
 Run `pod install`.
 
+**Важливо:** перед `pod spec lint` або публікацією створіть тег на origin: `git tag v1.0.0 && git push origin v1.0.0` (тег має відповідати версії в podspec).
+
 ### Manual Installation
 1. Download the repo.
-2. Add `bidscubeSdk` to your project.
+2. Add `BidscubeSDK` (framework) to your project.
 3. Link `UIKit`, `WebKit`, `AVFoundation`, `MediaPlayer`, and `GoogleAds-IMA-iOS-SDK`.
 
 ## Quick start
 ### 1. Initialize the SDK
 ```swift
-import bidscubeSdk
+import BidscubeSDK
 
 let config = SDKConfig.Builder()
    .enableLogging(true)
@@ -315,7 +317,7 @@ let config = SDKConfig.Builder()
 2. **Using existing workspace**:
    ```bash
    open bidscubeSdk.xcworkspace
-   # Select bidscubeSdk scheme and build
+   # Select BidscubeSDK scheme and build
    ```
 
 ## License
