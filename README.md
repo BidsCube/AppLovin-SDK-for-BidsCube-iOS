@@ -27,12 +27,12 @@ platform :ios, '14.0'
 use_frameworks!
 
 target 'YourApp' do
-  pod 'BidscubeSDK', '~> 1.0.0'
+  pod 'BidscubeSDK', '~> 1.0.1'
 end
 ```
 Run `pod install`.
 
-**Important:** Before `pod spec lint` or publishing, create and push the tag on origin: `git tag v1.0.0 && git push origin v1.0.0` (tag must match the version in the podspec).
+**Important:** Before `pod spec lint` or publishing, create and push the tag on origin: `git tag v1.0.1 && git push origin v1.0.1` (tag must match the version in the podspec).
 
 ### Manual Installation
 1. Download the repo.
@@ -186,8 +186,8 @@ enum AdPosition {
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/bidscube/bidscube-sdk-ios.git
-   cd bidscube-sdk-ios
+   git clone https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS.git
+   cd AppLovin-SDK-for-BidsCube-iOS
    ```
 
 2. **Install dependencies**:
@@ -296,7 +296,7 @@ let config = SDKConfig.Builder()
 1. **Using Xcode** (Recommended):
    - Create a new iOS project
    - File → Add Package Dependencies
-   - Enter: `https://github.com/bidscube/bidscube-sdk-ios.git`
+   - Enter: `https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS.git`
    - Build the project
 
 2. **Using existing workspace**:
@@ -308,40 +308,6 @@ let config = SDKConfig.Builder()
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Changelog
-
-### Version 1.2.2
-- Fire Native `imptrackers` on ad display with one-time guard per load
-- Add impression tracker success/failure logging for validation
-
-### Version 1.2.1
-- Automated release via GitHub Actions
-- Bug fixes and improvements
-
-### Version 1.1.0
-- Automated release via GitHub Actions
-- Bug fixes and improvements
-
-### Version 1.1.0
-- Release version
-
-### Version 0.2.1
-- Automated release via GitHub Actions
-- Hot fix for BidscubeSDK Flutter version compatibility
-- Bug fixes and improvements
-
-### Version 0.1
-- Automated release via GitHub Actions
-- Bug fixes and improvements
-
-### Version 0.0.2
-- Initial release
-- Image, Video, and Native ad support
-- Multiple ad positions
-- VAST video ad integration
-- Comprehensive error handling
-- Production-ready logging
 
 ---
 
