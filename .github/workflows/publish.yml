@@ -77,11 +77,16 @@ jobs:
         run: |
           PODSPEC=$(find . -name 'BidscubeSDK.podspec' -type f 2>/dev/null | head -1)
           if [ -z "$PODSPEC" ]; then
-            echo "::error::BidscubeSDK.podspec not found in $(pwd). Contents: $(ls -la)"
+            PODSPEC=$(find . -name 'bidscubeSdk.podspec' -type f 2>/dev/null | head -1)
+          fi
+          if [ -z "$PODSPEC" ]; then
+            echo "::error::No podspec found (BidscubeSDK.podspec or bidscubeSdk.podspec). Contents: $(ls -la)"
             exit 1
           fi
           SPEC_DIR=$(dirname "$PODSPEC")
+          SPEC_NAME=$(basename "$PODSPEC")
           echo "spec_dir=$SPEC_DIR" >> $GITHUB_OUTPUT
+          echo "spec_name=$SPEC_NAME" >> $GITHUB_OUTPUT
           sed -i "s|spec.version.*=.*|spec.version      = \"${{ steps.version.outputs.version }}\"|" "$PODSPEC"
           echo "Updated $PODSPEC version to ${{ steps.version.outputs.version }}"
           
@@ -102,8 +107,9 @@ jobs:
           # Install cocoapods first
           gem install cocoapods
           
-          # Check if the version exists in CocoaPods trunk
-          if pod search BidscubeSDK --simple | grep -q "BidscubeSDK ($VERSION)"; then
+          # Check if the version exists (support both BidscubeSDK and bidscubeSdk pod names)
+          if (pod search BidscubeSDK --simple 2>/dev/null | grep -q "BidscubeSDK ($VERSION)") || \
+             (pod search bidscubeSdk --simple 2>/dev/null | grep -q "bidscubeSdk ($VERSION)"); then
             echo "CocoaPods version $VERSION already exists"
             echo "skip_cocoapods=true" >> $GITHUB_OUTPUT
             echo "cocoapods_exists=true" >> $GITHUB_OUTPUT
@@ -125,7 +131,7 @@ jobs:
         if: steps.check_cocoapods.outputs.skip_cocoapods == 'false'
         run: |
           gem install cocoapods
-          cd "${{ steps.update_podspec.outputs.spec_dir }}" && pod spec lint BidscubeSDK.podspec --allow-warnings
+          cd "${{ steps.update_podspec.outputs.spec_dir }}" && pod spec lint "${{ steps.update_podspec.outputs.spec_name }}" --allow-warnings
 
       - name: Setup Git
         if: steps.check_cocoapods.outputs.skip_cocoapods == 'false'
@@ -136,7 +142,7 @@ jobs:
       - name: Commit version changes
         if: steps.check_cocoapods.outputs.skip_cocoapods == 'false'
         run: |
-          git add "${{ steps.update_podspec.outputs.spec_dir }}/BidscubeSDK.podspec"
+          git add "${{ steps.update_podspec.outputs.spec_dir }}/${{ steps.update_podspec.outputs.spec_name }}"
           git commit -m "Bump version to ${{ steps.version.outputs.version }}" || echo "No changes to commit"
           # Skip pushing to avoid permission issues - the tag already contains the correct version
 
@@ -149,7 +155,7 @@ jobs:
           cd "${{ steps.update_podspec.outputs.spec_dir }}"
           # Try to publish to CocoaPods and capture output
           echo "Attempting to publish to CocoaPods..."
-          if pod trunk push BidscubeSDK.podspec --allow-warnings 2>&1 | tee cocoapods_output.log; then
+          if pod trunk push "${{ steps.update_podspec.outputs.spec_name }}" --allow-warnings 2>&1 | tee cocoapods_output.log; then
             echo "✅ Successfully published to CocoaPods"
           else
             # Check if the error is due to duplicate entry
