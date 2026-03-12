@@ -73,16 +73,23 @@ jobs:
           echo "Extracted version: $VERSION"
 
       - name: Update podspec version
+        id: update_podspec
         run: |
-          # Update the version in podspec
-          sed -i "s|spec.version.*=.*|spec.version      = \"${{ steps.version.outputs.version }}\"|" BidscubeSDK.podspec
-          echo "Updated podspec version to ${{ steps.version.outputs.version }}"
+          PODSPEC=$(find . -name 'BidscubeSDK.podspec' -type f 2>/dev/null | head -1)
+          if [ -z "$PODSPEC" ]; then
+            echo "::error::BidscubeSDK.podspec not found in $(pwd). Contents: $(ls -la)"
+            exit 1
+          fi
+          SPEC_DIR=$(dirname "$PODSPEC")
+          echo "spec_dir=$SPEC_DIR" >> $GITHUB_OUTPUT
+          sed -i "s|spec.version.*=.*|spec.version      = \"${{ steps.version.outputs.version }}\"|" "$PODSPEC"
+          echo "Updated $PODSPEC version to ${{ steps.version.outputs.version }}"
           
       - name: Remove .swift-version file
         run: |
-          # Remove .swift-version file to avoid conflicts with podspec
-          if [ -f ".swift-version" ]; then
-            rm .swift-version
+          ROOT="${{ steps.update_podspec.outputs.spec_dir }}"
+          if [ -f "$ROOT/.swift-version" ]; then
+            rm "$ROOT/.swift-version"
             echo "Removed .swift-version file"
           fi
 
@@ -108,13 +115,9 @@ jobs:
 
       - name: Update Constants.swift version
         run: |
-          # Update SDK version in Constants.swift files
-          if [ -f "bidscubeSdk/Core/Constants.swift" ]; then
-            sed -i "s|public static let sdkVersion = \".*\"|public static let sdkVersion = \"${{ steps.version.outputs.version }}\"|" bidscubeSdk/Core/Constants.swift
-            echo "Updated bidscubeSdk/Core/Constants.swift"
-          fi
-          if [ -f "bidscubeSdk/Core/Constants.swift" ]; then
-            sed -i "s|public static let sdkVersion = \".*\"|public static let sdkVersion = \"${{ steps.version.outputs.version }}\"|" bidscubeSdk/Core/Constants.swift
+          ROOT="${{ steps.update_podspec.outputs.spec_dir }}"
+          if [ -f "$ROOT/bidscubeSdk/Core/Constants.swift" ]; then
+            sed -i "s|public static let sdkVersion = \".*\"|public static let sdkVersion = \"${{ steps.version.outputs.version }}\"|" "$ROOT/bidscubeSdk/Core/Constants.swift"
             echo "Updated bidscubeSdk/Core/Constants.swift"
           fi
 
@@ -122,7 +125,7 @@ jobs:
         if: steps.check_cocoapods.outputs.skip_cocoapods == 'false'
         run: |
           gem install cocoapods
-          pod spec lint BidscubeSDK.podspec --allow-warnings
+          cd "${{ steps.update_podspec.outputs.spec_dir }}" && pod spec lint BidscubeSDK.podspec --allow-warnings
 
       - name: Setup Git
         if: steps.check_cocoapods.outputs.skip_cocoapods == 'false'
@@ -133,7 +136,7 @@ jobs:
       - name: Commit version changes
         if: steps.check_cocoapods.outputs.skip_cocoapods == 'false'
         run: |
-          git add BidscubeSDK.podspec
+          git add "${{ steps.update_podspec.outputs.spec_dir }}/BidscubeSDK.podspec"
           git commit -m "Bump version to ${{ steps.version.outputs.version }}" || echo "No changes to commit"
           # Skip pushing to avoid permission issues - the tag already contains the correct version
 
@@ -143,7 +146,7 @@ jobs:
           COCOAPODS_TRUNK_TOKEN: ${{ secrets.COCOAPODS_TRUNK_TOKEN }}
         run: |
           gem install cocoapods
-          
+          cd "${{ steps.update_podspec.outputs.spec_dir }}"
           # Try to publish to CocoaPods and capture output
           echo "Attempting to publish to CocoaPods..."
           if pod trunk push BidscubeSDK.podspec --allow-warnings 2>&1 | tee cocoapods_output.log; then
