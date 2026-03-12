@@ -38,7 +38,7 @@ end
 ```
 Run `pod install`.
 
-**Важливо:** перед `pod spec lint` або публікацією створіть тег на origin: `git tag v1.0.0 && git push origin v1.0.0` (тег має відповідати версії в podspec).
+**Important:** Before `pod spec lint` or publishing, create and push the tag on origin: `git tag v1.0.0 && git push origin v1.0.0` (tag must match the version in the podspec).
 
 ### Manual Installation
 1. Download the repo.
