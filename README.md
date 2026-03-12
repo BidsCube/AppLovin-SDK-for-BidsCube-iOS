@@ -1,26 +1,22 @@
-# BidsCube Adapter for AppLovin MAX (iOS)
+# Bidscube SDK for iOS
 
-**BidscubeSDKAppLovin** is the official adapter to show BidCube ads (banner, interstitial, rewarded, MREC, native) through **AppLovin MAX** mediation. You integrate with AppLovin MAX only; no separate BidCube SDK or custom initialization in your app code.
+iOS SDK and AppLovin MAX adapter for BidCube demand. This repository is distributed for MAX mediation as **BidscubeSDKAppLovin** and includes the embedded BidCube runtime used by the adapter.
 
-**Repository:** [https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS](https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS)
-
----
+Repository: [https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS](https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS)
 
 ## Requirements
 
-- **iOS 14.0+**
-- **Xcode 12+**
-- **AppLovin MAX SDK** **13.0.0+**
-- AppLovin **SDK Key** and **Ad Unit IDs**
-- BidCube **Placement ID(s)** (from your BidCube account)
+- iOS 14.0+
+- BidscubeSDKAppLovin 1.0.1+
+- AppLovin MAX SDK 13.0.0+
+- Xcode 12+
+- For MAX mediation: BidCube Placement ID in the MAX `App ID` field
 
----
-
-## Installation
+## Add the SDK
 
 ### CocoaPods
 
-In your app’s **Podfile**:
+Assuming your project already uses CocoaPods, add:
 
 ```ruby
 platform :ios, '14.0'
@@ -28,7 +24,7 @@ use_frameworks!
 
 target 'YourApp' do
   pod 'AppLovinSDK', '>= 13.0.0'
-  pod 'BidscubeSDKAppLovin', '~> 1.0.1'
+  pod 'BidscubeSDKAppLovin', '1.0.1'
 end
 ```
 
@@ -38,46 +34,90 @@ Then run:
 pod install
 ```
 
-Open the `.xcworkspace` and build. You do **not** add or initialize any separate BidCube SDK — the adapter is used by AppLovin MAX automatically once configured.
+### Local pod development
 
----
+From this repo:
 
-## AppLovin MAX setup
+```bash
+pod install
+open bidscubeSdk.xcworkspace
+```
 
-1. **Initialize AppLovin MAX** in your app as you normally do (e.g. with your AppLovin SDK Key).
-2. In the **AppLovin MAX Dashboard** → your app → **Mediation** → **Manage Mediation**:
-   - Add a **Custom network** named **Bidscube**.
-   - Set the **server parameter**: **`app_id`** = your **BidCube Placement ID** (not the Application ID).
-   - For **native** ad units, you can add a local parameter **`is_native`** = **`true`**.
-   - Enable **Bidscube** for the ad units where you want BidCube demand.
+## AppLovin MAX integration
 
-3. Use your existing AppLovin MAX API to load and show ads (e.g. `MAInterstitialAd`, `MARewardedAd`, `MAAdView`). MAX will call this adapter when it needs BidCube demand; no extra code in your app for BidCube.
+To use Bidscube as a Custom network in AppLovin MAX:
 
----
+### 1. Add dependencies
 
-## Supported ad formats
+```ruby
+platform :ios, '14.0'
+use_frameworks!
 
-- **Banner**
-- **Interstitial**
-- **Rewarded**
-- **MREC**
-- **Native**
+target 'YourApp' do
+  pod 'AppLovinSDK', '>= 13.0.0'
+  pod 'BidscubeSDKAppLovin', '1.0.1'
+end
+```
 
----
+The embedded BidCube runtime is included by the adapter pod. Do not add or initialize a separate `BidscubeSDK` pod in app code.
 
-## Summary
+### 2. MAX Dashboard setup
 
-| Item | Value |
-|------|--------|
-| **Pod name** | `BidscubeSDKAppLovin` |
-| **AppLovin** | `AppLovinSDK` ≥ 13.0.0 |
-| **MAX custom network** | Bidscube |
-| **Server parameter** | `app_id` = BidCube **Placement ID** |
+Follow AppLovin's guide for custom SDK networks:
+[Integrating custom SDK networks](https://support.axon.ai/en/max/mediated-network-guides/integrating-custom-sdk-networks/)
 
-There is no separate “BidscubeSDK” pod to install and no `BidscubeSDK.initialize(...)` in your app — only **BidscubeSDKAppLovin** and your usual AppLovin MAX setup.
+Open the AppLovin MAX Dashboard and select your app.
 
----
+Go to `MAX > Mediation > Manage > Networks`.
+
+Click **Add a Custom Network** and create the network:
+
+- Network Type: `SDK`
+- Name: `Bidscube`
+- iOS Adapter Class Name: `ALBidscubeMediationAdapter`
+
+Go to `MAX > Mediation > Manage > Ad Units`, select each ad unit where you want Bidscube, enable **Bidscube**, and set the values for that placement.
+
+### 3. MAX parameters
+
+- iOS Adapter Class Name: `ALBidscubeMediationAdapter`
+- App ID: BidCube **Placement ID** used by the adapter for the MAX mediation request
+- Placement ID: optional / leave empty unless your MAX setup explicitly requires a second value
+- Custom Parameters: not used by the current adapter implementation
+
+The adapter reads the BidCube value from the MAX **App ID** field. Even though MAX labels that field as `App ID`, for this integration it must contain the BidCube **Placement ID**.
+
+### 4. Supported ad formats
+
+Banner, MREC, Interstitial, Rewarded, Native.
+
+### 5. Troubleshooting
+
+- If the network initializes but ads do not load, verify the MAX **App ID** field contains the correct BidCube **Placement ID**.
+- If MAX does not recognize the custom network, verify the iOS adapter class name is `ALBidscubeMediationAdapter`.
+- For native ad units, set `is_native = true` if your MAX setup uses a native-specific local parameter.
+
+## Runtime behavior
+
+Initialize and load ads using your normal AppLovin MAX integration (`MAInterstitialAd`, `MARewardedAd`, `MAAdView`, `MANativeAdLoader`, and so on).
+
+The adapter initializes the embedded BidCube runtime internally. No direct `BidscubeSDK.initialize(...)` call is required in app code.
+
+## Local build
+
+From the project root:
+
+```bash
+pod install
+open bidscubeSdk.xcworkspace
+```
+
+Requires Xcode and CocoaPods.
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+MIT. See [LICENSE](LICENSE).
+
+## Version
+
+AppLovin Bidscube iOS SDK 1.0.1.
