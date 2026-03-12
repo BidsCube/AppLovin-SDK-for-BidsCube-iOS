@@ -61,9 +61,12 @@ jobs:
           if [[ "$GITHUB_REF" == refs/tags/* ]]; then
             VERSION=${GITHUB_REF#refs/tags/v}
           else
-            # For manual dispatch, use a default version or extract from git
-            VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo "0.0.3")
-            # Remove 'v' prefix if present
+            # For manual dispatch: use latest tag (required for pod spec lint — tag must exist on remote)
+            VERSION=$(git describe --tags --abbrev=0 2>/dev/null || true)
+            if [[ -z "$VERSION" ]]; then
+              echo "::error::No git tag found. Create and push a version tag (e.g. git tag v1.0.0 && git push origin v1.0.0) before publishing."
+              exit 1
+            fi
             VERSION=${VERSION#v}
           fi
           echo "version=$VERSION" >> $GITHUB_OUTPUT
@@ -184,14 +187,12 @@ jobs:
           if [[ "$GITHUB_REF" == refs/tags/* ]]; then
             VERSION=${GITHUB_REF#refs/tags/v}
           else
-            # For manual dispatch, use a default version or extract from git
-            VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo "0.0.3")
-            # Remove 'v' prefix if present
+            VERSION=$(git describe --tags --abbrev=0 2>/dev/null || true)
             VERSION=${VERSION#v}
           fi
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Extracted version: $VERSION"
-          git commit --amend --no-edit
+          git commit --amend --no-edit || true
       - name: Validate Package.swift
         run: |
           swift package resolve
