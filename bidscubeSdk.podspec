@@ -1,6 +1,6 @@
 Pod::Spec.new do |spec|
   spec.name         = "BidscubeSDK"
-  spec.version      = "1.0.0"
+  spec.version      = "1.0.1"
   spec.summary      = "BidsCube iOS SDK for displaying ads"
   spec.description  = <<-DESC
                       BidsCube iOS SDK provides a comprehensive solution for displaying image, video, and native ads in iOS applications.
@@ -25,7 +25,7 @@ Pod::Spec.new do |spec|
   
   spec.documentation_url = "https://github.com/bidscube/bidscube-sdk-ios"
   
-  # Tag must exist on remote before pod spec lint / trunk push (e.g. git tag v1.0.0 && git push origin v1.0.0)
+  # Tag must exist on remote before pod spec lint / trunk push (e.g. git tag v1.0.1 && git push origin v1.0.1)
   spec.source       = { :git => "https://github.com/bidscube/bidscube-sdk-ios.git", :tag => "v#{spec.version}" }
   
   spec.source_files = "bidscubeSdk/**/*.{swift,h}"
