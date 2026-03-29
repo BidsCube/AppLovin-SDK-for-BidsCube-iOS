@@ -19,12 +19,15 @@ import BidscubeSDK
 let config = SDKConfig.Builder()
     .enableLogging(true)
     .enableDebugMode(false)
+    .adRequestAuthority("ssp-bcc-ads.com")
     .defaultAdTimeout(30_000)
     .defaultAdPosition(.unknown)
     .build()
 
 BidscubeSDK.initialize(config: config)
 ```
+
+`adRequestAuthority` accepts a host or host:port. Do not pass a full URL with query parameters; the SDK always builds requests as `https://<authority>/sdk`.
 
 ### Show an Image Ad
 

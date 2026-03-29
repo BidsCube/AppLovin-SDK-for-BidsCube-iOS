@@ -11,7 +11,11 @@ import BidscubeSDK
 @main
 struct testApp_iosApp: App {
     init() {
-            let config = SDKConfig.Builder()
+            let processInfo = ProcessInfo.processInfo
+            let customAuthority = processInfo.environment["bidcube.testSspAuthority"]
+                ?? processInfo.environment["BIDSCUBE_TEST_SSP_AUTHORITY"]
+
+            let builder = SDKConfig.Builder()
                 .enableLogging(true)
                 .enableDebugMode(true)
                 .defaultAdTimeout(10_000)
@@ -19,7 +23,12 @@ struct testApp_iosApp: App {
                 .enableSKAdNetwork(true)
                 .skAdNetworkId("com.bidscube.skadnetwork")
                 .skAdNetworkConversionValue(0)
-                .build()
+
+            if let customAuthority, !customAuthority.isEmpty {
+                _ = builder.adRequestAuthority(customAuthority)
+            }
+
+            let config = builder.build()
             BidscubeSDK.initialize(config: config)
         }
 

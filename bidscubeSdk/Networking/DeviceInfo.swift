@@ -3,6 +3,7 @@ import UIKit
 import AdSupport
 
 public struct DeviceInfo {
+    public static let defaultAdRequestAuthority = "ssp-bcc-ads.com"
     
     public static var bundleId: String {
         Bundle.main.bundleIdentifier ?? "com.unknown.app"
@@ -30,6 +31,14 @@ public struct DeviceInfo {
     
     public static var deviceHeight: Int {
         Int(UIScreen.main.bounds.height * UIScreen.main.scale)
+    }
+
+    public static var logicalScreenWidth: Int {
+        Int(UIScreen.main.bounds.width.rounded())
+    }
+
+    public static var logicalScreenHeight: Int {
+        Int(UIScreen.main.bounds.height.rounded())
     }
     
     public static var language: String {
@@ -144,13 +153,16 @@ public struct DeviceInfo {
             "appVersion": appVersion,
             "deviceWidth": deviceWidth,
             "deviceHeight": deviceHeight,
+            "logicalScreenWidth": logicalScreenWidth,
+            "logicalScreenHeight": logicalScreenHeight,
             "language": language,
             "userAgent": userAgent,
             "trackingEnabled": isTrackingEnabled,
             "advertisingId": advertisingIdentifier,
             "doNotTrack": doNotTrack,
             "systemVersion": UIDevice.current.systemVersion,
-            "deviceModel": UIDevice.current.model
+            "deviceModel": UIDevice.current.model,
+            "defaultAdRequestAuthority": defaultAdRequestAuthority
         ]
     }
 }

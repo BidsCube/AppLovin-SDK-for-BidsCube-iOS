@@ -6,25 +6,28 @@ public final class SDKConfig {
     public let enableDebugMode: Bool
     public let defaultAdTimeoutMs: Int
     public let defaultAdPosition: AdPosition
-    public let baseURL: String
+    public let adRequestAuthority: String
     public let enableSKAdNetwork: Bool
     public let skAdNetworkId: String?
     public let skAdNetworkConversionValue: Int
+
+    public var baseURL: String {
+        URLBuilder.baseURLString(from: adRequestAuthority)
+    }
 
     private init(enableLogging: Bool,
                  enableDebugMode: Bool,
                  defaultAdTimeoutMs: Int,
                  defaultAdPosition: AdPosition,
-                 baseURL: String,
+                 adRequestAuthority: String,
                  enableSKAdNetwork: Bool,
                  skAdNetworkId: String?,
-                 skAdNetworkConversionValue: Int,
-) {
+                 skAdNetworkConversionValue: Int) {
         self.enableLogging = enableLogging
         self.enableDebugMode = enableDebugMode
         self.defaultAdTimeoutMs = defaultAdTimeoutMs
         self.defaultAdPosition = defaultAdPosition
-        self.baseURL = baseURL
+        self.adRequestAuthority = URLBuilder.normalizedAdRequestAuthority(from: adRequestAuthority)
         self.enableSKAdNetwork = enableSKAdNetwork
         self.skAdNetworkId = skAdNetworkId
         self.skAdNetworkConversionValue = skAdNetworkConversionValue
@@ -35,7 +38,7 @@ public final class SDKConfig {
         private var enableDebugMode: Bool = false
         private var defaultAdTimeoutMs: Int = 30000
         private var defaultAdPosition: AdPosition = .unknown
-        private var baseURL: String = Constants.baseURL
+        private var adRequestAuthority: String = DeviceInfo.defaultAdRequestAuthority
         private var enableSKAdNetwork: Bool = false
         private var skAdNetworkId: String? = nil
         private var skAdNetworkConversionValue: Int = 0
@@ -67,8 +70,19 @@ public final class SDKConfig {
         }
 
         @discardableResult
+        public func adRequestAuthority(_ authority: String?) -> Builder {
+            self.adRequestAuthority = URLBuilder.normalizedAdRequestAuthority(from: authority)
+            return self
+        }
+
+        @discardableResult
+        public func host(_ authority: String?) -> Builder {
+            adRequestAuthority(authority)
+        }
+
+        @discardableResult
         public func baseURL(_ url: String) -> Builder {
-            self.baseURL = url
+            self.adRequestAuthority = URLBuilder.normalizedAdRequestAuthority(from: url)
             return self
         }
 
@@ -97,10 +111,10 @@ public final class SDKConfig {
                 enableDebugMode: enableDebugMode,
                 defaultAdTimeoutMs: defaultAdTimeoutMs,
                 defaultAdPosition: defaultAdPosition,
-                baseURL: baseURL,
+                adRequestAuthority: adRequestAuthority,
                 enableSKAdNetwork: enableSKAdNetwork,
                 skAdNetworkId: skAdNetworkId,
-                skAdNetworkConversionValue: skAdNetworkConversionValue,
+                skAdNetworkConversionValue: skAdNetworkConversionValue
             )
         }
     }

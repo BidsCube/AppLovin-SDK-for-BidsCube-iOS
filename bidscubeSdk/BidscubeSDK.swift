@@ -33,7 +33,7 @@ public final class BidscubeSDK {
             .enableDebugMode(false)
             .defaultAdTimeout(Constants.defaultTimeoutMs)
             .defaultAdPosition(Constants.defaultAdPosition)
-            .baseURL(Constants.baseURL)
+            .adRequestAuthority(DeviceInfo.defaultAdRequestAuthority)
             .enableSKAdNetwork(true)
             .skAdNetworkId("skadnetwork.com.example")
             .skAdNetworkConversionValue(1)
@@ -141,7 +141,13 @@ public final class BidscubeSDK {
     }
 
     
-    public static func buildRequestURL(placementId: String, adType: AdType, ctaText: String? = nil) -> URL? {
+    public static func buildRequestURL(
+        placementId: String,
+        adType: AdType,
+        ctaText: String? = nil,
+        nativeWidth: Int? = nil,
+        nativeHeight: Int? = nil
+    ) -> URL? {
         guard let config = configuration else {
             Logger.error("SDK not initialized")
             return nil
@@ -158,7 +164,9 @@ public final class BidscubeSDK {
             position: position,
             timeoutMs: timeout,
             debug: debug,
-            ctaText: ctaText
+            ctaText: ctaText,
+            nativeWidth: nativeWidth,
+            nativeHeight: nativeHeight
         )
     }
     public static func showImageAd(_ placementId: String, _ callback: AdCallback?) {
@@ -355,12 +363,16 @@ public final class BidscubeSDK {
 
 
     public static func showNativeAd(_ placementId: String, _ callback: AdCallback?) {
+        showNativeAd(placementId, width: DeviceInfo.logicalScreenWidth, height: DeviceInfo.logicalScreenHeight, callback)
+    }
+
+    public static func showNativeAd(_ placementId: String, width: Int, height: Int, _ callback: AdCallback?) {
         callback?.onAdLoading(placementId)
         
         // Build GET URL with SKAdNetwork parameters
         let includeSKAdNetworks = configuration?.enableSKAdNetwork ?? false
         
-        guard let url = URLBuilder.buildAdRequestURL(placementId: placementId, adType: .native, position: getEffectiveAdPosition(), timeoutMs: configuration?.defaultAdTimeoutMs ?? Constants.defaultTimeoutMs, debug: configuration?.enableDebugMode ?? false, includeSKAdNetworks: includeSKAdNetworks) else {
+        guard let url = URLBuilder.buildAdRequestURL(placementId: placementId, adType: .native, position: getEffectiveAdPosition(), timeoutMs: configuration?.defaultAdTimeoutMs ?? Constants.defaultTimeoutMs, debug: configuration?.enableDebugMode ?? false, includeSKAdNetworks: includeSKAdNetworks, nativeWidth: width, nativeHeight: height) else {
             callback?.onAdFailed(placementId, errorCode: Constants.ErrorCodes.invalidURL, errorMessage: Constants.ErrorMessages.failedToBuildURL)
             return
         }
@@ -418,6 +430,10 @@ public final class BidscubeSDK {
     }
 
     public static func getNativeAdView(_ placementId: String, _ callback: AdCallback?) -> UIView {
+        return getNativeAdView(placementId, width: DeviceInfo.logicalScreenWidth, height: DeviceInfo.logicalScreenHeight, callback)
+    }
+
+    public static func getNativeAdView(_ placementId: String, width: Int, height: Int, _ callback: AdCallback?) -> UIView {
         Logger.info("getNativeAdView called for placement: \(placementId)")
         
         let view: NativeAdView = createOnMainThread { NativeAdView() }
@@ -425,7 +441,7 @@ public final class BidscubeSDK {
         callback?.onAdLoading(placementId)
         
         
-        guard let url = buildRequestURL(placementId: placementId, adType: .native) else {
+        guard let url = buildRequestURL(placementId: placementId, adType: .native, nativeWidth: width, nativeHeight: height) else {
             Logger.error("Failed to build request URL for native ad")
             callback?.onAdFailed(placementId, errorCode: Constants.ErrorCodes.invalidURL, errorMessage: Constants.ErrorMessages.failedToBuildURL)
             return view

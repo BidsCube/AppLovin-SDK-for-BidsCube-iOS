@@ -1,0 +1,66 @@
+{
+  "object" : {
+    "artifacts" : [
+      {
+        "kind" : {
+          "xcframework" : {
+
+          }
+        },
+        "packageRef" : {
+          "identity" : "swift-package-manager-google-interactive-media-ads-ios",
+          "kind" : "remoteSourceControl",
+          "location" : "https://github.com/googleads/swift-package-manager-google-interactive-media-ads-ios",
+          "name" : "GoogleInteractiveMediaAds"
+        },
+        "path" : "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/.derivedData/SourcePackages/artifacts/swift-package-manager-google-interactive-media-ads-ios/GoogleInteractiveMediaAds/GoogleInteractiveMediaAds.xcframework",
+        "source" : {
+          "checksum" : "fe756f0dad63b971f9910e0006232c9816f87031485b8fd5b9c112785962873e",
+          "type" : "remote",
+          "url" : "https://imasdk.googleapis.com/downloads/ima/ios/GoogleInteractiveMediaAds-ios-v3.30.1.zip"
+        },
+        "targetName" : "GoogleInteractiveMediaAds"
+      }
+    ],
+    "dependencies" : [
+      {
+        "basedOn" : null,
+        "packageRef" : {
+          "identity" : "bidscube-sdk-ios",
+          "kind" : "remoteSourceControl",
+          "location" : "https://github.com/BidsCube/bidscube-sdk-ios",
+          "name" : "bidscubeSdk"
+        },
+        "state" : {
+          "checkoutState" : {
+            "branch" : "main",
+            "revision" : "58064abd2b37bc5d961bb051e9327439fb3c7536"
+          },
+          "name" : "sourceControlCheckout"
+        },
+        "subpath" : "bidscube-sdk-ios"
+      },
+      {
+        "basedOn" : null,
+        "packageRef" : {
+          "identity" : "swift-package-manager-google-interactive-media-ads-ios",
+          "kind" : "remoteSourceControl",
+          "location" : "https://github.com/googleads/swift-package-manager-google-interactive-media-ads-ios",
+          "name" : "GoogleInteractiveMediaAds"
+        },
+        "state" : {
+          "checkoutState" : {
+            "branch" : "main",
+            "revision" : "9bd145421334f4c3a4650b2478b21a0aa842bffb"
+          },
+          "name" : "sourceControlCheckout"
+        },
+        "subpath" : "swift-package-manager-google-interactive-media-ads-ios"
+      }
+    ],
+    "prebuilts" : [
+
+    ]
+  },
+  "version" : 7
+}

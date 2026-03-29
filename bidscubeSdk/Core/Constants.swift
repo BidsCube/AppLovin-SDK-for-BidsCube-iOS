@@ -3,7 +3,9 @@ import Foundation
 
 public struct Constants {
 
-    public static let baseURL = "https://ssp-bcc-ads.com/sdk"
+    public static let defaultAdRequestAuthority = DeviceInfo.defaultAdRequestAuthority
+    public static let sdkPath = "/sdk"
+    public static let baseURL = "https://\(defaultAdRequestAuthority)\(sdkPath)"
     public static let defaultTimeoutMs = 30000
     public static let defaultAdPosition = AdPosition.unknown
     
@@ -23,10 +25,11 @@ public struct Constants {
     public struct Methods {
         public static let api = "api"
         public static let xml = "xml"
+        public static let native = "s"
     }
     
     public static let userAgentPrefix = "BidscubeSDK-iOS"
-    public static let sdkVersion = "1.2.1"
+    public static let sdkVersion = "1.0.1"
     
     public struct ErrorCodes {
         public static let invalidURL = -1

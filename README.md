@@ -61,6 +61,26 @@ end
 
 The embedded BidCube runtime is included by the adapter pod. Do not add or initialize a separate `BidscubeSDK` pod in app code.
 
+## Public configuration API
+
+If you use the SDK runtime directly for testing or a standalone setup, you can override the SSP authority with `adRequestAuthority`.
+
+```swift
+let config = SDKConfig.Builder()
+    .enableLogging(true)
+    .enableDebugMode(false)
+    .adRequestAuthority("ssp-bcc-ads.com")
+    .build()
+
+BidscubeSDK.initialize(config: config)
+```
+
+Notes:
+
+- Pass only `host` or `host:port`.
+- Short inputs like `https://example.com/sdk?x=1` are normalized automatically to `example.com`.
+- Do not pass a full URL with query parameters; the SDK always builds requests as `https://<authority>/sdk` and appends query parameters itself.
+
 ### 2. MAX Dashboard setup
 
 Follow AppLovin's guide for custom SDK networks:
@@ -84,8 +104,10 @@ Go to `MAX > Mediation > Manage > Ad Units`, select each ad unit where you want 
 - App ID: BidCube **Placement ID** used by the adapter for the MAX mediation request
 - Placement ID: optional / leave empty unless your MAX setup explicitly requires a second value
 - Custom Parameters: not used by the current adapter implementation
+- Optional server parameter override: `request_authority` or `ssp_host` = BidCube SSP host / host:port
 
 The adapter reads the BidCube value from the MAX **App ID** field. Even though MAX labels that field as `App ID`, for this integration it must contain the BidCube **Placement ID**.
+If `request_authority` or `ssp_host` is provided in MAX server parameters, the adapter normalizes it and uses it as the ad request authority.
 
 ### 4. Supported ad formats
 
@@ -94,6 +116,7 @@ Banner, MREC, Interstitial, Rewarded, Native.
 ### 5. Troubleshooting
 
 - If the network initializes but ads do not load, verify the MAX **App ID** field contains the correct BidCube **Placement ID**.
+- If you override the SSP endpoint, pass only a host or host:port in `request_authority` / `ssp_host` or `adRequestAuthority`.
 - If MAX does not recognize the custom network, verify the iOS adapter class name is `ALBidscubeMediationAdapter`.
 - For native ad units, set `is_native = true` if your MAX setup uses a native-specific local parameter.
 
@@ -113,6 +136,13 @@ open bidscubeSdk.xcworkspace
 ```
 
 Requires Xcode and CocoaPods.
+
+## Sample app override
+
+The sample app supports a custom SSP authority through environment variables:
+
+- `bidcube.testSspAuthority`
+- `BIDSCUBE_TEST_SSP_AUTHORITY`
 
 ## License
 
