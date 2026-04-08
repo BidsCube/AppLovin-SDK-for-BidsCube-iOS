@@ -1,64 +1,21 @@
 # Bidscube SDK for iOS
 
-iOS SDK and AppLovin MAX adapter for BidCube demand. This repository is distributed for MAX mediation as **BidscubeSDKAppLovin** and includes the embedded BidCube runtime used by the adapter.
+iOS SDK and AppLovin MAX adapter for BidCube demand. For mediation, use the **BidscubeSDKAppLovin** CocoaPod: it bundles the BidCube runtime and the MAX adapter (`ALBidscubeMediationAdapter`).
 
 Repository: [https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS](https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS)
 
 ## Requirements
 
 - iOS 13.0+
-- **AppLovin MAX (mediation):** pod `BidscubeSDKAppLovin` + `AppLovinSDK` 13.x (one Bidscube pod bundles runtime + MAX adapter; no separate core pod)
-- **Standalone app (no MAX):** pod `BidscubeSDK` only (excludes AppLovin adapter sources)
+- CocoaPods: `BidscubeSDKAppLovin` and `AppLovinSDK` 13.x
 - Xcode 14+ recommended
-- For MAX mediation: BidCube **Placement ID** in the MAX `App ID` field
+- In MAX, put the BidCube **Placement ID** in the custom network **App ID** field (see below)
 
-## Add the SDK
+## AppLovin MAX — installing the adapter
 
-### CocoaPods — AppLovin MAX (recommended for mediation)
+### CocoaPods
 
-Use a **single** Bidscube pod; it already contains the full SDK and `ALBidscubeMediationAdapter`. You still add AppLovin MAX separately.
-
-```ruby
-platform :ios, '13.0'
-use_frameworks!
-
-target 'YourApp' do
-  pod 'AppLovinSDK', '>= 13.0.0', '< 14.0'
-  pod 'BidscubeSDKAppLovin', '1.0.3'
-end
-```
-
-### CocoaPods — core SDK only (no AppLovin / no MAX adapter)
-
-```ruby
-platform :ios, '13.0'
-use_frameworks!
-
-target 'YourApp' do
-  pod 'BidscubeSDK', '1.0.3'
-end
-```
-
-Then run:
-
-```bash
-pod install
-```
-
-### Local pod development
-
-From this repo:
-
-```bash
-pod install
-open bidscubeSdk.xcworkspace
-```
-
-## AppLovin MAX integration
-
-To use Bidscube as a Custom network in AppLovin MAX:
-
-### 1. Add dependencies
+Add a single Bidscube pod (runtime + adapter) and AppLovin MAX:
 
 ```ruby
 platform :ios, '13.0'
@@ -70,86 +27,56 @@ target 'YourApp' do
 end
 ```
 
-The `BidscubeSDKAppLovin` pod ships the full BidCube runtime and the MAX adapter. Do **not** add a second `BidscubeSDK` pod for the same target.
+Then:
 
-## Public configuration API
-
-If you use the SDK runtime directly for testing or a standalone setup, you can override the SSP authority with `adRequestAuthority`.
-
-```swift
-let config = SDKConfig.Builder()
-    .enableLogging(true)
-    .enableDebugMode(false)
-    .adRequestAuthority("ssp-bcc-ads.com")
-    .build()
-
-BidscubeSDK.initialize(config: config)
+```bash
+pod install
 ```
 
-Notes:
+Open the generated `.xcworkspace` in Xcode. Do not add a separate `BidscubeSDK` pod for the same target.
 
-- Pass only `host` or `host:port`.
-- Short inputs like `https://example.com/sdk?x=1` are normalized automatically to `example.com`.
-- Do not pass a full URL with query parameters; the SDK always builds requests as `https://<authority>/sdk` and appends query parameters itself.
+### MAX Dashboard
 
-### 2. MAX Dashboard setup
-
-Follow AppLovin's guide for custom SDK networks:
+Follow AppLovin’s guide for custom SDK networks:  
 [Integrating custom SDK networks](https://support.axon.ai/en/max/mediated-network-guides/integrating-custom-sdk-networks/)
 
-Open the AppLovin MAX Dashboard and select your app.
+1. Open your app in the AppLovin MAX Dashboard.
+2. Go to **MAX → Mediation → Manage → Networks**.
+3. **Add a Custom Network**:
+   - Network Type: **SDK**
+   - Name: **Bidscube** (or your label)
+   - **iOS Adapter Class Name:** `ALBidscubeMediationAdapter`
+4. Go to **MAX → Mediation → Manage → Ad Units**, open each ad unit that should use Bidscube, enable **Bidscube**, and set placement fields as below.
 
-Go to `MAX > Mediation > Manage > Networks`.
+### MAX parameters
 
-Click **Add a Custom Network** and create the network:
+| Field | Value |
+|--------|--------|
+| **iOS Adapter Class Name** | `ALBidscubeMediationAdapter` |
+| **App ID** | BidCube **Placement ID** (MAX still labels this “App ID”; for this network it must be the placement ID) |
+| **Placement ID** | Optional; leave empty unless your MAX setup needs a second value |
+| **Server parameters (optional)** | `request_authority` or `ssp_host` — SSP host or `host:port` (normalized the same way as a standalone `adRequestAuthority`) |
 
-- Network Type: `SDK`
-- Name: `Bidscube`
-- iOS Adapter Class Name: `ALBidscubeMediationAdapter`
+If `request_authority` or `ssp_host` is set, the adapter uses it as the ad request authority.
 
-Go to `MAX > Mediation > Manage > Ad Units`, select each ad unit where you want Bidscube, enable **Bidscube**, and set the values for that placement.
-
-### 3. MAX parameters
-
-- iOS Adapter Class Name: `ALBidscubeMediationAdapter`
-- App ID: BidCube **Placement ID** used by the adapter for the MAX mediation request
-- Placement ID: optional / leave empty unless your MAX setup explicitly requires a second value
-- Optional server parameters: `request_authority` or `ssp_host` = BidCube SSP host / host:port (normalized like `adRequestAuthority`)
-
-The adapter reads the BidCube value from the MAX **App ID** field. Even though MAX labels that field as `App ID`, for this integration it must contain the BidCube **Placement ID**.
-If `request_authority` or `ssp_host` is provided in MAX server parameters, the adapter normalizes it and uses it as the ad request authority.
-
-### 4. Supported ad formats
+### Supported ad formats
 
 Banner, MREC, Interstitial, Rewarded, Native.
 
-### 5. Troubleshooting
+### Troubleshooting
 
-- If the network initializes but ads do not load, verify the MAX **App ID** field contains the correct BidCube **Placement ID**.
-- If you override the SSP endpoint, pass only a host or host:port in `request_authority` / `ssp_host` or `adRequestAuthority`.
-- If MAX does not recognize the custom network, verify the iOS adapter class name is `ALBidscubeMediationAdapter`.
-- For native ad units, set `is_native = true` if your MAX setup uses a native-specific local parameter.
+- Ads do not load: confirm **App ID** contains the correct BidCube **Placement ID**.
+- SSP override: use only host or `host:port` in `request_authority` / `ssp_host`.
+- Custom network not found: class name must be exactly `ALBidscubeMediationAdapter`.
+- Native: if your setup uses a native-specific local parameter, set `is_native = true` where applicable.
 
 ## Runtime behavior
 
-Initialize and load ads using your normal AppLovin MAX integration (`MAInterstitialAd`, `MARewardedAd`, `MAAdView`, `MANativeAdLoader`, and so on).
+Use your usual MAX APIs (`MAInterstitialAd`, `MARewardedAd`, `MAAdView`, `MANativeAdLoader`, etc.). The adapter initializes the BidCube runtime internally; you do **not** need to call `BidscubeSDK.initialize(...)` in app code for MAX mediation.
 
-The adapter initializes the embedded BidCube runtime internally. No direct `BidscubeSDK.initialize(...)` call is required in app code.
+## Sample app (testing)
 
-## Local build
-
-From the project root:
-
-```bash
-pod install
-open bidscubeSdk.xcworkspace
-```
-
-Requires Xcode and CocoaPods.
-
-## Sample app override
-
-The sample app supports a custom SSP authority through environment variables:
+The bundled sample app can point at a test SSP via environment variables:
 
 - `bidcube.testSspAuthority`
 - `BIDSCUBE_TEST_SSP_AUTHORITY`
