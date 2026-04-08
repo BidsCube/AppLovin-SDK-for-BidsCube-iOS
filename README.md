@@ -24,7 +24,7 @@ use_frameworks!
 
 target 'YourApp' do
   pod 'AppLovinSDK', '>= 13.0.0', '< 14.0'
-  pod 'BidscubeSDKAppLovin', '1.0.1'
+  pod 'BidscubeSDKAppLovin', '1.0.3'
 end
 ```
 
@@ -35,7 +35,7 @@ platform :ios, '13.0'
 use_frameworks!
 
 target 'YourApp' do
-  pod 'BidscubeSDK', '1.0.1'
+  pod 'BidscubeSDK', '1.0.3'
 end
 ```
 
@@ -66,7 +66,7 @@ use_frameworks!
 
 target 'YourApp' do
   pod 'AppLovinSDK', '>= 13.0.0', '< 14.0'
-  pod 'BidscubeSDKAppLovin', '1.0.1'
+  pod 'BidscubeSDKAppLovin', '1.0.3'
 end
 ```
 
@@ -160,4 +160,4 @@ MIT. See [LICENSE](LICENSE).
 
 ## Version
 
-AppLovin Bidscube iOS SDK 1.0.1.
+AppLovin Bidscube iOS SDK 1.0.3.
