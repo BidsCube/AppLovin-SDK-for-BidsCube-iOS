@@ -188,7 +188,7 @@ public final class VideoAdView: UIView {
                        let adm = json["adm"] as? String {
                         
                         if let positionValue = json["position"] as? Int,
-                           let position = BidscubeSDK.AdPosition(rawValue: positionValue) {
+                           let position = AdPosition(rawValue: positionValue) {
                             print("🔍 VideoAdView: Received position from server: \(positionValue) - \(self.displayName(for: position))")
                             DispatchQueue.main.async {
                                 BidscubeSDK.setResponseAdPosition(position)
@@ -216,7 +216,7 @@ public final class VideoAdView: UIView {
         imaVideoHandler?.layoutSubviews()
     }
     
-    private func displayName(for position: BidscubeSDK.AdPosition) -> String {
+    private func displayName(for position: AdPosition) -> String {
         switch position {
         case .unknown: return "UNKNOWN"
         case .aboveTheFold: return "ABOVE_THE_FOLD"

@@ -1,0 +1,7 @@
+{
+  "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/bidscubeSdk/Controller/ViewController.swift" : {
+    "const-values" : "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/build/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/BidscubeSDK-primary.swiftconstvalues",
+    "dependencies" : "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/build/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/BidscubeSDK-primary.d",
+    "diagnostics" : "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/build/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/BidscubeSDK-primary.dia"
+  }
+}

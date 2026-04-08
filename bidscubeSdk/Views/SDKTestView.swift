@@ -444,7 +444,7 @@ struct SDKTestView: View {
         SDKLogger.d("SDKTestView", "Logging test completed - check if SDKLogger messages are filtered")
     }
     
-    private func displayName(for position: BidscubeSDK.AdPosition) -> String {
+    private func displayName(for position: AdPosition) -> String {
         switch position {
         case .unknown:
             return "UNKNOWN"

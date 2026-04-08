@@ -14,7 +14,7 @@ final class WindowedAdTestViewController: UIViewController, AdCallback, ConsentC
         stack.spacing = 8
         stack.translatesAutoresizingMaskIntoConstraints = false
 
-        let positions: [BidscubeSDK.AdPosition] = [.unknown, .aboveTheFold, .dependOnScreenSize, .belowTheFold, .header, .footer, .sidebar, .fullScreen]
+        let positions: [AdPosition] = [.unknown, .aboveTheFold, .dependOnScreenSize, .belowTheFold, .header, .footer, .sidebar, .fullScreen]
         for p in positions {
             let b = UIButton(type: .system)
             b.setTitle("Position: \(p)", for: .normal)
@@ -93,7 +93,7 @@ final class WindowedAdTestViewController: UIViewController, AdCallback, ConsentC
         currentAdView = viewToAdd
     }
 
-    private func testPosition(_ position: BidscubeSDK.AdPosition) {
+    private func testPosition(_ position: AdPosition) {
         BidscubeSDK.setAdPosition(position)
     }
 

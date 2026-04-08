@@ -499,7 +499,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 60C421EE7FD997AA3A2E3D9F /* Pods-BidscubeSDK.debug.xcconfig */;
 			buildSettings = {
-				BUILD_LIBRARY_FOR_DISTRIBUTION = YES;
+				BUILD_LIBRARY_FOR_DISTRIBUTION = NO;
 				CODE_SIGN_IDENTITY = "";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -539,7 +539,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 1B55B36A905074BAB6896980 /* Pods-BidscubeSDK.release.xcconfig */;
 			buildSettings = {
-				BUILD_LIBRARY_FOR_DISTRIBUTION = YES;
+				BUILD_LIBRARY_FOR_DISTRIBUTION = NO;
 				CODE_SIGN_IDENTITY = "";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;

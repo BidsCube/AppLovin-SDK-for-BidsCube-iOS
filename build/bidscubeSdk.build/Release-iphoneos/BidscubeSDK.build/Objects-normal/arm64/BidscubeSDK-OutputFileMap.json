@@ -1,0 +1,176 @@
+{
+  "" : {
+    "const-values" : "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/build/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/BidscubeSDK-primary.swiftconstvalues",
+    "dependencies" : "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/build/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/BidscubeSDK-primary.d",
+    "diagnostics" : "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/build/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/BidscubeSDK-primary.dia",
+    "emit-module-dependencies" : "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/build/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/BidscubeSDK-primary-emit-module.d",
+    "emit-module-diagnostics" : "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/build/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/BidscubeSDK-primary-emit-module.dia",
+    "pch" : "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/build/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/BidscubeSDK-primary-Bridging-header.pch",
+    "swift-dependencies" : "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/build/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/BidscubeSDK-primary.swiftdeps"
+  },
+  "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/bidscubeSdk/AppLovin/ALBidscubeMediationAdapter.swift" : {
+    "index-unit-output-path" : "/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/ALBidscubeMediationAdapter.o",
+    "llvm-bc" : "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/build/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/ALBidscubeMediationAdapter.bc",
+    "object" : "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/build/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/ALBidscubeMediationAdapter.o"
+  },
+  "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/bidscubeSdk/BidscubeSDK+SwiftUI.swift" : {
+    "index-unit-output-path" : "/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/BidscubeSDK+SwiftUI.o",
+    "llvm-bc" : "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/build/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/BidscubeSDK+SwiftUI.bc",
+    "object" : "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/build/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/BidscubeSDK+SwiftUI.o"
+  },
+  "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/bidscubeSdk/BidscubeSDK.swift" : {
+    "index-unit-output-path" : "/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/BidscubeSDK-67f622ea261301d1f9b04aa560ca7363.o",
+    "llvm-bc" : "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/build/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/BidscubeSDK-67f622ea261301d1f9b04aa560ca7363.bc",
+    "object" : "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/build/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/BidscubeSDK-67f622ea261301d1f9b04aa560ca7363.o"
+  },
+  "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/bidscubeSdk/Controller/ViewController.swift" : {
+    "index-unit-output-path" : "/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/ViewController-1bdb1a231d521575564aec2c96c65fee.o",
+    "llvm-bc" : "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/build/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/ViewController-1bdb1a231d521575564aec2c96c65fee.bc",
+    "object" : "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/build/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/ViewController-1bdb1a231d521575564aec2c96c65fee.o"
+  },
+  "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/bidscubeSdk/Controller/WindowedAdTestViewController.swift" : {
+    "index-unit-output-path" : "/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/WindowedAdTestViewController.o",
+    "llvm-bc" : "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/build/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/WindowedAdTestViewController.bc",
+    "object" : "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/build/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/WindowedAdTestViewController.o"
+  },
+  "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/bidscubeSdk/Core/AdPosition.swift" : {
+    "index-unit-output-path" : "/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/AdPosition.o",
+    "llvm-bc" : "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/build/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/AdPosition.bc",
+    "object" : "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/build/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/AdPosition.o"
+  },
+  "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/bidscubeSdk/Core/AdType.swift" : {
+    "index-unit-output-path" : "/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/AdType.o",
+    "llvm-bc" : "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/build/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/AdType.bc",
+    "object" : "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/build/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/AdType.o"
+  },
+  "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/bidscubeSdk/Core/Callbacks.swift" : {
+    "index-unit-output-path" : "/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/Callbacks.o",
+    "llvm-bc" : "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/build/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/Callbacks.bc",
+    "object" : "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/build/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/Callbacks.o"
+  },
+  "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/bidscubeSdk/Core/Constants.swift" : {
+    "index-unit-output-path" : "/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/Constants.o",
+    "llvm-bc" : "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/build/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/Constants.bc",
+    "object" : "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/build/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/Constants.o"
+  },
+  "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/bidscubeSdk/Core/ConversionTracker.swift" : {
+    "index-unit-output-path" : "/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/ConversionTracker.o",
+    "llvm-bc" : "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/build/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/ConversionTracker.bc",
+    "object" : "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/build/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/ConversionTracker.o"
+  },
+  "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/bidscubeSdk/Core/Logger.swift" : {
+    "index-unit-output-path" : "/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/Logger.o",
+    "llvm-bc" : "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/build/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/Logger.bc",
+    "object" : "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/build/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/Logger.o"
+  },
+  "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/bidscubeSdk/Core/SDKConfig.swift" : {
+    "index-unit-output-path" : "/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/SDKConfig.o",
+    "llvm-bc" : "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/build/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/SDKConfig.bc",
+    "object" : "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/build/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/SDKConfig.o"
+  },
+  "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/bidscubeSdk/Core/SKAdNetworkManager.swift" : {
+    "index-unit-output-path" : "/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/SKAdNetworkManager.o",
+    "llvm-bc" : "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/build/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/SKAdNetworkManager.bc",
+    "object" : "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/build/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/SKAdNetworkManager.o"
+  },
+  "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/bidscubeSdk/Core/SKAdNetworkModels.swift" : {
+    "index-unit-output-path" : "/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/SKAdNetworkModels.o",
+    "llvm-bc" : "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/build/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/SKAdNetworkModels.bc",
+    "object" : "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/build/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/SKAdNetworkModels.o"
+  },
+  "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/bidscubeSdk/Logger/SDKLogger.swift" : {
+    "index-unit-output-path" : "/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/SDKLogger.o",
+    "llvm-bc" : "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/build/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/SDKLogger.bc",
+    "object" : "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/build/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/SDKLogger.o"
+  },
+  "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/bidscubeSdk/Networking/DeviceInfo.swift" : {
+    "index-unit-output-path" : "/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/DeviceInfo.o",
+    "llvm-bc" : "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/build/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/DeviceInfo.bc",
+    "object" : "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/build/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/DeviceInfo.o"
+  },
+  "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/bidscubeSdk/Networking/NetworkManager.swift" : {
+    "index-unit-output-path" : "/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/NetworkManager.o",
+    "llvm-bc" : "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/build/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/NetworkManager.bc",
+    "object" : "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/build/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/NetworkManager.o"
+  },
+  "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/bidscubeSdk/Networking/URLBuilder.swift" : {
+    "index-unit-output-path" : "/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/URLBuilder.o",
+    "llvm-bc" : "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/build/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/URLBuilder.bc",
+    "object" : "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/build/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/URLBuilder.o"
+  },
+  "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/bidscubeSdk/Tests/ConsentTestView.swift" : {
+    "index-unit-output-path" : "/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/ConsentTestView-70f43c8391bc67c445a9150e133c4133.o",
+    "llvm-bc" : "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/build/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/ConsentTestView-70f43c8391bc67c445a9150e133c4133.bc",
+    "object" : "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/build/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/ConsentTestView-70f43c8391bc67c445a9150e133c4133.o"
+  },
+  "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/bidscubeSdk/Tests/SKAdNetworkTestView.swift" : {
+    "index-unit-output-path" : "/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/SKAdNetworkTestView-3207977c21d9bb1f93617b82077cf7ac.o",
+    "llvm-bc" : "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/build/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/SKAdNetworkTestView-3207977c21d9bb1f93617b82077cf7ac.bc",
+    "object" : "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/build/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/SKAdNetworkTestView-3207977c21d9bb1f93617b82077cf7ac.o"
+  },
+  "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/bidscubeSdk/Tests/WindowedAdTestView.swift" : {
+    "index-unit-output-path" : "/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/WindowedAdTestView-541611b657142418f2cbac1ba2f7151d.o",
+    "llvm-bc" : "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/build/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/WindowedAdTestView-541611b657142418f2cbac1ba2f7151d.bc",
+    "object" : "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/build/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/WindowedAdTestView-541611b657142418f2cbac1ba2f7151d.o"
+  },
+  "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/bidscubeSdk/Views/AdViewController.swift" : {
+    "index-unit-output-path" : "/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/AdViewController.o",
+    "llvm-bc" : "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/build/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/AdViewController.bc",
+    "object" : "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/build/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/AdViewController.o"
+  },
+  "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/bidscubeSdk/Views/BannerAdView.swift" : {
+    "index-unit-output-path" : "/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/BannerAdView.o",
+    "llvm-bc" : "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/build/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/BannerAdView.bc",
+    "object" : "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/build/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/BannerAdView.o"
+  },
+  "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/bidscubeSdk/Views/ContentView.swift" : {
+    "index-unit-output-path" : "/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/ContentView-ea0cf97cf19b394ca8248178f976cb19.o",
+    "llvm-bc" : "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/build/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/ContentView-ea0cf97cf19b394ca8248178f976cb19.bc",
+    "object" : "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/build/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/ContentView-ea0cf97cf19b394ca8248178f976cb19.o"
+  },
+  "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/bidscubeSdk/Views/CustomAdRenderView.swift" : {
+    "index-unit-output-path" : "/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/CustomAdRenderView.o",
+    "llvm-bc" : "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/build/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/CustomAdRenderView.bc",
+    "object" : "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/build/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/CustomAdRenderView.o"
+  },
+  "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/bidscubeSdk/Views/IMAVideoAdHandler.swift" : {
+    "index-unit-output-path" : "/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/IMAVideoAdHandler.o",
+    "llvm-bc" : "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/build/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/IMAVideoAdHandler.bc",
+    "object" : "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/build/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/IMAVideoAdHandler.o"
+  },
+  "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/bidscubeSdk/Views/IMAViewController.swift" : {
+    "index-unit-output-path" : "/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/IMAViewController.o",
+    "llvm-bc" : "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/build/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/IMAViewController.bc",
+    "object" : "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/build/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/IMAViewController.o"
+  },
+  "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/bidscubeSdk/Views/ImageAdView.swift" : {
+    "index-unit-output-path" : "/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/ImageAdView.o",
+    "llvm-bc" : "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/build/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/ImageAdView.bc",
+    "object" : "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/build/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/ImageAdView.o"
+  },
+  "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/bidscubeSdk/Views/NativeAdView.swift" : {
+    "index-unit-output-path" : "/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/NativeAdView.o",
+    "llvm-bc" : "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/build/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/NativeAdView.bc",
+    "object" : "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/build/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/NativeAdView.o"
+  },
+  "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/bidscubeSdk/Views/SDKTestView.swift" : {
+    "index-unit-output-path" : "/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/SDKTestView-2a86c4af3d9fadc846d05b2600b70b66.o",
+    "llvm-bc" : "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/build/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/SDKTestView-2a86c4af3d9fadc846d05b2600b70b66.bc",
+    "object" : "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/build/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/SDKTestView-2a86c4af3d9fadc846d05b2600b70b66.o"
+  },
+  "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/bidscubeSdk/Views/VideoAdView.swift" : {
+    "index-unit-output-path" : "/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/VideoAdView-e16b382ee29082d75e1cc858812c1256.o",
+    "llvm-bc" : "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/build/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/VideoAdView-e16b382ee29082d75e1cc858812c1256.bc",
+    "object" : "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/build/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/VideoAdView-e16b382ee29082d75e1cc858812c1256.o"
+  },
+  "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/testApp-ios/UIViewRepresentableWrapper.swift" : {
+    "index-unit-output-path" : "/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/UIViewRepresentableWrapper.o",
+    "llvm-bc" : "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/build/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/UIViewRepresentableWrapper.bc",
+    "object" : "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/build/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/UIViewRepresentableWrapper.o"
+  },
+  "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/testApp-ios/testApp_iosApp.swift" : {
+    "index-unit-output-path" : "/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/testApp_iosApp.o",
+    "llvm-bc" : "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/build/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/testApp_iosApp.bc",
+    "object" : "/Users/catchman/prj/bidcube/applovin/native/iOS/bidscube-sdk-ios/build/bidscubeSdk.build/Release-iphoneos/BidscubeSDK.build/Objects-normal/arm64/testApp_iosApp.o"
+  }
+}

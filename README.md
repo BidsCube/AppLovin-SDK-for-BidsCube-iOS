@@ -6,25 +6,36 @@ Repository: [https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS](https://
 
 ## Requirements
 
-- iOS 14.0+
-- BidscubeSDKAppLovin 1.0.1+
-- AppLovin MAX SDK 13.0.0+
-- Xcode 12+
-- For MAX mediation: BidCube Placement ID in the MAX `App ID` field
+- iOS 13.0+
+- **AppLovin MAX (mediation):** pod `BidscubeSDKAppLovin` + `AppLovinSDK` 13.x (one Bidscube pod bundles runtime + MAX adapter; no separate core pod)
+- **Standalone app (no MAX):** pod `BidscubeSDK` only (excludes AppLovin adapter sources)
+- Xcode 14+ recommended
+- For MAX mediation: BidCube **Placement ID** in the MAX `App ID` field
 
 ## Add the SDK
 
-### CocoaPods
+### CocoaPods — AppLovin MAX (recommended for mediation)
 
-Assuming your project already uses CocoaPods, add:
+Use a **single** Bidscube pod; it already contains the full SDK and `ALBidscubeMediationAdapter`. You still add AppLovin MAX separately.
 
 ```ruby
-platform :ios, '14.0'
+platform :ios, '13.0'
 use_frameworks!
 
 target 'YourApp' do
-  pod 'AppLovinSDK', '>= 13.0.0'
+  pod 'AppLovinSDK', '>= 13.0.0', '< 14.0'
   pod 'BidscubeSDKAppLovin', '1.0.1'
+end
+```
+
+### CocoaPods — core SDK only (no AppLovin / no MAX adapter)
+
+```ruby
+platform :ios, '13.0'
+use_frameworks!
+
+target 'YourApp' do
+  pod 'BidscubeSDK', '1.0.1'
 end
 ```
 
@@ -50,16 +61,16 @@ To use Bidscube as a Custom network in AppLovin MAX:
 ### 1. Add dependencies
 
 ```ruby
-platform :ios, '14.0'
+platform :ios, '13.0'
 use_frameworks!
 
 target 'YourApp' do
-  pod 'AppLovinSDK', '>= 13.0.0'
+  pod 'AppLovinSDK', '>= 13.0.0', '< 14.0'
   pod 'BidscubeSDKAppLovin', '1.0.1'
 end
 ```
 
-The embedded BidCube runtime is included by the adapter pod. Do not add or initialize a separate `BidscubeSDK` pod in app code.
+The `BidscubeSDKAppLovin` pod ships the full BidCube runtime and the MAX adapter. Do **not** add a second `BidscubeSDK` pod for the same target.
 
 ## Public configuration API
 
@@ -103,8 +114,7 @@ Go to `MAX > Mediation > Manage > Ad Units`, select each ad unit where you want 
 - iOS Adapter Class Name: `ALBidscubeMediationAdapter`
 - App ID: BidCube **Placement ID** used by the adapter for the MAX mediation request
 - Placement ID: optional / leave empty unless your MAX setup explicitly requires a second value
-- Custom Parameters: not used by the current adapter implementation
-- Optional server parameter override: `request_authority` or `ssp_host` = BidCube SSP host / host:port
+- Optional server parameters: `request_authority` or `ssp_host` = BidCube SSP host / host:port (normalized like `adRequestAuthority`)
 
 The adapter reads the BidCube value from the MAX **App ID** field. Even though MAX labels that field as `App ID`, for this integration it must contain the BidCube **Placement ID**.
 If `request_authority` or `ssp_host` is provided in MAX server parameters, the adapter normalizes it and uses it as the ad request authority.

@@ -1,16 +1,20 @@
 PODS:
-  - GoogleAds-IMA-iOS-SDK (3.18.5)
+  - AppLovinSDK (13.6.2)
+  - GoogleAds-IMA-iOS-SDK (3.27.4)
 
 DEPENDENCIES:
-  - GoogleAds-IMA-iOS-SDK (~> 3.18.4)
+  - AppLovinSDK (< 14.0, >= 13.0.0)
+  - GoogleAds-IMA-iOS-SDK (~> 3.19)
 
 SPEC REPOS:
   trunk:
+    - AppLovinSDK
     - GoogleAds-IMA-iOS-SDK
 
 SPEC CHECKSUMS:
-  GoogleAds-IMA-iOS-SDK: 7dbef0755db43698f2f6a3a7ac51a88571945399
+  AppLovinSDK: 91a47db42b6c0e2b83224006aa46b0b88c62c16f
+  GoogleAds-IMA-iOS-SDK: 1c696013d47bc3cafa48b7de9c8196941bd3105b
 
-PODFILE CHECKSUM: 9e4e105efe8a2c156cd74d7fd90420e0bbed4038
+PODFILE CHECKSUM: 79e7819d407c3e49837e350deaf8b70b30e784ba
 
 COCOAPODS: 1.16.2
