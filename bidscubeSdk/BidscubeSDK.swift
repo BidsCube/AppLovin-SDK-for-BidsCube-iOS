@@ -4,6 +4,8 @@ import StoreKit
 
 public final class BidscubeSDK {
     private static var configuration: SDKConfig?
+    private static var globalVideoPlayerType: BidscubeVideoPlayerType = .ima
+    private static var globalCustomVideoPlayerFactory: (any BidscubeCustomVideoPlayerFactory)?
     private static var manualAdPosition: AdPosition?
     private static var responseAdPosition: AdPosition = .unknown
     private static var consentRequired: Bool = false
@@ -18,7 +20,9 @@ public final class BidscubeSDK {
     public static func initialize(config: SDKConfig) {
         self.configuration = config
         Logger.configure(from: config)
-        Logger.info("BidsCube SDK initialized with configuration")
+        Logger.info("Bidscube SDK initialization started")
+        Logger.info("Bidscube SDK initialized with authority=\(config.adRequestAuthority), player=\(config.videoPlayerType.rawValue)")
+        Logger.deviceInfo()
         
         // Initialize SKAdNetwork if enabled
         if config.enableSKAdNetwork {
@@ -56,6 +60,36 @@ public final class BidscubeSDK {
 
     public static func isInitialized() -> Bool {
         return configuration != nil
+    }
+
+    public static func configureVideoPlayer(type: BidscubeVideoPlayerType, factory: (any BidscubeCustomVideoPlayerFactory)? = nil) {
+        globalVideoPlayerType = type
+        globalCustomVideoPlayerFactory = factory
+        Logger.player("Configured video player type: \(type.rawValue)")
+    }
+
+    public static func setCustomVideoPlayerFactory(_ factory: any BidscubeCustomVideoPlayerFactory) {
+        globalVideoPlayerType = .custom
+        globalCustomVideoPlayerFactory = factory
+        Logger.player("Registered custom video player factory from client")
+    }
+
+    static func currentVideoPlayerType() -> BidscubeVideoPlayerType {
+        if globalVideoPlayerType == .custom || globalCustomVideoPlayerFactory != nil {
+            return .custom
+        }
+        return configuration?.videoPlayerType ?? .ima
+    }
+
+    static func makeCustomVideoPlayerView() -> (UIView & BidscubeCustomVideoPlayer)? {
+        guard currentVideoPlayerType() == .custom else { return nil }
+        let factory = globalCustomVideoPlayerFactory ?? configuration?.customVideoPlayerFactory
+        guard let factory else {
+            Logger.warning("Custom video player type selected, but no factory provided. Falling back to IMA.")
+            return nil
+        }
+        Logger.player("Creating custom video player from client factory")
+        return factory.makeVideoPlayer()
     }
     
     public static func getConfiguration() -> SDKConfig? {
@@ -170,7 +204,7 @@ public final class BidscubeSDK {
         )
     }
     public static func showImageAd(_ placementId: String, _ callback: AdCallback?) {
-        print("showImageAd called with placementId: \(placementId)")
+        Logger.imageAd("Show image/interstitial requested for placement \(placementId)")
         callback?.onAdLoading(placementId)
         
         // Build POST URL and request body
@@ -239,8 +273,7 @@ public final class BidscubeSDK {
     }
 
     public static func getImageAdView(_ placementId: String, _ callback: AdCallback?) -> UIView {
-        print("🚀 DEBUG: getImageAdView called for placement: \(placementId)")
-        Logger.info("getImageAdView called for placement: \(placementId)")
+        Logger.imageAd("Loading image/banner view for placement \(placementId)")
         
         
         let effectivePosition = getEffectiveAdPosition()
@@ -281,6 +314,7 @@ public final class BidscubeSDK {
     }
 
     public static func showVideoAd(_ placementId: String, _ callback: AdCallback?) {
+        Logger.videoAd("Show video/rewarded requested for placement \(placementId)")
         callback?.onAdLoading(placementId)
         
         // Build GET URL with SKAdNetwork parameters
@@ -328,7 +362,7 @@ public final class BidscubeSDK {
         _ placementId: String,
         _ callback: AdCallback?
     ) -> UIView {
-       
+        Logger.videoAd("Loading video view for placement \(placementId)")
         let view = createOnMainThread { VideoAdView() }
         
         callback?.onAdLoading(placementId)
@@ -367,6 +401,7 @@ public final class BidscubeSDK {
     }
 
     public static func showNativeAd(_ placementId: String, width: Int, height: Int, _ callback: AdCallback?) {
+        Logger.nativeAd("Show native requested for placement \(placementId) with size \(width)x\(height)")
         callback?.onAdLoading(placementId)
         
         // Build GET URL with SKAdNetwork parameters
@@ -434,7 +469,7 @@ public final class BidscubeSDK {
     }
 
     public static func getNativeAdView(_ placementId: String, width: Int, height: Int, _ callback: AdCallback?) -> UIView {
-        Logger.info("getNativeAdView called for placement: \(placementId)")
+        Logger.nativeAd("Loading native view for placement \(placementId) with size \(width)x\(height)")
         
         let view: NativeAdView = createOnMainThread { NativeAdView() }
         

@@ -1,6 +1,6 @@
 Pod::Spec.new do |spec|
   spec.name         = "BidscubeSDKAppLovin"
-  spec.version      = "1.0.3"
+  spec.version      = "1.0.3.1"
   spec.summary      = "Bidscube iOS SDK with embedded AppLovin MAX adapter (single dependency for mediation)"
   spec.description  = <<-DESC
                       All Bidscube runtime sources plus the AppLovin MAX mediation adapter in one pod.

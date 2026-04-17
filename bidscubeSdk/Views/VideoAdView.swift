@@ -6,6 +6,7 @@ public final class VideoAdView: UIView {
     private let webView = WKWebView()
     private let loadingLabel = UILabel()
     private var imaVideoHandler: IMAVideoAdHandler?
+    private var customVideoPlayerView: (UIView & BidscubeCustomVideoPlayer)?
     private var placementId: String = ""
     private weak var callback: AdCallback?
     private weak var parentViewController: UIViewController?
@@ -74,7 +75,11 @@ public final class VideoAdView: UIView {
     }
     
     public func cleanup() {
+        customVideoPlayerView?.cleanup()
+        customVideoPlayerView?.removeFromSuperview()
+        customVideoPlayerView = nil
         imaVideoHandler?.cleanup()
+        imaVideoHandler?.removeFromSuperview()
         imaVideoHandler = nil
     }
     
@@ -89,10 +94,32 @@ public final class VideoAdView: UIView {
     public func loadVASTContent(_ vastXML: String, clickURL: String? = nil) {
         loadingLabel.isHidden = false
         loadingLabel.text = "Loading VAST Ad..."
+        Logger.player("Video ad request resolved for placement \(placementId). Starting player load from XML payload.")
         
         self.clickURL = clickURL
         
         cleanup()
+
+        if let customPlayer = BidscubeSDK.makeCustomVideoPlayerView() {
+            customVideoPlayerView = customPlayer
+            customPlayer.setPlacementInfo(placementId, callback: callback)
+            customPlayer.setParentViewController(parentViewController)
+            addSubview(customPlayer)
+            customPlayer.translatesAutoresizingMaskIntoConstraints = false
+            NSLayoutConstraint.activate([
+                customPlayer.topAnchor.constraint(equalTo: topAnchor),
+                customPlayer.leadingAnchor.constraint(equalTo: leadingAnchor),
+                customPlayer.trailingAnchor.constraint(equalTo: trailingAnchor),
+                customPlayer.bottomAnchor.constraint(equalTo: bottomAnchor)
+            ])
+            Logger.player("Using client custom video player for placement \(placementId)")
+            customPlayer.loadVAST(source: vastXML, isURL: false, clickURL: clickURL)
+            webView.isHidden = true
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                self.loadingLabel.isHidden = true
+            }
+            return
+        }
         
         imaVideoHandler = IMAVideoAdHandler(vastXML: vastXML, clickURL: clickURL)
         imaVideoHandler?.setPlacementInfo(placementId, callback: callback)
@@ -121,17 +148,39 @@ public final class VideoAdView: UIView {
             self.loadingLabel.isHidden = true
         }
         
-        print(" VideoAdView: Loading VAST XML content with IMA SDK")
-        print("⚠️ VideoAdView: For SwiftUI apps, consider using IMAVideoAdView instead for better view controller hierarchy")
+        Logger.player("Using default IMA player for placement \(placementId) with inline VAST XML")
+        Logger.warning("For SwiftUI apps, consider using IMAVideoAdView instead for better view controller hierarchy", prefix: Constants.LogPrefixes.player)
     }
     
     public func loadVASTFromURL(_ vastURL: String, clickURL: String? = nil) {
         loadingLabel.isHidden = false
         loadingLabel.text = "Loading VAST Ad..."
+        Logger.player("Video ad request resolved for placement \(placementId). Starting player load from URL \(vastURL)")
         
         self.clickURL = clickURL
         
         cleanup()
+
+        if let customPlayer = BidscubeSDK.makeCustomVideoPlayerView() {
+            customVideoPlayerView = customPlayer
+            customPlayer.setPlacementInfo(placementId, callback: callback)
+            customPlayer.setParentViewController(parentViewController)
+            addSubview(customPlayer)
+            customPlayer.translatesAutoresizingMaskIntoConstraints = false
+            NSLayoutConstraint.activate([
+                customPlayer.topAnchor.constraint(equalTo: topAnchor),
+                customPlayer.leadingAnchor.constraint(equalTo: leadingAnchor),
+                customPlayer.trailingAnchor.constraint(equalTo: trailingAnchor),
+                customPlayer.bottomAnchor.constraint(equalTo: bottomAnchor)
+            ])
+            Logger.player("Using client custom video player for placement \(placementId)")
+            customPlayer.loadVAST(source: vastURL, isURL: true, clickURL: clickURL)
+            webView.isHidden = true
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                self.loadingLabel.isHidden = true
+            }
+            return
+        }
         
         imaVideoHandler = IMAVideoAdHandler(vastURL: vastURL, clickURL: clickURL)
         imaVideoHandler?.setPlacementInfo(placementId, callback: callback)
@@ -165,19 +214,22 @@ public final class VideoAdView: UIView {
         loadingLabel.isHidden = false
         loadingLabel.text = "Loading Video Ad..."
         
-        print("🔍 VideoAdView: Making HTTP request to: \(url.absoluteString)")
+        Logger.videoAd("Loading video ad for placement \(placementId)")
+        Logger.network("Making SSP request to: \(url.absoluteString)")
         
         URLSession.shared.dataTask(with: url) { [weak self] data, response, error in
             DispatchQueue.main.async {
                 guard let self = self else { return }
                 
                 if let error = error {
+                    Logger.error("Video ad request failed for placement \(self.placementId): \(error.localizedDescription)", prefix: Constants.LogPrefixes.videoAd)
                     self.loadingLabel.text = "Error: \(error.localizedDescription)"
                     return
                 }
                 
                 guard let data = data,
                       let content = String(data: data, encoding: .utf8) else {
+                    Logger.error("Video ad request returned invalid response for placement \(self.placementId)", prefix: Constants.LogPrefixes.videoAd)
                     self.loadingLabel.text = "Error: Invalid response"
                     return
                 }
@@ -189,21 +241,25 @@ public final class VideoAdView: UIView {
                         
                         if let positionValue = json["position"] as? Int,
                            let position = AdPosition(rawValue: positionValue) {
-                            print("🔍 VideoAdView: Received position from server: \(positionValue) - \(self.displayName(for: position))")
+                            Logger.videoAd("Received position \(positionValue) (\(self.displayName(for: position))) for placement \(self.placementId)")
                             DispatchQueue.main.async {
                                 BidscubeSDK.setResponseAdPosition(position)
                             }
                         }
                         
                         if adm.hasPrefix("http") {
+                            Logger.player("Player source for placement \(self.placementId): remote VAST URL")
                             self.loadVASTFromURL(adm)
                         } else {
+                            Logger.player("Player source for placement \(self.placementId): inline VAST XML")
                             self.loadVASTContent(adm)
                         }
                     } else {
+                        Logger.player("Player source for placement \(self.placementId): raw response treated as inline VAST XML")
                         self.loadVASTContent(content)
                     }
                 } catch {
+                    Logger.warning("Video JSON parsing failed for placement \(self.placementId); falling back to raw VAST payload", prefix: Constants.LogPrefixes.videoAd)
                     self.loadVASTContent(content)
                 }
             }

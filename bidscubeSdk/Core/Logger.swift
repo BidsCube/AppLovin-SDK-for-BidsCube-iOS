@@ -68,6 +68,16 @@ public class Logger {
     public static func videoAd(_ message: String) {
         info(message, prefix: Constants.LogPrefixes.videoAd)
     }
+
+    /// Log AppLovin/MAX-related messages
+    public static func appLovin(_ message: String) {
+        info(message, prefix: Constants.LogPrefixes.appLovin)
+    }
+
+    /// Log player-related messages
+    public static func player(_ message: String) {
+        info(message, prefix: Constants.LogPrefixes.player)
+    }
     
     /// Log native ad-related messages
     public static func nativeAd(_ message: String) {

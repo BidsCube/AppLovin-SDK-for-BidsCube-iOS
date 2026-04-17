@@ -7,6 +7,8 @@ public final class SDKConfig {
     public let defaultAdTimeoutMs: Int
     public let defaultAdPosition: AdPosition
     public let adRequestAuthority: String
+    public let videoPlayerType: BidscubeVideoPlayerType
+    public let customVideoPlayerFactory: (any BidscubeCustomVideoPlayerFactory)?
     public let enableSKAdNetwork: Bool
     public let skAdNetworkId: String?
     public let skAdNetworkConversionValue: Int
@@ -20,6 +22,8 @@ public final class SDKConfig {
                  defaultAdTimeoutMs: Int,
                  defaultAdPosition: AdPosition,
                  adRequestAuthority: String,
+                 videoPlayerType: BidscubeVideoPlayerType,
+                 customVideoPlayerFactory: (any BidscubeCustomVideoPlayerFactory)?,
                  enableSKAdNetwork: Bool,
                  skAdNetworkId: String?,
                  skAdNetworkConversionValue: Int) {
@@ -28,6 +32,8 @@ public final class SDKConfig {
         self.defaultAdTimeoutMs = defaultAdTimeoutMs
         self.defaultAdPosition = defaultAdPosition
         self.adRequestAuthority = URLBuilder.normalizedAdRequestAuthority(from: adRequestAuthority)
+        self.videoPlayerType = videoPlayerType
+        self.customVideoPlayerFactory = customVideoPlayerFactory
         self.enableSKAdNetwork = enableSKAdNetwork
         self.skAdNetworkId = skAdNetworkId
         self.skAdNetworkConversionValue = skAdNetworkConversionValue
@@ -39,6 +45,8 @@ public final class SDKConfig {
         private var defaultAdTimeoutMs: Int = 30000
         private var defaultAdPosition: AdPosition = .unknown
         private var adRequestAuthority: String = DeviceInfo.defaultAdRequestAuthority
+        private var videoPlayerType: BidscubeVideoPlayerType = .ima
+        private var customVideoPlayerFactory: (any BidscubeCustomVideoPlayerFactory)?
         private var enableSKAdNetwork: Bool = false
         private var skAdNetworkId: String? = nil
         private var skAdNetworkConversionValue: Int = 0
@@ -72,6 +80,19 @@ public final class SDKConfig {
         @discardableResult
         public func adRequestAuthority(_ authority: String?) -> Builder {
             self.adRequestAuthority = URLBuilder.normalizedAdRequestAuthority(from: authority)
+            return self
+        }
+
+        @discardableResult
+        public func videoPlayerType(_ value: BidscubeVideoPlayerType) -> Builder {
+            self.videoPlayerType = value
+            return self
+        }
+
+        @discardableResult
+        public func customVideoPlayerFactory(_ factory: any BidscubeCustomVideoPlayerFactory) -> Builder {
+            self.customVideoPlayerFactory = factory
+            self.videoPlayerType = .custom
             return self
         }
 
@@ -112,6 +133,8 @@ public final class SDKConfig {
                 defaultAdTimeoutMs: defaultAdTimeoutMs,
                 defaultAdPosition: defaultAdPosition,
                 adRequestAuthority: adRequestAuthority,
+                videoPlayerType: videoPlayerType,
+                customVideoPlayerFactory: customVideoPlayerFactory,
                 enableSKAdNetwork: enableSKAdNetwork,
                 skAdNetworkId: skAdNetworkId,
                 skAdNetworkConversionValue: skAdNetworkConversionValue

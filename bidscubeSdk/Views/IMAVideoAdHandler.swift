@@ -90,7 +90,7 @@ public final class IMAVideoAdHandler: UIView {
     
     public func loadAd() {
         if adsLoader == nil || adDisplayContainer == nil {
-            print("🔄 IMAVideoAdHandler: Setting up IMA before loading ad")
+            Logger.player("Setting up IMA player before loading ad for placement \(placementId)")
             setupIMA()
         }
         
@@ -104,9 +104,7 @@ public final class IMAVideoAdHandler: UIView {
             return
         }
         
-        print("🔍 IMAVideoAdHandler: Starting ad load...")
-        print("   - AdDisplayContainer: \(adDisplayContainer)")
-        print("   - ViewController: \(adDisplayContainer.adContainerViewController?.description ?? "nil")")
+        Logger.player("IMA player is ready. Starting ad load for placement \(placementId)")
         
         if let vastURL = vastURL {
             let adsRequest = IMAAdsRequest(
@@ -203,6 +201,7 @@ public final class IMAVideoAdHandler: UIView {
             print("Error: IMAVideoAdHandler: No view controller available for IMAAdDisplayContainer")
         }
         
+        Logger.player("Initializing default IMA player for placement \(placementId)")
         let settings = IMASettings()
         settings.enableDebugMode = true
         settings.maxRedirects = 5  
@@ -396,7 +395,7 @@ public final class IMAVideoAdHandler: UIView {
 extension IMAVideoAdHandler: IMAAdsLoaderDelegate {
     
     public func adsLoader(_ loader: IMAAdsLoader, adsLoadedWith adsLoadedData: IMAAdsLoadedData) {
-        print(" IMAVideoAdHandler: Ads loaded successfully")
+        Logger.player("IMA ads loaded successfully for placement \(placementId)")
         
         adsManager = adsLoadedData.adsManager
         
@@ -410,7 +409,7 @@ extension IMAVideoAdHandler: IMAAdsLoaderDelegate {
         let errorMessage = adErrorData.adError.message ?? "Unknown error"
         let errorCode = adErrorData.adError.code.rawValue
         
-        print("Error: IMAVideoAdHandler: Failed to load ads: \(errorMessage)")
+        Logger.error("IMA failed to load ads for placement \(placementId): \(errorMessage)", prefix: Constants.LogPrefixes.player)
         print("   - Error code: \(errorCode)")
         print("   - Error type: \(adErrorData.adError.type)")
         
@@ -444,17 +443,15 @@ extension IMAVideoAdHandler: IMAAdsLoaderDelegate {
 extension IMAVideoAdHandler: IMAAdsManagerDelegate {
     
     public func adsManager(_ adsManager: IMAAdsManager, didReceive event: IMAAdEvent) {
-        print("🎯 IMAVideoAdHandler: Ad event: \(event.type)")
+        Logger.player("IMA event for placement \(placementId): \(event.type)")
         
         switch event.type {
         case .LOADED:
-            print("📺 IMAVideoAdHandler: Ad loaded, starting playback")
-            print("   - AdDisplayContainer: \(adDisplayContainer?.description ?? "nil")")
-            print("   - ViewController: \(adDisplayContainer?.adContainerViewController?.description ?? "nil")")
+            Logger.player("IMA player loaded ad and is starting playback for placement \(placementId)")
             adsManager.start()
             
         case .STARTED:
-            print("▶️ IMAVideoAdHandler: Ad started playing")
+            Logger.player("IMA player started playback for placement \(placementId)")
             callback?.onVideoAdStarted(placementId)
             hideCloseButton()
             
@@ -465,7 +462,7 @@ extension IMAVideoAdHandler: IMAAdsManagerDelegate {
             }
             
         case .COMPLETE:
-            print("🏁 IMAVideoAdHandler: Ad completed")
+            Logger.player("IMA player completed playback for placement \(placementId)")
             callback?.onVideoAdCompleted(placementId)
             showCloseButton()
             
@@ -477,7 +474,7 @@ extension IMAVideoAdHandler: IMAAdsManagerDelegate {
             }
             
         case .SKIPPED:
-            print("⏭️ IMAVideoAdHandler: Ad skipped")
+            Logger.player("IMA player skipped playback for placement \(placementId)")
             callback?.onVideoAdSkipped(placementId)
             showCloseButton()
             
@@ -489,11 +486,11 @@ extension IMAVideoAdHandler: IMAAdsManagerDelegate {
             }
             
         case .CLICKED:
-            print("🖱️ IMAVideoAdHandler: Ad clicked")
+            Logger.player("IMA player click event for placement \(placementId)")
             callback?.onAdClicked(placementId)
             
         case .PAUSE:
-            print("⏸️ IMAVideoAdHandler: Ad paused")
+            Logger.player("IMA player paused for placement \(placementId)")
             
             
             if let adViewController = findViewController() as? AdViewController {
@@ -502,7 +499,7 @@ extension IMAVideoAdHandler: IMAAdsManagerDelegate {
             }
             
         case .RESUME:
-            print("▶️ IMAVideoAdHandler: Ad resumed")
+            Logger.player("IMA player resumed for placement \(placementId)")
             
             
             if let adViewController = findViewController() as? AdViewController {
@@ -511,12 +508,12 @@ extension IMAVideoAdHandler: IMAAdsManagerDelegate {
             }
             
         default:
-            print("Info: IMAVideoAdHandler: Other ad event: \(event.type)")
+            Logger.player("IMA player other event for placement \(placementId): \(event.type)")
         }
     }
     
     public func adsManager(_ adsManager: IMAAdsManager, didReceive error: IMAAdError) {
-        print("Error: IMAVideoAdHandler: Ad error: \(error.message)")
+        Logger.error("IMA player error for placement \(placementId): \(error.message ?? "Unknown error")", prefix: Constants.LogPrefixes.player)
         callback?.onAdFailed(placementId, errorCode: error.code.rawValue, errorMessage: error.message!)
     }
     

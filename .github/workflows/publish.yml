@@ -64,7 +64,7 @@ jobs:
             # For manual dispatch: use latest tag (required for pod spec lint — tag must exist on remote)
             VERSION=$(git describe --tags --abbrev=0 2>/dev/null || true)
             if [[ -z "$VERSION" ]]; then
-              echo "::error::No git tag found. Create and push a version tag (e.g. git tag v1.0.3 && git push origin v1.0.3) before publishing."
+              echo "::error::No git tag found. Create and push a version tag (e.g. git tag v1.0.3.1 && git push origin v1.0.3.1) before publishing."
               exit 1
             fi
             VERSION=${VERSION#v}

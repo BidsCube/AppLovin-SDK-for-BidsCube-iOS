@@ -23,7 +23,7 @@ use_frameworks!
 
 target 'YourApp' do
   pod 'AppLovinSDK', '>= 13.0.0', '< 14.0'
-  pod 'BidscubeSDKAppLovin', '1.0.3'
+  pod 'BidscubeSDKAppLovin', '1.0.3.1'
 end
 ```
 
@@ -59,6 +59,38 @@ Follow AppLovin’s guide for custom SDK networks:
 
 If `request_authority` or `ssp_host` is set, the adapter uses it as the ad request authority.
 
+## Custom video player
+
+Clients can choose the video player through SDK configuration.
+
+By default, the SDK uses the built-in **IMA** player. To provide a custom player:
+
+```swift
+final class MyVideoPlayerView: UIView, BidscubeCustomVideoPlayer {
+    func setPlacementInfo(_ placementId: String, callback: AdCallback?) {}
+    func setParentViewController(_ viewController: UIViewController?) {}
+    func loadVAST(source: String, isURL: Bool, clickURL: String?) {
+        // Render your own player here
+    }
+    func cleanup() {}
+}
+
+final class MyVideoPlayerFactory: BidscubeCustomVideoPlayerFactory {
+    func makeVideoPlayer() -> (UIView & BidscubeCustomVideoPlayer) {
+        MyVideoPlayerView()
+    }
+}
+
+BidscubeSDK.configureVideoPlayer(
+    type: .custom,
+    factory: MyVideoPlayerFactory()
+)
+```
+
+Call this before AppLovin MAX initialization if you use the adapter path.
+
+If `.custom` is selected without a factory, the SDK logs a warning and falls back to the default IMA player.
+
 ### Supported ad formats
 
 Banner, MREC, Interstitial, Rewarded, Native.
@@ -87,4 +119,4 @@ MIT. See [LICENSE](LICENSE).
 
 ## Version
 
-AppLovin Bidscube iOS SDK 1.0.3.
+AppLovin Bidscube iOS SDK 1.0.3.1.

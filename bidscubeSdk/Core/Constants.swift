@@ -29,7 +29,7 @@ public struct Constants {
     }
     
     public static let userAgentPrefix = "BidscubeSDK-iOS"
-    public static let sdkVersion = "1.0.3"
+    public static let sdkVersion = "1.0.3.1"
     
     public struct ErrorCodes {
         public static let invalidURL = -1
@@ -53,6 +53,8 @@ public struct Constants {
         public static let sdk = "📱 BidscubeSDK"
         public static let urlBuilder = "🔗 URLBuilder"
         public static let network = "🌐 Network"
+        public static let appLovin = "🧩 AppLovin"
+        public static let player = "🎬 Player"
         public static let imageAd = "🖼️ ImageAd"
         public static let videoAd = "🎥 VideoAd"
         public static let nativeAd = "📱 NativeAd"
