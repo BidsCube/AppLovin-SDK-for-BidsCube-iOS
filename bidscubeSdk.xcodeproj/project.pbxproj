@@ -7,44 +7,14 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		0472AAC92EDDF5E300C51A5A /* BidscubeSDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0472AAB42EDDF5E200C51A5A /* BidscubeSDK.framework */; };
-		0472AACA2EDDF5E300C51A5A /* BidscubeSDK.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 0472AAB42EDDF5E200C51A5A /* BidscubeSDK.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		4C1BE4B1161D424505468F9C /* Pods_BidscubeSDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 67C6905002F67C6941A0A3C5 /* Pods_BidscubeSDK.framework */; settings = {ATTRIBUTES = (Required, ); }; };
 		83C597C3AACF24F90F93CF42 /* Pods_testApp_ios.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CCC1FF7AE42E6B912D9D4CBF /* Pods_testApp_ios.framework */; };
 /* End PBXBuildFile section */
-
-/* Begin PBXContainerItemProxy section */
-		0472AAC72EDDF5E300C51A5A /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 04A38F652E69C68500FC2662 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 0472AAB32EDDF5E200C51A5A;
-			remoteInfo = BidscubeSDK;
-		};
-/* End PBXContainerItemProxy section */
-
-/* Begin PBXCopyFilesBuildPhase section */
-		0472AACE2EDDF5E300C51A5A /* Embed Frameworks */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 10;
-			files = (
-				0472AACA2EDDF5E300C51A5A /* BidscubeSDK.framework in Embed Frameworks */,
-			);
-			name = "Embed Frameworks";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		0472AA882EDDF3DA00C51A5A /* testApp-ios.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "testApp-ios.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		0472AAB42EDDF5E200C51A5A /* BidscubeSDK.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = BidscubeSDK.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		15C415F0AA61BF2D21006DE4 /* Pods-testApp-ios.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-testApp-ios.debug.xcconfig"; path = "Target Support Files/Pods-testApp-ios/Pods-testApp-ios.debug.xcconfig"; sourceTree = "<group>"; };
-		1B55B36A905074BAB6896980 /* Pods-BidscubeSDK.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BidscubeSDK.release.xcconfig"; path = "Target Support Files/Pods-BidscubeSDK/Pods-BidscubeSDK.release.xcconfig"; sourceTree = "<group>"; };
 		464F057DEC84650EABE83A3E /* Pods-testApp-ios.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-testApp-ios.release.xcconfig"; path = "Target Support Files/Pods-testApp-ios/Pods-testApp-ios.release.xcconfig"; sourceTree = "<group>"; };
-		60C421EE7FD997AA3A2E3D9F /* Pods-BidscubeSDK.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BidscubeSDK.debug.xcconfig"; path = "Target Support Files/Pods-BidscubeSDK/Pods-BidscubeSDK.debug.xcconfig"; sourceTree = "<group>"; };
-		67C6905002F67C6941A0A3C5 /* Pods_BidscubeSDK.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_BidscubeSDK.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		CCC1FF7AE42E6B912D9D4CBF /* Pods_testApp_ios.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_testApp_ios.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -53,30 +23,16 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Controller/ViewController.swift,
+				Controller/WindowedAdTestViewController.swift,
+				Logger/SDKLogger.swift,
 				Tests/ConsentTestView.swift,
 				Tests/SKAdNetworkTestView.swift,
 				Tests/WindowedAdTestView.swift,
 				Views/ContentView.swift,
+				Views/CustomAdRenderView.swift,
 				Views/SDKTestView.swift,
-				Views/VideoAdView.swift,
 			);
 			target = 0472AAB32EDDF5E200C51A5A /* BidscubeSDK */;
-		};
-		044C5A092EDE40700030D8C4 /* Exceptions for "testApp-ios" folder in "BidscubeSDK" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				testApp_iosApp.swift,
-				UIViewRepresentableWrapper.swift,
-			);
-			target = 0472AAB32EDDF5E200C51A5A /* BidscubeSDK */;
-		};
-		044C5A1D2EDE41650030D8C4 /* Exceptions for "bidscubeSdk" folder in "testApp-ios" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Controller/WindowedAdTestViewController.swift,
-				Logger/SDKLogger.swift,
-			);
-			target = 0472AA872EDDF3DA00C51A5A /* testApp-ios */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
@@ -84,7 +40,6 @@
 		041A51DF2E7013FA00DC462A /* testApp-ios */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				044C5A092EDE40700030D8C4 /* Exceptions for "testApp-ios" folder in "BidscubeSDK" target */,
 			);
 			path = "testApp-ios";
 			sourceTree = "<group>";
@@ -134,7 +89,6 @@
 		04A38F702E69C68500FC2662 /* bidscubeSdk */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				044C5A1D2EDE41650030D8C4 /* Exceptions for "bidscubeSdk" folder in "testApp-ios" target */,
 				044C5A072EDE40540030D8C4 /* Exceptions for "bidscubeSdk" folder in "BidscubeSDK" target */,
 			);
 			path = bidscubeSdk;
@@ -154,7 +108,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0472AAC92EDDF5E300C51A5A /* BidscubeSDK.framework in Frameworks */,
 				83C597C3AACF24F90F93CF42 /* Pods_testApp_ios.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -163,7 +116,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4C1BE4B1161D424505468F9C /* Pods_BidscubeSDK.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -201,7 +153,6 @@
 			isa = PBXGroup;
 			children = (
 				CCC1FF7AE42E6B912D9D4CBF /* Pods_testApp_ios.framework */,
-				67C6905002F67C6941A0A3C5 /* Pods_BidscubeSDK.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -211,8 +162,6 @@
 			children = (
 				15C415F0AA61BF2D21006DE4 /* Pods-testApp-ios.debug.xcconfig */,
 				464F057DEC84650EABE83A3E /* Pods-testApp-ios.release.xcconfig */,
-				60C421EE7FD997AA3A2E3D9F /* Pods-BidscubeSDK.debug.xcconfig */,
-				1B55B36A905074BAB6896980 /* Pods-BidscubeSDK.release.xcconfig */,
 			);
 			path = Pods;
 			sourceTree = "<group>";
@@ -238,13 +187,11 @@
 				0472AA842EDDF3DA00C51A5A /* Sources */,
 				0472AA852EDDF3DA00C51A5A /* Frameworks */,
 				0472AA862EDDF3DA00C51A5A /* Resources */,
-				0472AACE2EDDF5E300C51A5A /* Embed Frameworks */,
 				60E5F364EC961EFAAC056A8B /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				0472AAC82EDDF5E300C51A5A /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				0472AA892EDDF3DA00C51A5A /* testApp */,
@@ -258,7 +205,6 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 0472AACB2EDDF5E300C51A5A /* Build configuration list for PBXNativeTarget "BidscubeSDK" */;
 			buildPhases = (
-				6AEEE7DACBFD098A650FB90A /* [CP] Check Pods Manifest.lock */,
 				0472AAAF2EDDF5E200C51A5A /* Headers */,
 				0472AAB02EDDF5E200C51A5A /* Sources */,
 				0472AAB12EDDF5E200C51A5A /* Frameworks */,
@@ -269,7 +215,7 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				0472AAB52EDDF5E200C51A5A /* bidscubeSdk */,
+				04A38F702E69C68500FC2662 /* bidscubeSdk */,
 			);
 			name = BidscubeSDK;
 			productName = BidscubeSDK;
@@ -375,28 +321,6 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-testApp-ios/Pods-testApp-ios-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		6AEEE7DACBFD098A650FB90A /* [CP] Check Pods Manifest.lock */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
-				"${PODS_ROOT}/Manifest.lock",
-			);
-			name = "[CP] Check Pods Manifest.lock";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-BidscubeSDK-checkManifestLockResult.txt",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
-			showEnvVarsInLog = 0;
-		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -416,14 +340,6 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
-/* Begin PBXTargetDependency section */
-		0472AAC82EDDF5E300C51A5A /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 0472AAB32EDDF5E200C51A5A /* BidscubeSDK */;
-			targetProxy = 0472AAC72EDDF5E300C51A5A /* PBXContainerItemProxy */;
-		};
-/* End PBXTargetDependency section */
-
 /* Begin XCBuildConfiguration section */
 		0472AAA72EDDF3DD00C51A5A /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -435,12 +351,8 @@
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
-				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				INFOPLIST_FILE = "testApp-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -470,12 +382,8 @@
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
-				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				INFOPLIST_FILE = "testApp-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -497,7 +405,6 @@
 		};
 		0472AACC2EDDF5E300C51A5A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 60C421EE7FD997AA3A2E3D9F /* Pods-BidscubeSDK.debug.xcconfig */;
 			buildSettings = {
 				BUILD_LIBRARY_FOR_DISTRIBUTION = NO;
 				CODE_SIGN_IDENTITY = "";
@@ -510,7 +417,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -537,7 +444,6 @@
 		};
 		0472AACD2EDDF5E300C51A5A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 1B55B36A905074BAB6896980 /* Pods-BidscubeSDK.release.xcconfig */;
 			buildSettings = {
 				BUILD_LIBRARY_FOR_DISTRIBUTION = NO;
 				CODE_SIGN_IDENTITY = "";
@@ -550,7 +456,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
