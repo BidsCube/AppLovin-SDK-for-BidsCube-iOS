@@ -43,6 +43,14 @@ if [ -f "README.md" ]; then
     echo "✅ Updated README.md version references"
 fi
 
+if [ -f "Podfile.example" ]; then
+    sed -i.bak "s/pod 'BidscubeSDKAppLovin', '[^']*'/pod 'BidscubeSDKAppLovin', '$VERSION'/" Podfile.example
+    rm -f Podfile.example.bak
+    echo "✅ Updated Podfile.example"
+fi
+
+"$(dirname "$0")/sync-cocoapods-spec.sh"
+
 echo "🎉 Version $VERSION updated successfully!"
 echo ""
 echo "Next steps:"

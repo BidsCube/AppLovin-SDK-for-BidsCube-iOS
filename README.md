@@ -14,27 +14,21 @@ Repository: [https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS](https://
 
 ## Installation
 
-`BidscubeSDKAppLovin` is installed from this GitHub repository. The pod is **not yet on CocoaPods Trunk**, so `pod 'BidscubeSDKAppLovin', '1.0.4'` alone will fail with *Unable to find a specification*.
+Podspecs are hosted **in this GitHub repository** (CocoaPods spec-repo layout). **CocoaPods Trunk is not used.**
 
-Add AppLovin MAX and Bidscube to your `Podfile`:
+Add both sources, AppLovin MAX, and Bidscube to your `Podfile`:
 
 ```ruby
 platform :ios, '13.0'
 use_frameworks!
 
+source 'https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS.git'
+source 'https://cdn.cocoapods.org/'
+
 target 'YourApp' do
   pod 'AppLovinSDK', '>= 13.0.0', '< 14.0'
-  pod 'BidscubeSDKAppLovin',
-      :git => 'https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS.git',
-      :tag => 'v1.0.4'
+  pod 'BidscubeSDKAppLovin', '1.0.4'
 end
-```
-
-Alternative (remote podspec URL):
-
-```ruby
-pod 'BidscubeSDKAppLovin',
-    :podspec => 'https://raw.githubusercontent.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS/v1.0.4/BidscubeSDKAppLovin.podspec'
 ```
 
 Then:
@@ -46,14 +40,6 @@ pod install --repo-update
 Open the generated `.xcworkspace` in Xcode.
 
 See also [`Podfile.example`](Podfile.example).
-
-### CocoaPods Trunk (optional)
-
-After maintainers publish with `scripts/publish-cocoapods.sh` (or the GitHub **Publish SDK** workflow on tag push), you can switch to:
-
-```ruby
-pod 'BidscubeSDKAppLovin', '1.0.4'
-```
 
 ### Swift Package Manager
 
@@ -154,7 +140,7 @@ Call this before AppLovin MAX initialization if you use a custom player. If `.cu
 
 ## Troubleshooting
 
-- **`Unable to find a specification for 'BidscubeSDKAppLovin'`:** the pod is not on CocoaPods Trunk yet. Use the `:git` + `:tag` install from [Installation](#installation) above (or the `:podspec` URL).
+- **`Unable to find a specification for 'BidscubeSDKAppLovin'`:** add `source 'https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS.git'` above your pods (see [Installation](#installation)), then run `pod install --repo-update`.
 - **Ads do not load:** confirm **App ID** contains the correct BidCube **Placement ID**.
 - **SSP override:** use only host or `host:port` in `request_authority` / `ssp_host`.
 - **Custom network not found:** class name must be exactly `ALBidscubeMediationAdapter`.
