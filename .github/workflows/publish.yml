@@ -13,8 +13,6 @@ jobs:
   validate:
     name: Validate on macOS
     runs-on: macos-latest
-    outputs:
-      version: ${{ steps.version.outputs.version }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -38,121 +36,33 @@ jobs:
           else
             VERSION=$(git describe --tags --abbrev=0 2>/dev/null || true)
             if [[ -z "$VERSION" ]]; then
-              echo "::error::No git tag found. Create and push a version tag (e.g. git tag v1.0.4 && git push origin v1.0.4) before publishing."
+              echo "::error::No git tag found."
               exit 1
             fi
             VERSION=${VERSION#v}
           fi
           echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "Extracted version: $VERSION"
 
-      - name: Update podspec versions
-        run: |
-          set -euo pipefail
-          for SPEC in BidscubeSDKAppLovin.podspec bidscubeSdk.podspec; do
-            if [ -f "$SPEC" ]; then
-              sed -i '' "s|spec.version.*=.*|spec.version      = \"${{ steps.version.outputs.version }}\"|" "$SPEC"
-              echo "Updated $SPEC"
-            fi
-          done
+      - name: Sync in-repo CocoaPods spec
+        run: ./scripts/sync-cocoapods-spec.sh
 
-      - name: Rewrite podspec source URLs
+      - name: Verify spec layout
         run: |
-          REPO_URL="${{ github.server_url }}/${{ github.repository }}.git"
-          TAG="v${{ steps.version.outputs.version }}"
-          for SPEC in BidscubeSDKAppLovin.podspec bidscubeSdk.podspec; do
-            if [ -f "$SPEC" ]; then
-              sed -i '' "s|:git => \"[^\"]*\"|:git => \"$REPO_URL\"|" "$SPEC"
-              sed -i '' "s|:tag => \"v[^\"]*\"|:tag => \"$TAG\"|" "$SPEC"
-            fi
-          done
+          VERSION="${{ steps.version.outputs.version }}"
+          test -f "BidscubeSDKAppLovin/${VERSION}/BidscubeSDKAppLovin.podspec"
 
-      - name: Update Constants.swift version
-        run: |
-          if [ -f "bidscubeSdk/Core/Constants.swift" ]; then
-            sed -i '' "s|public static let sdkVersion = \".*\"|public static let sdkVersion = \"${{ steps.version.outputs.version }}\"|" bidscubeSdk/Core/Constants.swift
-          fi
-
-      - name: Lint podspecs
-        run: |
-          pod lib lint BidscubeSDKAppLovin.podspec --allow-warnings --verbose
-          if [ -f bidscubeSdk.podspec ]; then
-            pod lib lint bidscubeSdk.podspec --allow-warnings --verbose || true
-          fi
+      - name: Lint podspec
+        run: pod lib lint BidscubeSDKAppLovin.podspec --allow-warnings --verbose
 
       - name: Validate Package.swift
         run: |
           swift package resolve
           swift package describe --type json > /dev/null
 
-  publish-cocoapods:
-    name: Publish to CocoaPods
-    runs-on: macos-latest
-    needs: validate
-    environment: bidscube_env
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Setup Ruby
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: '3.2'
-          bundler-cache: true
-
-      - name: Install CocoaPods
-        run: gem install cocoapods
-
-      - name: Extract version from tag
-        id: version
-        run: |
-          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
-            VERSION=${GITHUB_REF#refs/tags/v}
-          else
-            VERSION=$(git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//')
-          fi
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-
-      - name: Update podspec versions and source
-        run: |
-          REPO_URL="${{ github.server_url }}/${{ github.repository }}.git"
-          TAG="v${{ steps.version.outputs.version }}"
-          for SPEC in BidscubeSDKAppLovin.podspec bidscubeSdk.podspec; do
-            if [ -f "$SPEC" ]; then
-              sed -i '' "s|spec.version.*=.*|spec.version      = \"${{ steps.version.outputs.version }}\"|" "$SPEC"
-              sed -i '' "s|:git => \"[^\"]*\"|:git => \"$REPO_URL\"|" "$SPEC"
-              sed -i '' "s|:tag => \"v[^\"]*\"|:tag => \"$TAG\"|" "$SPEC"
-            fi
-          done
-
-      - name: Check if CocoaPods version exists
-        id: check_cocoapods
-        run: |
-          VERSION="${{ steps.version.outputs.version }}"
-          if pod search BidscubeSDKAppLovin --simple 2>/dev/null | grep -q "BidscubeSDKAppLovin ($VERSION)"; then
-            echo "skip_cocoapods=true" >> $GITHUB_OUTPUT
-          else
-            echo "skip_cocoapods=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Publish BidscubeSDKAppLovin to CocoaPods
-        if: steps.check_cocoapods.outputs.skip_cocoapods == 'false'
-        env:
-          COCOAPODS_TRUNK_TOKEN: ${{ secrets.COCOAPODS_TRUNK_TOKEN }}
-        run: |
-          pod trunk push BidscubeSDKAppLovin.podspec --allow-warnings
-
-      - name: Skip CocoaPods (version already exists)
-        if: steps.check_cocoapods.outputs.skip_cocoapods == 'true'
-        run: echo "CocoaPods version already exists — skipping trunk push"
-
   publish-release:
     name: Create GitHub Release
     runs-on: macos-latest
-    needs: [validate, publish-cocoapods]
-    if: always() && needs.validate.result == 'success'
+    needs: validate
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -182,11 +92,12 @@ jobs:
             --notes "$(cat <<EOF
           ## BidscubeSDKAppLovin v${{ steps.version.outputs.version }}
 
-          Single CocoaPod: Bidscube runtime + AppLovin MAX adapter (\`ALBidscubeMediationAdapter\`).
-
-          ### Installation
+          Install via in-repo CocoaPods spec (no Trunk):
 
           \`\`\`ruby
+          source 'https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS.git'
+          source 'https://cdn.cocoapods.org/'
+
           pod 'AppLovinSDK', '>= 13.0.0', '< 14.0'
           pod 'BidscubeSDKAppLovin', '${{ steps.version.outputs.version }}'
           \`\`\`

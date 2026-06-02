@@ -26,6 +26,11 @@ jobs:
       - name: Lint BidscubeSDKAppLovin podspec
         run: pod lib lint BidscubeSDKAppLovin.podspec --allow-warnings --verbose
 
+      - name: Verify in-repo spec layout
+        run: |
+          VERSION=$(grep 'spec.version' BidscubeSDKAppLovin.podspec | sed 's/.*"\([^"]*\)".*/\1/')
+          test -f "BidscubeSDKAppLovin/${VERSION}/BidscubeSDKAppLovin.podspec"
+
       - name: Resolve Swift package
         run: swift package resolve
 
