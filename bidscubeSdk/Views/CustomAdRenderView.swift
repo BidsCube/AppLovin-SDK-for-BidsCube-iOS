@@ -1,5 +1,4 @@
 import SwiftUI
-import BidscubeSDK
 
 /// Demonstrates overriding SDK rendering via `onAdRenderOverride` and logging the ad markup + position.
 struct CustomAdRenderView: View {

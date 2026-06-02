@@ -1,20 +1,18 @@
 Pod::Spec.new do |spec|
   spec.name         = "BidscubeSDKAppLovin"
-  spec.version      = "1.0.3.1"
+  spec.version      = "1.0.4"
   spec.summary      = "Bidscube iOS SDK with embedded AppLovin MAX adapter (single dependency for mediation)"
   spec.description  = <<-DESC
                       All Bidscube runtime sources plus the AppLovin MAX mediation adapter in one pod.
-                      You only add this pod and AppLovin MAX — no separate BidscubeSDK pod.
+                      Add this pod and AppLovin MAX — no separate BidscubeSDK pod is required.
 
                       Adapter class for MAX dashboard: ALBidscubeMediationAdapter
 
-                      Features:
-                      - Interstitial, rewarded, banner/MREC/leader, native
-                      - Image, video, and native ads via Bidscube runtime
-                      - IMA for video where applicable
+                      Supported formats: Banner, MREC, Interstitial, Rewarded, Native
+                      Video ads use Google IMA by default.
                       DESC
 
-  spec.homepage     = "https://github.com/bidscube/bidscube-sdk-ios"
+  spec.homepage     = "https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS"
   spec.license      = { :type => "MIT", :file => "LICENSE" }
   spec.author       = { "Vlad" => "generalisimys20132@gmail.com" }
 
@@ -22,12 +20,26 @@ Pod::Spec.new do |spec|
   spec.ios.deployment_target = "13.0"
   spec.swift_versions = ["5.9"]
 
-  spec.documentation_url = "https://github.com/bidscube/bidscube-sdk-ios"
+  spec.documentation_url = "https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS"
 
-  spec.source       = { :git => "https://github.com/bidscube/bidscube-sdk-ios.git", :tag => "v#{spec.version}" }
+  spec.source       = {
+    :git => "https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS.git",
+    :tag => "v#{spec.version}"
+  }
 
-  spec.source_files = "bidscubeSdk/**/*.{swift,h}"
+  spec.module_name = "BidscubeSDK"
+
+  spec.source_files = "bidscubeSdk/**/*.{swift,h,m}"
   spec.public_header_files = "bidscubeSdk/bidscubeSdk.h"
+  spec.exclude_files = [
+    "bidscubeSdk/Tests/**/*",
+    "bidscubeSdk/Controller/**/*",
+    "bidscubeSdk/Views/SDKTestView.swift",
+    "bidscubeSdk/Views/ContentView.swift",
+    "bidscubeSdk/Views/CustomAdRenderView.swift",
+    "bidscubeSdk/Views/IMAVideoAdHandler.swift.disabled",
+    "bidscubeSdk/Logger/SDKLogger.swift"
+  ]
 
   spec.dependency "GoogleAds-IMA-iOS-SDK", "~> 3.19"
   spec.dependency "AppLovinSDK", ">= 13.0.0", "< 14.0"

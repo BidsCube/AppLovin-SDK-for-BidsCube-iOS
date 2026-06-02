@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate-ios:
+    name: Validate iOS package
+    runs-on: macos-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+          bundler-cache: true
+
+      - name: Install CocoaPods
+        run: gem install cocoapods
+
+      - name: Lint BidscubeSDKAppLovin podspec
+        run: pod lib lint BidscubeSDKAppLovin.podspec --allow-warnings --verbose
+
+      - name: Resolve Swift package
+        run: swift package resolve
+
+      - name: Describe Swift package
+        run: swift package describe --type json > /dev/null
+
+      - name: Install pod dependencies for sample workspace
+        run: pod install
+
+      - name: Build SDK scheme (Xcode workspace)
+        run: |
+          xcodebuild build \
+            -workspace bidscubeSdk.xcworkspace \
+            -scheme bidscubeSdk \
+            -destination 'generic/platform=iOS Simulator' \
+            -quiet \
+            CODE_SIGNING_ALLOWED=NO

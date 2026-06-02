@@ -1,6 +1,5 @@
 import UIKit
 import WebKit
-import BidscubeSDK
 
 public final class BannerAdView: UIView {
     private let webView = WKWebView()
@@ -149,7 +148,8 @@ public final class BannerAdView: UIView {
                             }
                         }
                         
-                        if let skadnetworkData = json["skadnetwork"] as? [String: Any] {
+                        if #available(iOS 14.0, *),
+                           let skadnetworkData = json["skadnetwork"] as? [String: Any] {
                             print("BannerAdView: Found SKAdNetwork data in response")
                             if let skadnetworkResponse = SKAdNetworkManager.parseSKAdNetworkResponse(from: skadnetworkData) {
                                 print("BannerAdView: Successfully parsed SKAdNetwork response")
@@ -157,6 +157,8 @@ public final class BannerAdView: UIView {
                             } else {
                                 print("BannerAdView: Failed to parse SKAdNetwork response")
                             }
+                        } else if json["skadnetwork"] != nil {
+                            print("BannerAdView: SKAdNetwork data ignored on iOS versions before 14")
                         } else {
                             print("BannerAdView: No SKAdNetwork data in response")
                         }

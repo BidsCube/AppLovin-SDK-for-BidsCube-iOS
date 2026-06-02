@@ -243,7 +243,8 @@ public final class BidscubeSDK {
                         }
                         
                         // Process SKAdNetwork response if present
-                        if let skadnetworkData = json["skadnetwork"] as? [String: Any] {
+                        if #available(iOS 14.0, *),
+                           let skadnetworkData = json["skadnetwork"] as? [String: Any] {
                             print("BidscubeSDK: Found SKAdNetwork data in response")
                             if let skadnetworkResponse = SKAdNetworkManager.parseSKAdNetworkResponse(from: skadnetworkData) {
                                 print("BidscubeSDK: Successfully parsed SKAdNetwork response")
@@ -251,6 +252,8 @@ public final class BidscubeSDK {
                             } else {
                                 print("BidscubeSDK: Failed to parse SKAdNetwork response")
                             }
+                        } else if json["skadnetwork"] != nil {
+                            print("BidscubeSDK: SKAdNetwork data ignored on iOS versions before 14")
                         } else {
                             print("BidscubeSDK: No SKAdNetwork data in response")
                         }
@@ -438,7 +441,8 @@ public final class BidscubeSDK {
                         }
                         
                         // Process SKAdNetwork response if present
-                        if let skadnetworkData = json["skadnetwork"] as? [String: Any] {
+                        if #available(iOS 14.0, *),
+                           let skadnetworkData = json["skadnetwork"] as? [String: Any] {
                             print("🔍 BidscubeSDK: Found SKAdNetwork data in video response")
                             if let skadnetworkResponse = SKAdNetworkManager.parseSKAdNetworkResponse(from: skadnetworkData) {
                                 print("BidscubeSDK: Successfully parsed SKAdNetwork response")
@@ -446,6 +450,8 @@ public final class BidscubeSDK {
                             } else {
                                 print("BidscubeSDK: Failed to parse SKAdNetwork response")
                             }
+                        } else if json["skadnetwork"] != nil {
+                            print("ℹ️ BidscubeSDK: SKAdNetwork data ignored on iOS versions before 14")
                         } else {
                             print("ℹ️ BidscubeSDK: No SKAdNetwork data in video response")
                         }
@@ -920,30 +926,44 @@ public final class BidscubeSDK {
     /// Check if SKAdNetwork is available
     /// - Returns: True if SKAdNetwork is available
     public static func isSKAdNetworkAvailable() -> Bool {
-        return SKAdNetworkManager.isAvailable()
+        if #available(iOS 14.0, *) {
+            return SKAdNetworkManager.isAvailable()
+        }
+        return false
     }
     
     /// Get all SKAdNetwork IDs from the app's Info.plist
     /// - Returns: Array of SKAdNetwork identifiers
     public static func getSKAdNetworkIDs() -> [String] {
-        return SKAdNetworkManager.getSKAdNetworkIDs()
+        if #available(iOS 14.0, *) {
+            return SKAdNetworkManager.getSKAdNetworkIDs()
+        }
+        return []
     }
     
     /// Display SKAdNetwork IDs in console
     public static func displaySKAdNetworkIDsInConsole() {
-        SKAdNetworkManager.displaySKAdNetworkIDsInConsole()
+        if #available(iOS 14.0, *) {
+            SKAdNetworkManager.displaySKAdNetworkIDsInConsole()
+        }
     }
     
     /// Get SKAdNetwork IDs as formatted string for display
     /// - Returns: Formatted string with all SKAdNetwork IDs
     public static func getSKAdNetworkIDsAsString() -> String {
-        return SKAdNetworkManager.getSKAdNetworkIDsAsString()
+        if #available(iOS 14.0, *) {
+            return SKAdNetworkManager.getSKAdNetworkIDsAsString()
+        }
+        return ""
     }
     
     /// Debug method to inspect Info.plist structure
     /// - Returns: Detailed information about Info.plist contents
     public static func debugInfoPlistStructure() -> String {
-        return SKAdNetworkManager.debugInfoPlistStructure()
+        if #available(iOS 14.0, *) {
+            return SKAdNetworkManager.debugInfoPlistStructure()
+        }
+        return "SKAdNetwork APIs require iOS 14.0+"
     }
 }
 

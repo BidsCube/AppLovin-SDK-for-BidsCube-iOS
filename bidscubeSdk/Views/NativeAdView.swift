@@ -1,5 +1,4 @@
 import UIKit
-import BidscubeSDK
 
 struct NativeAdData: Codable {
     let native: NativeAdContent
@@ -426,14 +425,17 @@ public final class NativeAdView: UIView {
                             }
                             
                             // Process SKAdNetwork response if present
-                            if let skadnetworkData = json["skadnetwork"] as? [String: Any] {
+                            if #available(iOS 14.0, *),
+                               let skadnetworkData = json["skadnetwork"] as? [String: Any] {
                                 print("NativeAdView: Found SKAdNetwork data in response")
-                            if let skadnetworkResponse = SKAdNetworkManager.parseSKAdNetworkResponse(from: skadnetworkData) {
-                                print("NativeAdView: Successfully parsed SKAdNetwork response")
-                                SKAdNetworkManager.processSKAdNetworkResponse(skadnetworkResponse)
+                                if let skadnetworkResponse = SKAdNetworkManager.parseSKAdNetworkResponse(from: skadnetworkData) {
+                                    print("NativeAdView: Successfully parsed SKAdNetwork response")
+                                    SKAdNetworkManager.processSKAdNetworkResponse(skadnetworkResponse)
                                 } else {
                                     print("NativeAdView: Failed to parse SKAdNetwork response")
                                 }
+                            } else if json["skadnetwork"] != nil {
+                                print("NativeAdView: SKAdNetwork data ignored on iOS versions before 14")
                             } else {
                                 print("NativeAdView: No SKAdNetwork data in response")
                             }
