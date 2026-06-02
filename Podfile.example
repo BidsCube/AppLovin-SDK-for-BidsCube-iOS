@@ -1,0 +1,11 @@
+platform :ios, '13.0'
+use_frameworks!
+
+target 'YourApp' do
+  pod 'AppLovinSDK', '>= 13.0.0', '< 14.0'
+
+  # Install from GitHub (works immediately; no CocoaPods Trunk required)
+  pod 'BidscubeSDKAppLovin',
+      :git => 'https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS.git',
+      :tag => 'v1.0.4'
+end
