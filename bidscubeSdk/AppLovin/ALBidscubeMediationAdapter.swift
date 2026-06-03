@@ -278,7 +278,7 @@ extension ALBidscubeMediationAdapter: MARewardedAdapter {
 
         configureReward(for: parameters)
         BidscubeSDK.setDisplayViewController(presenter)
-        let callback = BidscubeRewardedMAXCallback(delegate: delegate)
+        let callback = BidscubeRewardedMAXCallback(adapter: self, delegate: delegate)
         BidscubeSDK.presentVideoAd(placement, from: presenter, callback: callback)
         rewardedReady = false
         rewardedPlacementId = nil
