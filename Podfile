@@ -7,7 +7,8 @@ source 'https://cdn.cocoapods.org/'
 
 target 'testApp-ios' do
   pod 'AppLovinSDK', '>= 13.0.0', '< 14.0'
-  pod 'BidscubeSDKAppLovin', :podspec => 'BidscubeSDKAppLovin.podspec'
+  # Local sources for CI/dev; published integrators use the CocoaPods spec repo tag.
+  pod 'BidscubeSDKAppLovin', :path => '.'
 end
 
 post_install do |installer|
