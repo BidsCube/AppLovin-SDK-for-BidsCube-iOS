@@ -24,6 +24,7 @@ All notable changes to the Bidscube iOS SDK and AppLovin MAX adapter are documen
 
 ### Changed
 
+- **Minimum iOS deployment target raised to 15.0** (Google IMA SDK requirement for rewarded / video ads).
 - `showImageAd`, `showVideoAd`, and `showNativeAd` present through `AdViewController` when no custom render override is used.
 - `NetworkManager` treats HTTP 204 as no-fill; other HTTP errors map to stable `AdErrorCode` values.
 

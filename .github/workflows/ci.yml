@@ -40,11 +40,11 @@ jobs:
       - name: Install pod dependencies for sample workspace
         run: pod install
 
-      - name: Build SDK scheme (Xcode workspace)
+      - name: Build test app (Xcode workspace)
         run: |
           xcodebuild build \
             -workspace bidscubeSdk.xcworkspace \
-            -scheme bidscubeSdk \
+            -scheme testApp-ios \
             -destination 'generic/platform=iOS Simulator' \
             -quiet \
             CODE_SIGNING_ALLOWED=NO
