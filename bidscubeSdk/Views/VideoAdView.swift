@@ -10,6 +10,7 @@ public final class VideoAdView: UIView {
     private var placementId: String = ""
     private weak var callback: AdCallback?
     private weak var parentViewController: UIViewController?
+    private var didReportLoaded = false
     private var clickURL: String?
 
     public override init(frame: CGRect) {
@@ -213,57 +214,92 @@ public final class VideoAdView: UIView {
     public func loadVideoAdFromURL(_ url: URL) {
         loadingLabel.isHidden = false
         loadingLabel.text = "Loading Video Ad..."
-        
+        didReportLoaded = false
+
         Logger.videoAd("Loading video ad for placement \(placementId)")
         Logger.network("Making SSP request to: \(url.absoluteString)")
-        
-        URLSession.shared.dataTask(with: url) { [weak self] data, response, error in
-            DispatchQueue.main.async {
-                guard let self = self else { return }
-                
-                if let error = error {
-                    Logger.error("Video ad request failed for placement \(self.placementId): \(error.localizedDescription)", prefix: Constants.LogPrefixes.videoAd)
-                    self.loadingLabel.text = "Error: \(error.localizedDescription)"
-                    return
-                }
-                
-                guard let data = data,
-                      let content = String(data: data, encoding: .utf8) else {
-                    Logger.error("Video ad request returned invalid response for placement \(self.placementId)", prefix: Constants.LogPrefixes.videoAd)
-                    self.loadingLabel.text = "Error: Invalid response"
-                    return
-                }
-                
-                do {
-                    if let jsonData = content.data(using: .utf8),
-                       let json = try JSONSerialization.jsonObject(with: jsonData) as? [String: Any],
-                       let adm = json["adm"] as? String {
-                        
-                        if let positionValue = json["position"] as? Int,
-                           let position = AdPosition(rawValue: positionValue) {
-                            Logger.videoAd("Received position \(positionValue) (\(self.displayName(for: position))) for placement \(self.placementId)")
-                            DispatchQueue.main.async {
-                                BidscubeSDK.setResponseAdPosition(position)
-                            }
-                        }
-                        
-                        if adm.hasPrefix("http") {
-                            Logger.player("Player source for placement \(self.placementId): remote VAST URL")
-                            self.loadVASTFromURL(adm)
-                        } else {
-                            Logger.player("Player source for placement \(self.placementId): inline VAST XML")
-                            self.loadVASTContent(adm)
-                        }
-                    } else {
-                        Logger.player("Player source for placement \(self.placementId): raw response treated as inline VAST XML")
-                        self.loadVASTContent(content)
-                    }
-                } catch {
-                    Logger.warning("Video JSON parsing failed for placement \(self.placementId); falling back to raw VAST payload", prefix: Constants.LogPrefixes.videoAd)
-                    self.loadVASTContent(content)
-                }
+
+        AdHTTPClient.fetchBody(url: url) { [weak self] result in
+            guard let self = self else { return }
+            switch result {
+            case .failure(let error):
+                Logger.error(
+                    "Video ad request failed for placement \(self.placementId): \(AdErrorCode.message(for: error))",
+                    prefix: Constants.LogPrefixes.videoAd
+                )
+                self.loadingLabel.text = AdErrorCode.message(for: error)
+                AdFailureDispatcher.deliver(
+                    placementId: self.placementId,
+                    format: "video",
+                    callback: self.callback,
+                    error: error
+                )
+            case .success(let content):
+                self.handleVideoResponseBody(content)
             }
-        }.resume()
+        }
+    }
+
+    private func handleVideoResponseBody(_ content: String) {
+        do {
+            if let jsonData = content.data(using: .utf8),
+               let json = try JSONSerialization.jsonObject(with: jsonData) as? [String: Any],
+               let adm = json["adm"] as? String {
+                if adm.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    AdFailureDispatcher.deliver(
+                        placementId: placementId,
+                        format: "video",
+                        callback: callback,
+                        errorCode: AdErrorCode.emptyAdm,
+                        errorMessage: "Empty ad markup"
+                    )
+                    return
+                }
+
+                if let positionValue = json["position"] as? Int,
+                   let position = AdPosition(rawValue: positionValue) {
+                    BidscubeSDK.setResponseAdPosition(position)
+                }
+
+                if adm.hasPrefix("http") {
+                    loadVASTFromURL(adm)
+                } else {
+                    loadVASTContent(adm)
+                }
+                reportAdLoadedIfNeeded()
+                return
+            }
+        } catch {
+            AdFailureDispatcher.deliver(
+                placementId: placementId,
+                format: "video",
+                callback: callback,
+                errorCode: AdErrorCode.invalidResponse,
+                errorMessage: "Failed to parse ad server response"
+            )
+            return
+        }
+
+        if content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            AdFailureDispatcher.deliver(
+                placementId: placementId,
+                format: "video",
+                callback: callback,
+                errorCode: AdErrorCode.emptyAdm,
+                errorMessage: "Empty ad markup"
+            )
+            return
+        }
+
+        loadVASTContent(content)
+        reportAdLoadedIfNeeded()
+    }
+
+    private func reportAdLoadedIfNeeded() {
+        guard !didReportLoaded else { return }
+        didReportLoaded = true
+        callback?.onAdLoaded(placementId)
+        callback?.onAdDisplayed(placementId)
     }
     
     public override func layoutSubviews() {

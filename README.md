@@ -27,7 +27,7 @@ source 'https://cdn.cocoapods.org/'
 
 target 'YourApp' do
   pod 'AppLovinSDK', '>= 13.0.0', '< 14.0'
-  pod 'BidscubeSDKAppLovin', '1.0.4'
+  pod 'BidscubeSDKAppLovin', '1.0.5'
 end
 ```
 
@@ -138,10 +138,17 @@ BidscubeSDK.configureVideoPlayer(type: .custom, factory: MyVideoPlayerFactory())
 
 Call this before AppLovin MAX initialization if you use a custom player. If `.custom` is selected without a factory, the SDK logs a warning and falls back to IMA.
 
+## Error codes
+
+Ad failures are reported through `AdCallback.onAdFailed(placementId, errorCode, errorMessage)` using stable codes in `AdErrorCode` (for example **204** for HTTP no-fill). See [docs/errors.md](docs/errors.md).
+
+For MAX or apps that initialize early without a presenter, the adapter calls `BidscubeSDK.setDisplayViewController(_:)` before show/load so full-screen ads always have a host view controller.
+
 ## Troubleshooting
 
 - **`Unable to find a specification for 'BidscubeSDKAppLovin'`:** add `source 'https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS.git'` above your pods (see [Installation](#installation)), then run `pod install --repo-update`.
 - **Ads do not load:** confirm **App ID** contains the correct BidCube **Placement ID**.
+- **HTTP 204 / no fill:** code `204` is expected when the SSP has no ad; it is not a crash.
 - **SSP override:** use only host or `host:port` in `request_authority` / `ssp_host`.
 - **Custom network not found:** class name must be exactly `ALBidscubeMediationAdapter`.
 - **Native:** if your setup uses a native-specific local parameter, set `is_native = true` where applicable.
@@ -177,7 +184,7 @@ Quick steps for app publishers integrating Bidscube via AppLovin MAX:
 
    target 'YourApp' do
      pod 'AppLovinSDK', '>= 13.0.0', '< 14.0'
-     pod 'BidscubeSDKAppLovin', '1.0.4'
+     pod 'BidscubeSDKAppLovin', '1.0.5'
    end
    ```
 
@@ -198,7 +205,7 @@ Quick steps for app publishers integrating Bidscube via AppLovin MAX:
 
 7. **Verify** — use MAX Mediation Debugger and confirm Bidscube appears on the waterfall for your ad units.
 
-See also [`Podfile.example`](Podfile.example).
+See also [`Podfile.example`](Podfile.example), [`docs/errors.md`](docs/errors.md), and [`RELEASE.md`](RELEASE.md) for publishing **1.0.5**.
 
 ## License
 
@@ -206,4 +213,4 @@ MIT. See [LICENSE](LICENSE).
 
 ## Version
 
-BidscubeSDKAppLovin **1.0.4**
+BidscubeSDKAppLovin **1.0.5**

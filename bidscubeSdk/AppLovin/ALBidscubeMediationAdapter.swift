@@ -138,12 +138,18 @@ final class ALBidscubeMediationAdapter: ALMediationAdapter {
             case .failure(let net):
                 let adapter: MAAdapterError
                 switch net {
+                case .noFill:
+                    adapter = .noFill
                 case .timeout:
                     adapter = .timeout
                 case .networkUnavailable:
                     adapter = .noConnection
                 default:
-                    adapter = self?.mapLoadError(net.localizedDescription) ?? .unspecified
+                    adapter = MAAdapterError(
+                        adapterError: .unspecified,
+                        mediatedNetworkErrorCode: net.adErrorCode,
+                        mediatedNetworkErrorMessage: net.adErrorMessage ?? net.localizedDescription
+                    )
                 }
                 completion(false, adapter)
             }
@@ -189,6 +195,7 @@ extension ALBidscubeMediationAdapter: MAInterstitialAdapter {
             return
         }
 
+        BidscubeSDK.setDisplayViewController(presenter)
         let callback = BidscubeInterstitialMAXCallback(delegate: delegate)
         BidscubeSDK.presentImageAd(placement, from: presenter, callback: callback)
         interstitialReady = false
@@ -270,7 +277,8 @@ extension ALBidscubeMediationAdapter: MARewardedAdapter {
         }
 
         configureReward(for: parameters)
-        let callback = BidscubeRewardedMAXCallback(adapter: self, delegate: delegate)
+        BidscubeSDK.setDisplayViewController(presenter)
+        let callback = BidscubeRewardedMAXCallback(delegate: delegate)
         BidscubeSDK.presentVideoAd(placement, from: presenter, callback: callback)
         rewardedReady = false
         rewardedPlacementId = nil
@@ -338,6 +346,10 @@ extension ALBidscubeMediationAdapter: MAAdViewAdapter {
         guard !placement.isEmpty else {
             delegate.didFailToLoadAdViewAdWithError(mapLoadError("Missing Bidscube placement (MAX App ID / app_id)."))
             return
+        }
+
+        if let presenter = parameters.presentingViewController ?? UIApplication.shared.alsc_topViewController() {
+            BidscubeSDK.setDisplayViewController(presenter)
         }
 
         let size = adFormat.size
@@ -412,6 +424,10 @@ extension ALBidscubeMediationAdapter: MANativeAdAdapter {
     func loadNativeAd(for parameters: MAAdapterResponseParameters, andNotify delegate: MANativeAdAdapterDelegate) {
         let placement = bidscubePlacementId(from: parameters)
         ensureBidscubeInitializedIfNeeded(from: parameters)
+
+        if let presenter = parameters.presentingViewController ?? UIApplication.shared.alsc_topViewController() {
+            BidscubeSDK.setDisplayViewController(presenter)
+        }
 
         guard !placement.isEmpty else {
             delegate.didFailToLoadNativeAdWithError(MAAdapterError(

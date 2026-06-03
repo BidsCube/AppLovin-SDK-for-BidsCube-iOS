@@ -59,6 +59,7 @@ public final class NativeAdView: UIView {
     private var clickURL: String?
     private var placementId: String = ""
     private weak var callback: AdCallback?
+    private var didReportLoaded = false
     private var currentLayoutMode: NativeAdLayoutMode = .full
     private var activeConstraints: [NSLayoutConstraint] = []
     private var impressionTrackerURLs: [URL] = []
@@ -380,81 +381,87 @@ public final class NativeAdView: UIView {
         resetImpressionTrackingState()
         loadingLabel.isHidden = false
         loadingLabel.text = "Loading Native Ad..."
-        
-        print("NativeAdView: Making HTTP request to: \(url.absoluteString)")
-        
-        URLSession.shared.dataTask(with: url) { [weak self] data, response, error in
-            DispatchQueue.main.async {
-                guard let self = self else { return }
-                
-                if let error = error {
-                    print("NativeAdView: Network error: \(error.localizedDescription)")
-                    self.loadingLabel.text = "Error: \(error.localizedDescription)"
-                    return
-                }
-                
-                guard let data = data else {
-                    print("NativeAdView: No data received from server")
-                    self.loadingLabel.text = "Error: No data received"
-                    return
-                }
-                
-                guard let content = String(data: data, encoding: .utf8) else {
-                    print("NativeAdView: Invalid response encoding")
-                    self.loadingLabel.text = "Error: Invalid response"
-                    return
-                }
-                
-                print("NativeAdView: Received response: \(content)")
-                
-                do {
-                    if let jsonData = content.data(using: .utf8),
-                       let json = try JSONSerialization.jsonObject(with: jsonData) as? [String: Any] {
-                        
-                        print("NativeAdView: Successfully parsed JSON response")
-                        
-                        if let adm = json["adm"] as? String {
-                            print("NativeAdView: Found adm field in response")
-                            
-                            if let positionValue = json["position"] as? Int,
-                               let position = AdPosition(rawValue: positionValue) {
-                                print("NativeAdView: Received position from server: \(positionValue) - \(self.displayName(for: position))")
-                                DispatchQueue.main.async {
-                                    BidscubeSDK.setResponseAdPosition(position)
-                                }
-                            }
-                            
-                            // Process SKAdNetwork response if present
-                            if #available(iOS 14.0, *),
-                               let skadnetworkData = json["skadnetwork"] as? [String: Any] {
-                                print("NativeAdView: Found SKAdNetwork data in response")
-                                if let skadnetworkResponse = SKAdNetworkManager.parseSKAdNetworkResponse(from: skadnetworkData) {
-                                    print("NativeAdView: Successfully parsed SKAdNetwork response")
-                                    SKAdNetworkManager.processSKAdNetworkResponse(skadnetworkResponse)
-                                } else {
-                                    print("NativeAdView: Failed to parse SKAdNetwork response")
-                                }
-                            } else if json["skadnetwork"] != nil {
-                                print("NativeAdView: SKAdNetwork data ignored on iOS versions before 14")
-                            } else {
-                                print("NativeAdView: No SKAdNetwork data in response")
-                            }
-                            
-                            self.loadNativeAdContent(adm)
-                        } else {
-                            print("NativeAdView: No adm field found in response, treating entire content as native ad")
-                            self.loadNativeAdContent(content)
-                        }
-                    } else {
-                        print("NativeAdView: Response is not valid JSON, treating as direct native ad content")
-                        self.loadNativeAdContent(content)
-                    }
-                } catch {
-                    print("NativeAdView: JSON parsing failed: \(error), treating as direct native ad content")
-                    self.loadNativeAdContent(content)
-                }
+        didReportLoaded = false
+
+        AdHTTPClient.fetchBody(url: url) { [weak self] result in
+            guard let self = self else { return }
+            switch result {
+            case .failure(let error):
+                self.loadingLabel.text = AdErrorCode.message(for: error)
+                AdFailureDispatcher.deliver(
+                    placementId: self.placementId,
+                    format: "native",
+                    callback: self.callback,
+                    error: error
+                )
+            case .success(let content):
+                self.handleNativeResponseBody(content)
             }
-        }.resume()
+        }
+    }
+
+    private func handleNativeResponseBody(_ content: String) {
+        do {
+            if let jsonData = content.data(using: .utf8),
+               let json = try JSONSerialization.jsonObject(with: jsonData) as? [String: Any],
+               let adm = json["adm"] as? String {
+                if adm.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    AdFailureDispatcher.deliver(
+                        placementId: placementId,
+                        format: "native",
+                        callback: callback,
+                        errorCode: AdErrorCode.emptyAdm,
+                        errorMessage: "Empty ad markup"
+                    )
+                    return
+                }
+
+                if let positionValue = json["position"] as? Int,
+                   let position = AdPosition(rawValue: positionValue) {
+                    BidscubeSDK.setResponseAdPosition(position)
+                }
+
+                if #available(iOS 14.0, *),
+                   let skadnetworkData = json["skadnetwork"] as? [String: Any],
+                   let skadnetworkResponse = SKAdNetworkManager.parseSKAdNetworkResponse(from: skadnetworkData) {
+                    SKAdNetworkManager.processSKAdNetworkResponse(skadnetworkResponse)
+                }
+
+                loadNativeAdContent(adm)
+                reportAdLoadedIfNeeded()
+                return
+            }
+        } catch {
+            AdFailureDispatcher.deliver(
+                placementId: placementId,
+                format: "native",
+                callback: callback,
+                errorCode: AdErrorCode.invalidResponse,
+                errorMessage: "Failed to parse ad server response"
+            )
+            return
+        }
+
+        if content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            AdFailureDispatcher.deliver(
+                placementId: placementId,
+                format: "native",
+                callback: callback,
+                errorCode: AdErrorCode.emptyAdm,
+                errorMessage: "Empty ad markup"
+            )
+            return
+        }
+
+        loadNativeAdContent(content)
+        reportAdLoadedIfNeeded()
+    }
+
+    private func reportAdLoadedIfNeeded() {
+        guard !didReportLoaded else { return }
+        didReportLoaded = true
+        callback?.onAdLoaded(placementId)
+        callback?.onAdDisplayed(placementId)
     }
     
     private func loadImage(from urlString: String, into imageView: UIImageView) {

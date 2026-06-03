@@ -27,8 +27,8 @@ update_podspec() {
 # Primary delivery package
 update_podspec "BidscubeSDKAppLovin.podspec"
 
-# Deprecated standalone pod (compatibility only; git tracks bidscubeSdk.podspec)
-update_podspec "bidscubeSdk.podspec"
+# Deprecated standalone pod (compatibility only)
+update_podspec "BidscubeSDK.podspec"
 
 if [ -f "bidscubeSdk/Core/Constants.swift" ]; then
     sed -i.bak "s/public static let sdkVersion = \".*\"/public static let sdkVersion = \"$VERSION\"/" bidscubeSdk/Core/Constants.swift
@@ -43,10 +43,19 @@ if [ -f "README.md" ]; then
     echo "✅ Updated README.md version references"
 fi
 
-if [ -f "Podfile.example" ]; then
-    sed -i.bak "s/pod 'BidscubeSDKAppLovin', '[^']*'/pod 'BidscubeSDKAppLovin', '$VERSION'/" Podfile.example
-    rm -f Podfile.example.bak
-    echo "✅ Updated Podfile.example"
+for podfile in Podfile.example Podfile; do
+    if [ -f "$podfile" ]; then
+        sed -i.bak "s/pod 'BidscubeSDKAppLovin', '[^']*'/pod 'BidscubeSDKAppLovin', '$VERSION'/" "$podfile"
+        rm -f "${podfile}.bak"
+        echo "✅ Updated $podfile"
+    fi
+done
+
+if [ -f "testApp/README.md" ]; then
+    sed -i.bak "s/BidscubeSDKAppLovin` [0-9.]*\*/BidscubeSDKAppLovin $VERSION*/" testApp/README.md 2>/dev/null || \
+    sed -i.bak "s/BidscubeSDKAppLovin [0-9.][0-9.]*/BidscubeSDKAppLovin $VERSION/" testApp/README.md
+    rm -f testApp/README.md.bak
+    echo "✅ Updated testApp/README.md"
 fi
 
 "$(dirname "$0")/sync-cocoapods-spec.sh"
