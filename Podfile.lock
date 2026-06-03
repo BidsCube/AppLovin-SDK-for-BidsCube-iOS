@@ -7,7 +7,7 @@ PODS:
 
 DEPENDENCIES:
   - AppLovinSDK (< 14.0, >= 13.0.0)
-  - BidscubeSDKAppLovin (from `BidscubeSDKAppLovin.podspec`)
+  - BidscubeSDKAppLovin (from `.`)
 
 SPEC REPOS:
   trunk:
@@ -16,13 +16,13 @@ SPEC REPOS:
 
 EXTERNAL SOURCES:
   BidscubeSDKAppLovin:
-    :podspec: BidscubeSDKAppLovin.podspec
+    :path: "."
 
 SPEC CHECKSUMS:
   AppLovinSDK: 91a47db42b6c0e2b83224006aa46b0b88c62c16f
   BidscubeSDKAppLovin: 493d7e51d8c706f481891028453d373a773fc1c9
   GoogleAds-IMA-iOS-SDK: b1b1e3b8f486cfb7c7a669a58a5380421f3bcaab
 
-PODFILE CHECKSUM: 0961f4fbfbb30c8521b5923ada6c92dbe2ab2e36
+PODFILE CHECKSUM: 06229af53c14299d1f9fa95042e6555d0f2c2b6a
 
 COCOAPODS: 1.16.2
