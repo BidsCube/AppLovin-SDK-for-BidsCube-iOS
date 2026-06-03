@@ -6,7 +6,7 @@ Repository: [https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS](https://
 
 ## Requirements
 
-- iOS 13.0+
+- iOS 15.0+ (required by Google IMA SDK for video ads)
 - Xcode 15+
 - Swift 5.9+
 - CocoaPods (recommended integration path)
@@ -19,7 +19,7 @@ Podspecs are hosted **in this GitHub repository** (CocoaPods spec-repo layout). 
 Add both sources, AppLovin MAX, and Bidscube to your `Podfile`:
 
 ```ruby
-platform :ios, '13.0'
+platform :ios, '15.0'
 use_frameworks!
 
 source 'https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS.git'
@@ -176,7 +176,7 @@ Quick steps for app publishers integrating Bidscube via AppLovin MAX:
 1. **Add the pod** — in your app `Podfile`:
 
    ```ruby
-   platform :ios, '13.0'
+   platform :ios, '15.0'
    use_frameworks!
 
    source 'https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS.git'

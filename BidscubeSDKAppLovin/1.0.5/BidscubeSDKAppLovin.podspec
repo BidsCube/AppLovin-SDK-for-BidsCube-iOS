@@ -16,8 +16,8 @@ Pod::Spec.new do |spec|
   spec.license      = { :type => "MIT", :file => "LICENSE" }
   spec.author       = { "Vlad" => "generalisimys20132@gmail.com" }
 
-  spec.platform     = :ios, "13.0"
-  spec.ios.deployment_target = "13.0"
+  spec.platform     = :ios, "15.0"
+  spec.ios.deployment_target = "15.0"
   spec.swift_versions = ["5.9"]
 
   spec.documentation_url = "https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS"

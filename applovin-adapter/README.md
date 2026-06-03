@@ -8,7 +8,7 @@ AppLovin MAX custom network adapter for the Bidscube iOS SDK. The adapter ships 
 
 ## Requirements
 
-- **iOS** 13.0+
+- **iOS** 15.0+
 - **AppLovin MAX SDK** 13.x
 - **Xcode** 15+, Swift 5.9+
 - MAX **Adapter Class Name:** `ALBidscubeMediationAdapter`

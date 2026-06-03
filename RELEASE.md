@@ -23,7 +23,10 @@ Or lint the podspec: `pod lib lint BidscubeSDKAppLovin.podspec --allow-warnings`
 
 ## Integrator upgrade
 
+**Requires iOS 15.0+** in your app `Podfile` / Xcode deployment target (IMA video dependency).
+
 ```ruby
+platform :ios, '15.0'
 pod 'BidscubeSDKAppLovin', '1.0.5'
 ```
 
