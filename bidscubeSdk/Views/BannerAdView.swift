@@ -7,6 +7,7 @@ public final class BannerAdView: UIView {
     private var clickURL: String?
     private var placementId: String = ""
     private weak var callback: AdCallback?
+    private var didReportLoaded = false
     private var bannerPosition: AdPosition = .header
     private var bannerHeight: CGFloat = 50
     private var bannerWidth: CGFloat = 320
@@ -111,67 +112,87 @@ public final class BannerAdView: UIView {
     public func loadAdFromURL(_ url: URL) {
         loadingLabel.isHidden = false
         loadingLabel.text = "Loading Banner..."
-        
-        print("BannerAdView: Making HTTP request to: \(url.absoluteString)")
-        
-        var request = URLRequest(url: url)
-        request.httpMethod = "GET"
-        request.setValue("application/json", forHTTPHeaderField: "Accept")
-        request.setValue(DeviceInfo.userAgent, forHTTPHeaderField: "User-Agent")
-        
-        URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
-            DispatchQueue.main.async {
-                guard let self = self else { return }
-                
-                if let error = error {
-                    self.loadingLabel.text = "Error: \(error.localizedDescription)"
-                    return
-                }
-                
-                guard let data = data,
-                      let htmlContent = String(data: data, encoding: .utf8) else {
-                    self.loadingLabel.text = "Error: Invalid response"
-                    return
-                }
-                
-                do {
-                    if let jsonData = htmlContent.data(using: .utf8),
-                       let json = try JSONSerialization.jsonObject(with: jsonData) as? [String: Any],
-                       let adm = json["adm"] as? String {
-                         print("Banner Adm: \(adm)")
-                        
-                        if let positionValue = json["position"] as? Int,
-                           let position = AdPosition(rawValue: positionValue) {
-                            print("BannerAdView: Received position from server: \(positionValue) - \(self.displayName(for: position))")
-                            DispatchQueue.main.async {
-                                BidscubeSDK.setResponseAdPosition(position)
-                            }
-                        }
-                        
-                        if #available(iOS 14.0, *),
-                           let skadnetworkData = json["skadnetwork"] as? [String: Any] {
-                            print("BannerAdView: Found SKAdNetwork data in response")
-                            if let skadnetworkResponse = SKAdNetworkManager.parseSKAdNetworkResponse(from: skadnetworkData) {
-                                print("BannerAdView: Successfully parsed SKAdNetwork response")
-                                SKAdNetworkManager.processSKAdNetworkResponse(skadnetworkResponse)
-                            } else {
-                                print("BannerAdView: Failed to parse SKAdNetwork response")
-                            }
-                        } else if json["skadnetwork"] != nil {
-                            print("BannerAdView: SKAdNetwork data ignored on iOS versions before 14")
-                        } else {
-                            print("BannerAdView: No SKAdNetwork data in response")
-                        }
-                        
-                        self.loadAdContent(adm)
-                    } else {
-                        self.loadAdContent(htmlContent)
-                    }
-                } catch {
-                    self.loadAdContent(htmlContent)
-                }
+        didReportLoaded = false
+
+        AdHTTPClient.fetchBody(url: url) { [weak self] result in
+            guard let self = self else { return }
+            switch result {
+            case .failure(let error):
+                self.loadingLabel.text = AdErrorCode.message(for: error)
+                AdFailureDispatcher.deliver(
+                    placementId: self.placementId,
+                    format: "banner",
+                    callback: self.callback,
+                    error: error
+                )
+            case .success(let body):
+                self.handleAdResponseBody(body)
             }
-        }.resume()
+        }
+    }
+
+    private func handleAdResponseBody(_ body: String) {
+        do {
+            if let jsonData = body.data(using: .utf8),
+               let json = try JSONSerialization.jsonObject(with: jsonData) as? [String: Any],
+               let adm = json["adm"] as? String {
+                if adm.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    AdFailureDispatcher.deliver(
+                        placementId: placementId,
+                        format: "banner",
+                        callback: callback,
+                        errorCode: AdErrorCode.emptyAdm,
+                        errorMessage: "Empty ad markup"
+                    )
+                    return
+                }
+
+                if let positionValue = json["position"] as? Int,
+                   let position = AdPosition(rawValue: positionValue) {
+                    BidscubeSDK.setResponseAdPosition(position)
+                }
+
+                if #available(iOS 14.0, *),
+                   let skadnetworkData = json["skadnetwork"] as? [String: Any],
+                   let skadnetworkResponse = SKAdNetworkManager.parseSKAdNetworkResponse(from: skadnetworkData) {
+                    SKAdNetworkManager.processSKAdNetworkResponse(skadnetworkResponse)
+                }
+
+                loadAdContent(adm)
+                reportAdLoadedIfNeeded()
+                return
+            }
+        } catch {
+            AdFailureDispatcher.deliver(
+                placementId: placementId,
+                format: "banner",
+                callback: callback,
+                errorCode: AdErrorCode.invalidResponse,
+                errorMessage: "Failed to parse ad server response"
+            )
+            return
+        }
+
+        if body.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            AdFailureDispatcher.deliver(
+                placementId: placementId,
+                format: "banner",
+                callback: callback,
+                errorCode: AdErrorCode.emptyAdm,
+                errorMessage: "Empty ad markup"
+            )
+            return
+        }
+
+        loadAdContent(body)
+        reportAdLoadedIfNeeded()
+    }
+
+    private func reportAdLoadedIfNeeded() {
+        guard !didReportLoaded else { return }
+        didReportLoaded = true
+        callback?.onAdLoaded(placementId)
+        callback?.onAdDisplayed(placementId)
     }
     
     public func loadAdContent(_ htmlContent: String) {

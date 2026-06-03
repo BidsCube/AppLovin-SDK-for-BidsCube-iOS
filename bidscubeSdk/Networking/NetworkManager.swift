@@ -112,12 +112,17 @@ public class NetworkManager {
                     return
                 }
                 
+                if httpResponse.statusCode == 204 {
+                    completion(.failure(.noFill))
+                    return
+                }
+
                 guard 200...299 ~= httpResponse.statusCode else {
                     completion(.failure(.httpError(httpResponse.statusCode)))
                     return
                 }
                 
-                guard let data = data else {
+                guard let data = data, !data.isEmpty else {
                     completion(.failure(.noData))
                     return
                 }
@@ -135,47 +140,53 @@ public enum NetworkError: Error, LocalizedError {
     case invalidURL
     case noData
     case invalidResponse
+    case noFill
     case httpError(Int)
     case timeout
     case networkUnavailable
     case unknown(Error)
     
     public var errorDescription: String? {
+        adErrorMessage
+    }
+
+    /// Message aligned with `AdErrorCode` for mediation / logging.
+    public var adErrorMessage: String? {
         switch self {
         case .invalidURL:
-            return "Invalid URL"
-        case .noData:
-            return "No data received"
-        case .invalidResponse:
-            return "Invalid response"
+            return Constants.ErrorMessages.failedToBuildURL
+        case .noData, .invalidResponse:
+            return "Invalid ad server response"
+        case .noFill:
+            return "No ad fill: ad server returned HTTP 204 (No Content)"
         case .httpError(let code):
             return "HTTP error: \(code)"
         case .timeout:
-            return "Request timeout"
+            return "Network error: Request timed out"
         case .networkUnavailable:
-            return "Network unavailable"
+            return "Network error: Network unavailable"
         case .unknown(let error):
-            return error.localizedDescription
+            return "Network error: \(error.localizedDescription)"
         }
     }
     
-    public var errorCode: Int {
+    public var adErrorCode: Int {
         switch self {
         case .invalidURL:
-            return Constants.ErrorCodes.invalidURL
-        case .noData:
-            return Constants.ErrorCodes.invalidResponse
-        case .invalidResponse:
-            return Constants.ErrorCodes.invalidResponse
-        case .httpError(let code):
-            return code
-        case .timeout:
-            return Constants.ErrorCodes.timeoutError
-        case .networkUnavailable:
-            return Constants.ErrorCodes.networkError
-        case .unknown:
-            return Constants.ErrorCodes.networkError
+            return AdErrorCode.unknown
+        case .noData, .invalidResponse:
+            return AdErrorCode.invalidResponse
+        case .noFill:
+            return AdErrorCode.noFill
+        case .httpError:
+            return AdErrorCode.httpError
+        case .timeout, .networkUnavailable, .unknown:
+            return AdErrorCode.networkError
         }
+    }
+
+    public var errorCode: Int {
+        adErrorCode
     }
     
     static func from(error: Error) -> NetworkError {

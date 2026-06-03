@@ -7,5 +7,5 @@ source 'https://cdn.cocoapods.org/'
 
 target 'testApp-ios' do
   pod 'AppLovinSDK', '>= 13.0.0', '< 14.0'
-  pod 'BidscubeSDKAppLovin', :podspec => 'BidscubeSDKAppLovin.podspec'
+  pod 'BidscubeSDKAppLovin', '1.0.5'
 end

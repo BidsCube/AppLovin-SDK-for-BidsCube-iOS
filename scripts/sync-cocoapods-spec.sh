@@ -1,7 +1,7 @@
 #!/bin/bash
 # Sync root BidscubeSDKAppLovin.podspec into the in-repo CocoaPods spec layout.
 # Enables: source 'https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS.git'
-#          pod 'BidscubeSDKAppLovin', '1.0.4'
+#          pod 'BidscubeSDKAppLovin', '1.0.5'
 # No CocoaPods Trunk required.
 
 set -euo pipefail
@@ -15,7 +15,11 @@ if [ ! -f "$SRC" ]; then
   exit 1
 fi
 
-VERSION=$(grep 'spec.version' "$SRC" | sed 's/.*"\([^"]*\)".*/\1/')
+VERSION=$(grep -m1 'spec\.version' "$SRC" | sed -n 's/.*spec\.version[^"]*"\([^"]*\)".*/\1/p')
+if [ -z "$VERSION" ]; then
+  echo "Could not parse spec.version from $SRC"
+  exit 1
+fi
 DEST_DIR="BidscubeSDKAppLovin/${VERSION}"
 DEST="${DEST_DIR}/BidscubeSDKAppLovin.podspec"
 

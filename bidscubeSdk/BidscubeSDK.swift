@@ -12,9 +12,21 @@ public final class BidscubeSDK {
     private static var hasAdsConsentFlag: Bool = false
     private static var hasAnalyticsConsentFlag: Bool = false
     private static var consentDebugDeviceId: String?
-    
-    
+    /// Optional host view controller (e.g. bound from MAX adapter on show).
+    private static weak var displayViewController: UIViewController?
+
     private static var activeBanners: [BannerAdView] = []
+
+    /// Bind the view controller used to present full-screen ads when none is passed explicitly (MAX show callbacks).
+    public static func setDisplayViewController(_ viewController: UIViewController?) {
+        displayViewController = viewController
+    }
+
+    static func resolvePresentationViewController(explicit: UIViewController? = nil) -> UIViewController? {
+        if let explicit { return explicit }
+        if let displayViewController { return displayViewController }
+        return topViewControllerForPresentation()
+    }
 
     
     public static func initialize(config: SDKConfig) {
@@ -101,6 +113,7 @@ public final class BidscubeSDK {
         removeAllBanners()
         
         configuration = nil
+        displayViewController = nil
         manualAdPosition = nil
         responseAdPosition = .unknown
         consentRequired = false
@@ -203,76 +216,26 @@ public final class BidscubeSDK {
             nativeHeight: nativeHeight
         )
     }
+    public static func showImageAd(from presenter: UIViewController? = nil, placementId: String, callback: AdCallback?) {
+        let run: () -> Void = {
+            guard let host = resolvePresentationViewController(explicit: presenter) else {
+                AdFailureDispatcher.deliver(
+                    placementId: placementId,
+                    format: "image",
+                    callback: callback,
+                    errorCode: AdErrorCode.noViewController,
+                    errorMessage: "A view controller is required to display ads. Pass a UIViewController when showing ads (for example from the MAX adapter show callback)."
+                )
+                return
+            }
+            AdViewController.presentAd(placementId: placementId, adType: .image, from: host, callback: callback)
+        }
+        if Thread.isMainThread { run() } else { DispatchQueue.main.async(execute: run) }
+    }
+
     public static func showImageAd(_ placementId: String, _ callback: AdCallback?) {
         Logger.imageAd("Show image/interstitial requested for placement \(placementId)")
-        callback?.onAdLoading(placementId)
-        
-        // Build POST URL and request body
-        let includeSKAdNetworks = configuration?.enableSKAdNetwork ?? false
-        
-        guard let url = URLBuilder.buildAdRequestURL(placementId: placementId, adType: .image, position: getEffectiveAdPosition(), timeoutMs: configuration?.defaultAdTimeoutMs ?? Constants.defaultTimeoutMs, debug: configuration?.enableDebugMode ?? false, includeSKAdNetworks: includeSKAdNetworks) else {
-            print("Failed to build URL for placementId: \(placementId)")
-            callback?.onAdFailed(placementId, errorCode: Constants.ErrorCodes.invalidURL, errorMessage: Constants.ErrorMessages.failedToBuildURL)
-            return
-        }
-        
-        NetworkManager.shared.get(url: url) { result in
-            switch result {
-            case .success(let data):
-                guard let htmlContent = String(data: data, encoding: .utf8) else {
-                    callback?.onAdFailed(placementId, errorCode: Constants.ErrorCodes.invalidResponse, errorMessage: Constants.ErrorMessages.invalidResponse)
-                    return
-                }
-                
-                do {
-                    if let jsonData = htmlContent.data(using: .utf8),
-                       let json = try JSONSerialization.jsonObject(with: jsonData) as? [String: Any] {
-                        
-                        // User override: if both adm and position are present, let user render
-                        if let adm = json["adm"] as? String,
-                           let positionValue = json["position"] as? Int,
-                           let position = AdPosition(rawValue: positionValue) {
-                            callback?.onAdRenderOverride(adm: adm, position: position)
-                            return // Don't proceed with default rendering
-                        }
-                        
-                        // Process position
-                        if let positionValue = json["position"] as? Int,
-                           let position = AdPosition(rawValue: positionValue) {
-                            self.responseAdPosition = position
-                        }
-                        
-                        // Process SKAdNetwork response if present
-                        if #available(iOS 14.0, *),
-                           let skadnetworkData = json["skadnetwork"] as? [String: Any] {
-                            print("BidscubeSDK: Found SKAdNetwork data in response")
-                            if let skadnetworkResponse = SKAdNetworkManager.parseSKAdNetworkResponse(from: skadnetworkData) {
-                                print("BidscubeSDK: Successfully parsed SKAdNetwork response")
-                                SKAdNetworkManager.processSKAdNetworkResponse(skadnetworkResponse)
-                            } else {
-                                print("BidscubeSDK: Failed to parse SKAdNetwork response")
-                            }
-                        } else if json["skadnetwork"] != nil {
-                            print("BidscubeSDK: SKAdNetwork data ignored on iOS versions before 14")
-                        } else {
-                            print("BidscubeSDK: No SKAdNetwork data in response")
-                        }
-                    }
-                } catch {
-                    print("BidscubeSDK: Error parsing JSON response: \(error)")
-                    self.responseAdPosition = .unknown
-                }
-                
-                callback?.onAdLoaded(placementId)
-                callback?.onAdDisplayed(placementId)
-                
-                // Track SKAdNetwork impression
-                trackAdImpression()
-                
-            case .failure(let error):
-                callback?.onAdFailed(placementId, errorCode: error.errorCode, errorMessage: error.localizedDescription)
-            }
-        }
+        showImageAd(from: nil, placementId: placementId, callback: callback)
     }
 
     public static func getImageAdView(_ placementId: String, _ callback: AdCallback?) -> UIView {
@@ -293,7 +256,13 @@ public final class BidscubeSDK {
         
         guard let url = buildRequestURL(placementId: placementId, adType: .image) else {
             Logger.error("Failed to build request URL for image ad")
-            callback?.onAdFailed(placementId, errorCode: Constants.ErrorCodes.invalidURL, errorMessage: Constants.ErrorMessages.failedToBuildURL)
+            AdFailureDispatcher.deliver(
+                placementId: placementId,
+                format: "image",
+                callback: callback,
+                errorCode: AdErrorCode.unknown,
+                errorMessage: Constants.ErrorMessages.failedToBuildURL
+            )
             return view
         }
         
@@ -306,59 +275,29 @@ public final class BidscubeSDK {
             bannerAdView.loadAdFromURL(url)
         }
         
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-            self.responseAdPosition = .unknown
-            callback?.onAdLoaded(placementId)
-            callback?.onAdDisplayed(placementId)
-        }
-        
         return view
+    }
+
+    public static func showVideoAd(from presenter: UIViewController? = nil, placementId: String, callback: AdCallback?) {
+        let run: () -> Void = {
+            guard let host = resolvePresentationViewController(explicit: presenter) else {
+                AdFailureDispatcher.deliver(
+                    placementId: placementId,
+                    format: "video",
+                    callback: callback,
+                    errorCode: AdErrorCode.noViewController,
+                    errorMessage: "A view controller is required to display ads. Pass a UIViewController when showing ads (for example from the MAX adapter show callback)."
+                )
+                return
+            }
+            AdViewController.presentAd(placementId: placementId, adType: .video, from: host, callback: callback)
+        }
+        if Thread.isMainThread { run() } else { DispatchQueue.main.async(execute: run) }
     }
 
     public static func showVideoAd(_ placementId: String, _ callback: AdCallback?) {
         Logger.videoAd("Show video/rewarded requested for placement \(placementId)")
-        callback?.onAdLoading(placementId)
-        
-        // Build GET URL with SKAdNetwork parameters
-        let includeSKAdNetworks = configuration?.enableSKAdNetwork ?? false
-        
-        guard let url = URLBuilder.buildAdRequestURL(placementId: placementId, adType: .video, position: getEffectiveAdPosition(), timeoutMs: configuration?.defaultAdTimeoutMs ?? Constants.defaultTimeoutMs, debug: configuration?.enableDebugMode ?? false, includeSKAdNetworks: includeSKAdNetworks) else {
-            callback?.onAdFailed(placementId, errorCode: Constants.ErrorCodes.invalidURL, errorMessage: Constants.ErrorMessages.failedToBuildURL)
-            return
-        }
-        
-        NetworkManager.shared.get(url: url) { result in
-            switch result {
-            case .success(let data):
-                guard let content = String(data: data, encoding: .utf8) else {
-                    callback?.onAdFailed(placementId, errorCode: Constants.ErrorCodes.invalidResponse, errorMessage: Constants.ErrorMessages.invalidResponse)
-                    return
-                }
-                
-                
-                do {
-                    if let jsonData = content.data(using: .utf8),
-                               let json = try JSONSerialization.jsonObject(with: jsonData) as? [String: Any],
-                               let adm = json["adm"] as? String,
-                               let positionValue = json["position"] as? Int,
-                               let position = AdPosition(rawValue: positionValue) {
-                                callback?.onAdRenderOverride(adm: adm, position: position)
-                                return
-                            }
-                } catch {
-                    self.responseAdPosition = .fullScreen
-                }
-                
-                callback?.onAdLoaded(placementId)
-                callback?.onAdDisplayed(placementId)
-                callback?.onVideoAdStarted(placementId)
-                callback?.onVideoAdCompleted(placementId)
-                
-            case .failure(let error):
-                callback?.onAdFailed(placementId, errorCode: error.errorCode, errorMessage: error.localizedDescription)
-            }
-        }
+        showVideoAd(from: nil, placementId: placementId, callback: callback)
     }
 
     public static func getVideoAdView(
@@ -374,7 +313,13 @@ public final class BidscubeSDK {
         let adType: AdType = .video
         guard let url = buildRequestURL(placementId: placementId, adType: adType) else {
             Logger.error("Failed to build request URL for \(adType)")
-            callback?.onAdFailed(placementId, errorCode: Constants.ErrorCodes.invalidURL, errorMessage: Constants.ErrorMessages.failedToBuildURL)
+            AdFailureDispatcher.deliver(
+                placementId: placementId,
+                format: "video",
+                callback: callback,
+                errorCode: AdErrorCode.unknown,
+                errorMessage: Constants.ErrorMessages.failedToBuildURL
+            )
             return view
         }
         
@@ -384,90 +329,50 @@ public final class BidscubeSDK {
             videoAdView.loadVideoAdFromURL(url)
         }
         
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-            self.responseAdPosition = .fullScreen
-            callback?.onAdLoaded(placementId)
-            callback?.onAdDisplayed(placementId)
-            callback?.onVideoAdStarted(placementId)
-            
-           
-            callback?.onVideoAdCompleted(placementId)
-        }
-        
         return view
     }
 
 
     public static func showNativeAd(_ placementId: String, _ callback: AdCallback?) {
-        showNativeAd(placementId, width: DeviceInfo.logicalScreenWidth, height: DeviceInfo.logicalScreenHeight, callback)
+        showNativeAd(from: nil, placementId: placementId, callback: callback)
+    }
+
+    public static func showNativeAd(from presenter: UIViewController? = nil, placementId: String, callback: AdCallback?) {
+        showNativeAd(
+            from: presenter,
+            placementId: placementId,
+            width: DeviceInfo.logicalScreenWidth,
+            height: DeviceInfo.logicalScreenHeight,
+            callback: callback
+        )
+    }
+
+    public static func showNativeAd(
+        from presenter: UIViewController? = nil,
+        placementId: String,
+        width: Int,
+        height: Int,
+        callback: AdCallback?
+    ) {
+        Logger.nativeAd("Show native requested for placement \(placementId) with size \(width)x\(height)")
+        let run: () -> Void = {
+            guard let host = resolvePresentationViewController(explicit: presenter) else {
+                AdFailureDispatcher.deliver(
+                    placementId: placementId,
+                    format: "native",
+                    callback: callback,
+                    errorCode: AdErrorCode.noViewController,
+                    errorMessage: "A view controller is required to display ads. Pass a UIViewController when showing ads (for example from the MAX adapter show callback)."
+                )
+                return
+            }
+            AdViewController.presentAd(placementId: placementId, adType: .native, from: host, callback: callback)
+        }
+        if Thread.isMainThread { run() } else { DispatchQueue.main.async(execute: run) }
     }
 
     public static func showNativeAd(_ placementId: String, width: Int, height: Int, _ callback: AdCallback?) {
-        Logger.nativeAd("Show native requested for placement \(placementId) with size \(width)x\(height)")
-        callback?.onAdLoading(placementId)
-        
-        // Build GET URL with SKAdNetwork parameters
-        let includeSKAdNetworks = configuration?.enableSKAdNetwork ?? false
-        
-        guard let url = URLBuilder.buildAdRequestURL(placementId: placementId, adType: .native, position: getEffectiveAdPosition(), timeoutMs: configuration?.defaultAdTimeoutMs ?? Constants.defaultTimeoutMs, debug: configuration?.enableDebugMode ?? false, includeSKAdNetworks: includeSKAdNetworks, nativeWidth: width, nativeHeight: height) else {
-            callback?.onAdFailed(placementId, errorCode: Constants.ErrorCodes.invalidURL, errorMessage: Constants.ErrorMessages.failedToBuildURL)
-            return
-        }
-        
-        NetworkManager.shared.get(url: url) { result in
-            switch result {
-            case .success(let data):
-                guard let content = String(data: data, encoding: .utf8) else {
-                    callback?.onAdFailed(placementId, errorCode: Constants.ErrorCodes.invalidResponse, errorMessage: Constants.ErrorMessages.invalidResponse)
-                    return
-                }
-                
-                
-                do {
-                    if let jsonData = content.data(using: .utf8),
-                       let json = try JSONSerialization.jsonObject(with: jsonData) as? [String: Any] {
-                        
-                        if let adm = json["adm"] as? String,
-                           let positionValue = json["position"] as? Int,
-                           let position = AdPosition(rawValue: positionValue) {
-                            callback?.onAdRenderOverride(adm: adm, position: position)
-                            return // Don't proceed with default rendering
-                        }
-                        // Process position
-                        if let positionValue = json["position"] as? Int,
-                           let position = AdPosition(rawValue: positionValue) {
-                            self.responseAdPosition = position
-                        }
-                        
-                        // Process SKAdNetwork response if present
-                        if #available(iOS 14.0, *),
-                           let skadnetworkData = json["skadnetwork"] as? [String: Any] {
-                            print("🔍 BidscubeSDK: Found SKAdNetwork data in video response")
-                            if let skadnetworkResponse = SKAdNetworkManager.parseSKAdNetworkResponse(from: skadnetworkData) {
-                                print("BidscubeSDK: Successfully parsed SKAdNetwork response")
-                                SKAdNetworkManager.processSKAdNetworkResponse(skadnetworkResponse)
-                            } else {
-                                print("BidscubeSDK: Failed to parse SKAdNetwork response")
-                            }
-                        } else if json["skadnetwork"] != nil {
-                            print("ℹ️ BidscubeSDK: SKAdNetwork data ignored on iOS versions before 14")
-                        } else {
-                            print("ℹ️ BidscubeSDK: No SKAdNetwork data in video response")
-                        }
-                    }
-                } catch {
-                    print("❌ BidscubeSDK: Error parsing video JSON response: \(error)")
-                    self.responseAdPosition = .unknown
-                }
-                
-                callback?.onAdLoaded(placementId)
-                callback?.onAdDisplayed(placementId)
-                
-            case .failure(let error):
-                callback?.onAdFailed(placementId, errorCode: error.errorCode, errorMessage: error.localizedDescription)
-            }
-        }
+        showNativeAd(from: nil, placementId: placementId, width: width, height: height, callback: callback)
     }
 
     public static func getNativeAdView(_ placementId: String, _ callback: AdCallback?) -> UIView {
@@ -484,20 +389,19 @@ public final class BidscubeSDK {
         
         guard let url = buildRequestURL(placementId: placementId, adType: .native, nativeWidth: width, nativeHeight: height) else {
             Logger.error("Failed to build request URL for native ad")
-            callback?.onAdFailed(placementId, errorCode: Constants.ErrorCodes.invalidURL, errorMessage: Constants.ErrorMessages.failedToBuildURL)
+            AdFailureDispatcher.deliver(
+                placementId: placementId,
+                format: "native",
+                callback: callback,
+                errorCode: AdErrorCode.unknown,
+                errorMessage: Constants.ErrorMessages.failedToBuildURL
+            )
             return view
         }
         
         
         view.setPlacementInfo(placementId, callback: callback)
         view.loadNativeAdFromURL(url)
-        
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-            self.responseAdPosition = .unknown
-            callback?.onAdLoaded(placementId)
-            callback?.onAdDisplayed(placementId)
-        }
         
         return view
     }
@@ -582,20 +486,19 @@ public final class BidscubeSDK {
         
         guard let url = buildRequestURL(placementId: placementId, adType: .image) else {
             Logger.error("Failed to build request URL for banner ad")
-            callback?.onAdFailed(placementId, errorCode: Constants.ErrorCodes.invalidURL, errorMessage: Constants.ErrorMessages.failedToBuildURL)
+            AdFailureDispatcher.deliver(
+                placementId: placementId,
+                format: "banner",
+                callback: callback,
+                errorCode: AdErrorCode.unknown,
+                errorMessage: Constants.ErrorMessages.failedToBuildURL
+            )
             return bannerView
         }
         
         
         bannerView.setPlacementInfo(placementId, callback: callback)
         bannerView.loadAdFromURL(url)
-        
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-            self.responseAdPosition = position
-            callback?.onAdLoaded(placementId)
-            callback?.onAdDisplayed(placementId)
-        }
         
         return bannerView
     }
@@ -648,20 +551,19 @@ public final class BidscubeSDK {
         
         guard let url = buildRequestURL(placementId: placementId, adType: .image) else {
             Logger.error("Failed to build request URL for banner ad")
-            callback?.onAdFailed(placementId, errorCode: Constants.ErrorCodes.invalidURL, errorMessage: Constants.ErrorMessages.failedToBuildURL)
+            AdFailureDispatcher.deliver(
+                placementId: placementId,
+                format: "banner",
+                callback: callback,
+                errorCode: AdErrorCode.unknown,
+                errorMessage: Constants.ErrorMessages.failedToBuildURL
+            )
             return bannerView
         }
         
         
         bannerView.setPlacementInfo(placementId, callback: callback)
         bannerView.loadAdFromURL(url)
-        
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-            self.responseAdPosition = position
-            callback?.onAdLoaded(placementId)
-            callback?.onAdDisplayed(placementId)
-        }
         
         return bannerView
     }
@@ -964,6 +866,28 @@ public final class BidscubeSDK {
             return SKAdNetworkManager.debugInfoPlistStructure()
         }
         return "SKAdNetwork APIs require iOS 14.0+"
+    }
+
+    private static func topViewControllerForPresentation() -> UIViewController? {
+        let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
+        let keyWindow = scenes.flatMap(\.windows).first { $0.isKeyWindow }
+        guard let root = keyWindow?.rootViewController else { return nil }
+        return topViewController(from: root)
+    }
+
+    private static func topViewController(from viewController: UIViewController) -> UIViewController {
+        if let presented = viewController.presentedViewController {
+            return topViewController(from: presented)
+        }
+        if let nav = viewController as? UINavigationController,
+           let visible = nav.visibleViewController {
+            return topViewController(from: visible)
+        }
+        if let tab = viewController as? UITabBarController,
+           let selected = tab.selectedViewController {
+            return topViewController(from: selected)
+        }
+        return viewController
     }
 }
 

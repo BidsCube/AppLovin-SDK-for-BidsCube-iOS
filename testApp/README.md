@@ -41,4 +41,10 @@ testApp/
 testApp-Info.plist           App Info.plist (AppLovin keys, SKAdNetwork)
 ```
 
-The app uses the local podspec (`BidscubeSDKAppLovin.podspec`) — no CocoaPods Trunk required.
+The app pulls **`BidscubeSDKAppLovin` 1.0.5 from this GitHub repo** (same as publisher integration) — no CocoaPods Trunk required.
+
+For local SDK development against uncommitted changes, temporarily use:
+
+```ruby
+pod 'BidscubeSDKAppLovin', :podspec => 'BidscubeSDKAppLovin.podspec'
+```
