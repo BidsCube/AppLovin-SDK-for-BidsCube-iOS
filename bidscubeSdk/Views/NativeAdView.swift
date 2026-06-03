@@ -479,10 +479,8 @@ public final class NativeAdView: UIView {
         
         print("NativeAdView: Starting image download from: \(url.absoluteString)")
         
-        URLSession.shared.dataTask(with: url) { [weak self] data, response, error in
+        URLSession.shared.dataTask(with: url) { data, response, error in
             DispatchQueue.main.async {
-                guard let self = self else { return }
-                
                 if let error = error {
                     print("NativeAdView: Image download error: \(error.localizedDescription)")
                     imageView.backgroundColor = .systemRed
@@ -792,7 +790,6 @@ public final class NativeAdView: UIView {
     /// Automatically sets the layout mode based on the available size
     /// - Parameter size: The available size for the ad view
     public func setLayoutModeForSize(_ size: CGSize) {
-        let width = size.width
         let height = size.height
         
         // Determine layout based on size
