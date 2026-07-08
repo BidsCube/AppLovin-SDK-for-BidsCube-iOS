@@ -6,6 +6,34 @@ All notable changes to the Bidscube iOS SDK and AppLovin MAX adapter are documen
 
 ---
 
+## [1.1.0] - 2026-07-08
+
+### Added
+
+- `BidscubeSDK.BidscubeAdPayload`, `loadAdPayload`, and `presentCachedAd` for true MAX load/show caching (no second network request at show).
+- `BidscubeSDK.collectSignal()` and `MASignalProvider` on `ALBidscubeMediationAdapter` (structured JSON, no PII).
+- Sibling MAX test app layout: `BidscubeSDKAppLovinTestApp` (outside this repository).
+- `.gitattributes` export-ignore for legacy in-repo `testApp*` samples in release archives.
+
+### Changed
+
+- Interstitial MAX adapter uses video interstitial path (`AdType.video` + cached VAST presentation).
+- Rewarded flow uses cached video payload at show time.
+- Reward callback fires at most once after video completion (or `shouldAlwaysRewardUser`).
+- MAX testing mode (`parameters.isTesting`) enables SDK debug logging during QA.
+- Documentation and podspec: Native MAX explicitly unsupported; OpenRTB bid requests not implemented.
+
+### Removed
+
+- Native MAX adapter path (`MANativeAdAdapter`, `MABidscubeNativeAd`, native load/show helpers).
+
+### Fixed
+
+- MAX delegate and UI callbacks dispatched on the main thread via `runOnMain`.
+- Documentation no longer claims Native MAX or OpenRTB bid request support.
+
+---
+
 ## [1.0.5] - 2026-06-03
 
 ### Added

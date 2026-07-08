@@ -6,6 +6,8 @@ source 'https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS.git'
 source 'https://cdn.cocoapods.org/'
 
 target 'YourApp' do
-  pod 'AppLovinSDK', '>= 13.0.0', '< 14.0'
-  pod 'BidscubeSDKAppLovin', '1.0.5'
+  pod 'BidscubeSDKAppLovin', '1.1.0'
 end
+
+# BidscubeSDKAppLovin pulls AppLovinSDK and GoogleAds-IMA-iOS-SDK transitively.
+# Add `pod 'AppLovinSDK', '>= 13.0.0', '< 14.0'` only if you need to pin a specific MAX version.

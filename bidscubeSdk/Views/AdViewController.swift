@@ -57,6 +57,7 @@ public final class AdViewController: UIViewController {
     
     private let placementId: String
     private let adType: AdType
+    private let cachedResponseBody: String?
     private let callback: AdCallback?
     private var adView: UIView?
     private var backButton: UIButton!
@@ -69,9 +70,15 @@ public final class AdViewController: UIViewController {
     private var doubleTapGestureRecognizer: UITapGestureRecognizer?
     private var isVideoPlaying = false
     
-    public init(placementId: String, adType: AdType, callback: AdCallback? = nil) {
+    public init(
+        placementId: String,
+        adType: AdType,
+        cachedResponseBody: String? = nil,
+        callback: AdCallback? = nil
+    ) {
         self.placementId = placementId
         self.adType = adType
+        self.cachedResponseBody = cachedResponseBody
         self.callback = callback
         super.init(nibName: nil, bundle: nil)
     }
@@ -191,9 +198,24 @@ public final class AdViewController: UIViewController {
         
         switch adType {
         case .image:
-            adView = BidscubeSDK.getImageAdView(placementId, errorHandlingCallback)
+            if let cachedResponseBody {
+                let view = ImageAdView()
+                view.setPlacementInfo(placementId, callback: errorHandlingCallback)
+                view.loadAdFromCachedResponseBody(cachedResponseBody)
+                adView = view
+            } else {
+                adView = BidscubeSDK.getImageAdView(placementId, errorHandlingCallback)
+            }
         case .video:
-            adView = BidscubeSDK.getVideoAdView(placementId, errorHandlingCallback)
+            if let cachedResponseBody {
+                let view = VideoAdView()
+                view.setPlacementInfo(placementId, callback: errorHandlingCallback)
+                view.setParentViewController(self)
+                view.loadAdFromCachedResponseBody(cachedResponseBody)
+                adView = view
+            } else {
+                adView = BidscubeSDK.getVideoAdView(placementId, errorHandlingCallback)
+            }
         case .native:
             adView = BidscubeSDK.getNativeAdView(placementId, errorHandlingCallback)
         }
@@ -730,10 +752,12 @@ public extension AdViewController {
     
     static func presentAd(placementId: String,
                           adType: AdType,
+                          cachedResponseBody: String? = nil,
                           from viewController: UIViewController,
                           callback: AdCallback? = nil) {
         let adViewController = AdViewController(placementId: placementId,
                                                 adType: adType,
+                                                cachedResponseBody: cachedResponseBody,
                                                 callback: callback)
         adViewController.modalPresentationStyle = .fullScreen
         viewController.present(adViewController, animated: true)
