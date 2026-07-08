@@ -100,6 +100,13 @@ public final class ImageAdView: UIView {
         self.callback = callback
     }
     
+    public func loadAdFromCachedResponseBody(_ body: String) {
+        loadingLabel.isHidden = false
+        loadingLabel.text = "Loading Ad..."
+        didReportLoaded = false
+        handleAdResponseBody(body)
+    }
+
     public func loadAdFromURL(_ url: URL) {
         loadingLabel.isHidden = false
         loadingLabel.text = "Loading Ad..."

@@ -407,8 +407,99 @@ public final class BidscubeSDK {
     }
     
     
-    
-    
+    // MARK: - Cached ad payload (MAX adapter load/show)
+
+    /// Raw Bidscube ad response captured during MAX load for reuse at show time.
+    public struct BidscubeAdPayload {
+        public let placementId: String
+        public let adType: AdType
+        public let responseBody: String
+
+        public init(placementId: String, adType: AdType, responseBody: String) {
+            self.placementId = placementId
+            self.adType = adType
+            self.responseBody = responseBody
+        }
+    }
+
+    /// Fetches and returns the Bidscube ad response body for caching during MAX load.
+    public static func loadAdPayload(
+        placementId: String,
+        adType: AdType,
+        completion: @escaping (Result<BidscubeAdPayload, BidscubeRequestError>) -> Void
+    ) {
+        guard isInitialized() else {
+            completion(.failure(BidscubeRequestError(
+                errorCode: AdErrorCode.unknown,
+                message: "Bidscube SDK is not initialized"
+            )))
+            return
+        }
+        guard !placementId.isEmpty else {
+            completion(.failure(BidscubeRequestError(
+                errorCode: AdErrorCode.unknown,
+                message: "Missing placement ID"
+            )))
+            return
+        }
+        guard let url = buildRequestURL(placementId: placementId, adType: adType) else {
+            completion(.failure(BidscubeRequestError(
+                errorCode: AdErrorCode.unknown,
+                message: Constants.ErrorMessages.failedToBuildURL
+            )))
+            return
+        }
+
+        AdHTTPClient.fetchBody(url: url) { result in
+            switch result {
+            case .success(let body):
+                completion(.success(BidscubeAdPayload(
+                    placementId: placementId,
+                    adType: adType,
+                    responseBody: body
+                )))
+            case .failure(let error):
+                completion(.failure(error))
+            }
+        }
+    }
+
+    /// Presents a full-screen ad from a cached payload without issuing a second network request.
+    public static func presentCachedAd(
+        _ payload: BidscubeAdPayload,
+        from viewController: UIViewController,
+        callback: AdCallback? = nil
+    ) {
+        let run: () -> Void = {
+            AdViewController.presentAd(
+                placementId: payload.placementId,
+                adType: payload.adType,
+                cachedResponseBody: payload.responseBody,
+                from: viewController,
+                callback: callback
+            )
+        }
+        if Thread.isMainThread { run() } else { DispatchQueue.main.async(execute: run) }
+    }
+
+    /// Structured bidding signal for AppLovin MAX (no device identifiers or PII).
+    public static func collectSignal(adapterVersion: String? = nil) -> String {
+        let adapterVer = adapterVersion ?? "\(Constants.sdkVersion).0"
+        let payload: [String: Any] = [
+            "sdk_version": Constants.sdkVersion,
+            "adapter_version": adapterVer,
+            "adapter": "applovin-max-ios",
+            "openrtb_pod_metadata_enabled": false,
+            "pod_bidding": false
+        ]
+        guard let data = try? JSONSerialization.data(withJSONObject: payload, options: []),
+              let json = String(data: data, encoding: .utf8) else {
+            return "{}"
+        }
+        return json
+    }
+
+
     public static func presentImageAd(_ placementId: String, from viewController: UIViewController, callback: AdCallback? = nil) {
         AdViewController.presentAd(placementId: placementId, adType: .image, from: viewController, callback: callback)
     }

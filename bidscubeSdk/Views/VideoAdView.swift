@@ -211,6 +211,14 @@ public final class VideoAdView: UIView {
         }
     }
     
+    public func loadAdFromCachedResponseBody(_ body: String) {
+        loadingLabel.isHidden = false
+        loadingLabel.text = "Loading Video Ad..."
+        didReportLoaded = false
+        Logger.videoAd("Loading cached video ad payload for placement \(placementId)")
+        handleVideoResponseBody(body)
+    }
+
     public func loadVideoAdFromURL(_ url: URL) {
         loadingLabel.isHidden = false
         loadingLabel.text = "Loading Video Ad..."

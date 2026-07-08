@@ -17,12 +17,14 @@ private func bidscubePlacementId(from parameters: MAAdapterResponseParameters) -
     return parameters.thirdPartyAdPlacementIdentifier
 }
 
-private func bidscubeSDKConfig(fromServerParameters serverParameters: [String: Any]?) -> SDKConfig {
-    let rawAuthority = (serverParameters?[BidscubeMAXParams.requestAuthority] as? String)
-        ?? (serverParameters?[BidscubeMAXParams.sspHost] as? String)
+private func bidscubeSDKConfig(from parameters: MAAdapterParameters) -> SDKConfig {
+    let serverParameters = parameters.serverParameters
+    let rawAuthority = (serverParameters[BidscubeMAXParams.requestAuthority] as? String)
+        ?? (serverParameters[BidscubeMAXParams.sspHost] as? String)
+    let isTesting = parameters.isTesting
     return SDKConfig.Builder()
-        .enableLogging(false)
-        .enableDebugMode(false)
+        .enableLogging(isTesting)
+        .enableDebugMode(isTesting)
         .defaultAdTimeout(Constants.defaultTimeoutMs)
         .defaultAdPosition(.fullScreen)
         .adRequestAuthority(rawAuthority)
@@ -32,14 +34,14 @@ private func bidscubeSDKConfig(fromServerParameters serverParameters: [String: A
 
 private func ensureBidscubeInitializedIfNeeded(from parameters: MAAdapterParameters) {
     if BidscubeSDK.isInitialized() { return }
-    BidscubeSDK.initialize(config: bidscubeSDKConfig(fromServerParameters: parameters.serverParameters))
+    BidscubeSDK.initialize(config: bidscubeSDKConfig(from: parameters))
 }
 
-// MARK: - Native ad wrapper for MAX
-
-private final class MABidscubeNativeAd: MANativeAd {
-    override func prepare(forInteractionClickableViews clickableViews: [UIView], withContainer container: UIView) -> Bool {
-        true
+private func runOnMain(_ block: @escaping () -> Void) {
+    if Thread.isMainThread {
+        block()
+    } else {
+        DispatchQueue.main.async(execute: block)
     }
 }
 
@@ -56,12 +58,13 @@ final class ALBidscubeMediationAdapter: ALMediationAdapter {
 
     var interstitialPlacementId: String?
     var interstitialReady = false
+    var cachedInterstitialPayload: BidscubeSDK.BidscubeAdPayload?
 
     var rewardedPlacementId: String?
     var rewardedReady = false
+    var cachedRewardedPayload: BidscubeSDK.BidscubeAdPayload?
 
     weak var loadedBannerView: UIView?
-    weak var loadedNativeView: UIView?
 
     override var thirdPartySdkName: String { "Bidscube" }
 
@@ -82,7 +85,7 @@ final class ALBidscubeMediationAdapter: ALMediationAdapter {
         }
         Self.didRunInitialization = true
 
-        BidscubeSDK.initialize(config: bidscubeSDKConfig(fromServerParameters: parameters.serverParameters))
+        BidscubeSDK.initialize(config: bidscubeSDKConfig(from: parameters))
         Self.lastInitStatus = .initializedSuccess
         completionHandler(.initializedSuccess, nil)
     }
@@ -90,10 +93,11 @@ final class ALBidscubeMediationAdapter: ALMediationAdapter {
     override func destroy() {
         interstitialPlacementId = nil
         interstitialReady = false
+        cachedInterstitialPayload = nil
         rewardedPlacementId = nil
         rewardedReady = false
+        cachedRewardedPayload = nil
         loadedBannerView = nil
-        loadedNativeView = nil
     }
 
     private func mapLoadError(_ message: String) -> MAAdapterError {
@@ -104,60 +108,62 @@ final class ALBidscubeMediationAdapter: ALMediationAdapter {
         )
     }
 
-    fileprivate func prefetchAd(
+    private func mapRequestError(_ error: BidscubeRequestError) -> MAAdapterError {
+        switch error.errorCode {
+        case AdErrorCode.noFill:
+            return .noFill
+        case AdErrorCode.networkError where error.message.localizedCaseInsensitiveContains("timed out"):
+            return .timeout
+        case AdErrorCode.networkError:
+            return .noConnection
+        default:
+            return MAAdapterError(
+                adapterError: .unspecified,
+                mediatedNetworkErrorCode: error.errorCode,
+                mediatedNetworkErrorMessage: error.message
+            )
+        }
+    }
+
+    fileprivate func loadAndCachePayload(
         placementId: String,
         adType: AdType,
         parameters: MAAdapterParameters,
-        completion: @escaping (Bool, MAAdapterError?) -> Void
+        completion: @escaping (BidscubeSDK.BidscubeAdPayload?, MAAdapterError?) -> Void
     ) {
         ensureBidscubeInitializedIfNeeded(from: parameters)
         guard BidscubeSDK.isInitialized() else {
-            completion(false, .notInitialized)
+            completion(nil, .notInitialized)
             return
         }
         guard !placementId.isEmpty else {
-            completion(false, mapLoadError("Missing Bidscube placement (MAX App ID / app_id)."))
+            completion(nil, mapLoadError("Missing Bidscube placement (MAX App ID / app_id)."))
             return
         }
-        guard let url = BidscubeSDK.buildRequestURL(placementId: placementId, adType: adType) else {
-            completion(false, mapLoadError(Constants.ErrorMessages.failedToBuildURL))
-            return
-        }
-        NetworkManager.shared.get(url: url) { [weak self] result in
+
+        BidscubeSDK.loadAdPayload(placementId: placementId, adType: adType) { result in
             switch result {
-            case .success(let data):
-                if data.isEmpty {
-                    completion(false, .noFill)
-                    return
-                }
-                if String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == true {
-                    completion(false, .noFill)
-                    return
-                }
-                completion(true, nil)
-            case .failure(let net):
-                let adapter: MAAdapterError
-                switch net {
-                case .noFill:
-                    adapter = .noFill
-                case .timeout:
-                    adapter = .timeout
-                case .networkUnavailable:
-                    adapter = .noConnection
-                default:
-                    adapter = MAAdapterError(
-                        adapterError: .unspecified,
-                        mediatedNetworkErrorCode: net.adErrorCode,
-                        mediatedNetworkErrorMessage: net.adErrorMessage ?? net.localizedDescription
-                    )
-                }
-                completion(false, adapter)
+            case .success(let payload):
+                completion(payload, nil)
+            case .failure(let error):
+                completion(nil, self.mapRequestError(error))
             }
         }
     }
 }
 
-// MARK: - Interstitial
+// MARK: - Signal collection
+
+@available(iOS 13.0, *)
+extension ALBidscubeMediationAdapter: MASignalProvider {
+
+    func collectSignal(with parameters: MASignalCollectionParameters, andNotify delegate: MASignalCollectionDelegate) {
+        let signal = BidscubeSDK.collectSignal(adapterVersion: adapterVersion)
+        delegate.didCollectSignal(signal)
+    }
+}
+
+// MARK: - Interstitial (video)
 
 @available(iOS 13.0, *)
 extension ALBidscubeMediationAdapter: MAInterstitialAdapter {
@@ -167,13 +173,15 @@ extension ALBidscubeMediationAdapter: MAInterstitialAdapter {
         ensureBidscubeInitializedIfNeeded(from: parameters)
         interstitialReady = false
         interstitialPlacementId = nil
+        cachedInterstitialPayload = nil
 
-        prefetchAd(placementId: placement, adType: .image, parameters: parameters) { [weak adapterRef = self] ok, err in
-            DispatchQueue.main.async {
-                guard let adapter = adapterRef else { return }
-                if ok {
-                    adapter.interstitialPlacementId = placement
-                    adapter.interstitialReady = true
+        loadAndCachePayload(placementId: placement, adType: .video, parameters: parameters) { [weak self] payload, err in
+            runOnMain {
+                guard let self else { return }
+                if let payload {
+                    self.cachedInterstitialPayload = payload
+                    self.interstitialPlacementId = placement
+                    self.interstitialReady = true
                     delegate.didLoadInterstitialAd()
                 } else if let err {
                     delegate.didFailToLoadInterstitialAdWithError(err)
@@ -184,22 +192,29 @@ extension ALBidscubeMediationAdapter: MAInterstitialAdapter {
 
     func showInterstitialAd(for parameters: MAAdapterResponseParameters, andNotify delegate: MAInterstitialAdapterDelegate) {
         let placement = bidscubePlacementId(from: parameters)
-        guard interstitialReady, interstitialPlacementId == placement,
+        guard interstitialReady,
+              interstitialPlacementId == placement,
+              let payload = cachedInterstitialPayload,
               let presenter = parameters.presentingViewController ?? UIApplication.shared.alsc_topViewController() else {
             let err = MAAdapterError(
                 adapterError: MAAdapterError.adDisplayFailedError,
                 mediatedNetworkErrorCode: MAAdapterError.adNotReady.code.rawValue,
                 mediatedNetworkErrorMessage: MAAdapterError.adNotReady.message
             )
-            delegate.didFailToDisplayInterstitialAdWithError(err)
+            runOnMain {
+                delegate.didFailToDisplayInterstitialAdWithError(err)
+            }
             return
         }
 
-        BidscubeSDK.setDisplayViewController(presenter)
-        let callback = BidscubeInterstitialMAXCallback(delegate: delegate)
-        BidscubeSDK.presentImageAd(placement, from: presenter, callback: callback)
-        interstitialReady = false
-        interstitialPlacementId = nil
+        runOnMain {
+            BidscubeSDK.setDisplayViewController(presenter)
+            let callback = BidscubeInterstitialMAXCallback(delegate: delegate)
+            BidscubeSDK.presentCachedAd(payload, from: presenter, callback: callback)
+            self.interstitialReady = false
+            self.interstitialPlacementId = nil
+            self.cachedInterstitialPayload = nil
+        }
     }
 }
 
@@ -217,15 +232,21 @@ private final class BidscubeInterstitialMAXCallback: NSObject, AdCallback {
     func onAdLoaded(_ placementId: String) {}
 
     func onAdDisplayed(_ placementId: String) {
-        delegate?.didDisplayInterstitialAd()
+        runOnMain {
+            self.delegate?.didDisplayInterstitialAd()
+        }
     }
 
     func onAdClicked(_ placementId: String) {
-        delegate?.didClickInterstitialAd()
+        runOnMain {
+            self.delegate?.didClickInterstitialAd()
+        }
     }
 
     func onAdClosed(_ placementId: String) {
-        delegate?.didHideInterstitialAd()
+        runOnMain {
+            self.delegate?.didHideInterstitialAd()
+        }
     }
 
     func onAdFailed(_ placementId: String, errorCode: Int, errorMessage: String) {
@@ -234,7 +255,9 @@ private final class BidscubeInterstitialMAXCallback: NSObject, AdCallback {
             mediatedNetworkErrorCode: errorCode,
             mediatedNetworkErrorMessage: errorMessage
         )
-        delegate?.didFailToDisplayInterstitialAdWithError(err)
+        runOnMain {
+            self.delegate?.didFailToDisplayInterstitialAdWithError(err)
+        }
     }
 }
 
@@ -248,13 +271,15 @@ extension ALBidscubeMediationAdapter: MARewardedAdapter {
         ensureBidscubeInitializedIfNeeded(from: parameters)
         rewardedReady = false
         rewardedPlacementId = nil
+        cachedRewardedPayload = nil
 
-        prefetchAd(placementId: placement, adType: .video, parameters: parameters) { [weak adapterRef = self] ok, err in
-            DispatchQueue.main.async {
-                guard let adapter = adapterRef else { return }
-                if ok {
-                    adapter.rewardedPlacementId = placement
-                    adapter.rewardedReady = true
+        loadAndCachePayload(placementId: placement, adType: .video, parameters: parameters) { [weak self] payload, err in
+            runOnMain {
+                guard let self else { return }
+                if let payload {
+                    self.cachedRewardedPayload = payload
+                    self.rewardedPlacementId = placement
+                    self.rewardedReady = true
                     delegate.didLoadRewardedAd()
                 } else if let err {
                     delegate.didFailToLoadRewardedAdWithError(err)
@@ -265,23 +290,30 @@ extension ALBidscubeMediationAdapter: MARewardedAdapter {
 
     func showRewardedAd(for parameters: MAAdapterResponseParameters, andNotify delegate: MARewardedAdapterDelegate) {
         let placement = bidscubePlacementId(from: parameters)
-        guard rewardedReady, rewardedPlacementId == placement,
+        guard rewardedReady,
+              rewardedPlacementId == placement,
+              let payload = cachedRewardedPayload,
               let presenter = parameters.presentingViewController ?? UIApplication.shared.alsc_topViewController() else {
             let err = MAAdapterError(
                 adapterError: MAAdapterError.adDisplayFailedError,
                 mediatedNetworkErrorCode: MAAdapterError.adNotReady.code.rawValue,
                 mediatedNetworkErrorMessage: MAAdapterError.adNotReady.message
             )
-            delegate.didFailToDisplayRewardedAdWithError(err)
+            runOnMain {
+                delegate.didFailToDisplayRewardedAdWithError(err)
+            }
             return
         }
 
         configureReward(for: parameters)
-        BidscubeSDK.setDisplayViewController(presenter)
-        let callback = BidscubeRewardedMAXCallback(adapter: self, delegate: delegate)
-        BidscubeSDK.presentVideoAd(placement, from: presenter, callback: callback)
-        rewardedReady = false
-        rewardedPlacementId = nil
+        runOnMain {
+            BidscubeSDK.setDisplayViewController(presenter)
+            let callback = BidscubeRewardedMAXCallback(adapter: self, delegate: delegate)
+            BidscubeSDK.presentCachedAd(payload, from: presenter, callback: callback)
+            self.rewardedReady = false
+            self.rewardedPlacementId = nil
+            self.cachedRewardedPayload = nil
+        }
     }
 }
 
@@ -289,7 +321,8 @@ extension ALBidscubeMediationAdapter: MARewardedAdapter {
 private final class BidscubeRewardedMAXCallback: NSObject, AdCallback {
     private weak var adapter: ALBidscubeMediationAdapter?
     private weak var delegate: MARewardedAdapterDelegate?
-    private var granted = false
+    private var videoCompleted = false
+    private var didReward = false
 
     init(adapter: ALBidscubeMediationAdapter, delegate: MARewardedAdapterDelegate) {
         self.adapter = adapter
@@ -302,18 +335,22 @@ private final class BidscubeRewardedMAXCallback: NSObject, AdCallback {
     func onAdLoaded(_ placementId: String) {}
 
     func onAdDisplayed(_ placementId: String) {
-        delegate?.didDisplayRewardedAd()
+        runOnMain {
+            self.delegate?.didDisplayRewardedAd()
+        }
     }
 
     func onAdClicked(_ placementId: String) {
-        delegate?.didClickRewardedAd()
+        runOnMain {
+            self.delegate?.didClickRewardedAd()
+        }
     }
 
     func onAdClosed(_ placementId: String) {
-        if granted || adapter?.shouldAlwaysRewardUser == true, let reward = adapter?.reward {
-            delegate?.didRewardUser(with: reward)
+        runOnMain {
+            self.maybeReward()
+            self.delegate?.didHideRewardedAd()
         }
-        delegate?.didHideRewardedAd()
     }
 
     func onAdFailed(_ placementId: String, errorCode: Int, errorMessage: String) {
@@ -322,11 +359,26 @@ private final class BidscubeRewardedMAXCallback: NSObject, AdCallback {
             mediatedNetworkErrorCode: errorCode,
             mediatedNetworkErrorMessage: errorMessage
         )
-        delegate?.didFailToDisplayRewardedAdWithError(err)
+        runOnMain {
+            self.delegate?.didFailToDisplayRewardedAdWithError(err)
+        }
     }
 
     func onVideoAdCompleted(_ placementId: String) {
-        granted = true
+        videoCompleted = true
+    }
+
+    func onVideoAdSkipped(_ placementId: String) {
+        videoCompleted = false
+    }
+
+    private func maybeReward() {
+        guard !didReward else { return }
+        guard videoCompleted || adapter?.shouldAlwaysRewardUser == true else { return }
+        guard let reward = adapter?.reward else { return }
+
+        didReward = true
+        delegate?.didRewardUser(with: reward)
     }
 }
 
@@ -341,38 +393,42 @@ extension ALBidscubeMediationAdapter: MAAdViewAdapter {
         andNotify delegate: MAAdViewAdapterDelegate
     ) {
         let placement = bidscubePlacementId(from: parameters)
-        ensureBidscubeInitializedIfNeeded(from: parameters)
 
-        guard !placement.isEmpty else {
-            delegate.didFailToLoadAdViewAdWithError(mapLoadError("Missing Bidscube placement (MAX App ID / app_id)."))
-            return
+        runOnMain { [weak self] in
+            guard let self else { return }
+            ensureBidscubeInitializedIfNeeded(from: parameters)
+
+            guard !placement.isEmpty else {
+                delegate.didFailToLoadAdViewAdWithError(self.mapLoadError("Missing Bidscube placement (MAX App ID / app_id)."))
+                return
+            }
+
+            if let presenter = parameters.presentingViewController ?? UIApplication.shared.alsc_topViewController() {
+                BidscubeSDK.setDisplayViewController(presenter)
+            }
+
+            let size = adFormat.size
+            let callback = BidscubeAdViewMAXCallback(delegate: delegate, adView: nil)
+            let view: UIView
+
+            if adFormat.isBannerOrLeaderAd {
+                let isLeader = adFormat.label.uppercased().contains("LEADER")
+                let position: AdPosition = isLeader ? .sidebar : .footer
+                let banner = BidscubeSDK.getBannerAdView(placement, position: position, callback: callback)
+                banner.setBannerDimensions(width: size.width, height: size.height)
+                view = banner
+            } else {
+                view = BidscubeSDK.getImageAdView(placement, callback)
+                view.translatesAutoresizingMaskIntoConstraints = false
+                NSLayoutConstraint.activate([
+                    view.widthAnchor.constraint(equalToConstant: size.width),
+                    view.heightAnchor.constraint(equalToConstant: size.height)
+                ])
+            }
+
+            callback.adView = view
+            self.loadedBannerView = view
         }
-
-        if let presenter = parameters.presentingViewController ?? UIApplication.shared.alsc_topViewController() {
-            BidscubeSDK.setDisplayViewController(presenter)
-        }
-
-        let size = adFormat.size
-        let callback = BidscubeAdViewMAXCallback(delegate: delegate, adView: nil)
-        let view: UIView
-
-        if adFormat.isBannerOrLeaderAd {
-            let isLeader = adFormat.label.uppercased().contains("LEADER")
-            let position: AdPosition = isLeader ? .sidebar : .footer
-            let banner = BidscubeSDK.getBannerAdView(placement, position: position, callback: callback)
-            banner.setBannerDimensions(width: size.width, height: size.height)
-            view = banner
-        } else {
-            view = BidscubeSDK.getImageAdView(placement, callback)
-            view.translatesAutoresizingMaskIntoConstraints = false
-            NSLayoutConstraint.activate([
-                view.widthAnchor.constraint(equalToConstant: size.width),
-                view.heightAnchor.constraint(equalToConstant: size.height)
-            ])
-        }
-
-        callback.adView = view
-        loadedBannerView = view
     }
 }
 
@@ -391,19 +447,27 @@ private final class BidscubeAdViewMAXCallback: NSObject, AdCallback {
 
     func onAdLoaded(_ placementId: String) {
         guard let adView else { return }
-        delegate?.didLoadAd(forAdView: adView)
+        runOnMain {
+            self.delegate?.didLoadAd(forAdView: adView)
+        }
     }
 
     func onAdDisplayed(_ placementId: String) {
-        delegate?.didDisplayAdViewAd()
+        runOnMain {
+            self.delegate?.didDisplayAdViewAd()
+        }
     }
 
     func onAdClicked(_ placementId: String) {
-        delegate?.didClickAdViewAd()
+        runOnMain {
+            self.delegate?.didClickAdViewAd()
+        }
     }
 
     func onAdClosed(_ placementId: String) {
-        delegate?.didHideAdViewAd()
+        runOnMain {
+            self.delegate?.didHideAdViewAd()
+        }
     }
 
     func onAdFailed(_ placementId: String, errorCode: Int, errorMessage: String) {
@@ -412,81 +476,9 @@ private final class BidscubeAdViewMAXCallback: NSObject, AdCallback {
             mediatedNetworkErrorCode: errorCode,
             mediatedNetworkErrorMessage: errorMessage
         )
-        delegate?.didFailToLoadAdViewAdWithError(err)
-    }
-}
-
-// MARK: - Native (MANativeAdAdapter)
-
-@available(iOS 13.0, *)
-extension ALBidscubeMediationAdapter: MANativeAdAdapter {
-
-    func loadNativeAd(for parameters: MAAdapterResponseParameters, andNotify delegate: MANativeAdAdapterDelegate) {
-        let placement = bidscubePlacementId(from: parameters)
-        ensureBidscubeInitializedIfNeeded(from: parameters)
-
-        if let presenter = parameters.presentingViewController ?? UIApplication.shared.alsc_topViewController() {
-            BidscubeSDK.setDisplayViewController(presenter)
+        runOnMain {
+            self.delegate?.didFailToLoadAdViewAdWithError(err)
         }
-
-        guard !placement.isEmpty else {
-            delegate.didFailToLoadNativeAdWithError(MAAdapterError(
-                adapterError: .unspecified,
-                mediatedNetworkErrorCode: MAAdapterError.errorCodeUnspecified,
-                mediatedNetworkErrorMessage: "Missing Bidscube placement (MAX App ID / app_id)."
-            ))
-            return
-        }
-
-        let screenW = Int(UIScreen.main.bounds.width)
-        let screenH = Int(UIScreen.main.bounds.height)
-        let callback = BidscubeNativeMAXCallback(adapter: self, delegate: delegate)
-        let view = BidscubeSDK.getNativeAdView(placement, width: screenW, height: screenH, callback)
-        loadedNativeView = view
-    }
-}
-
-@available(iOS 13.0, *)
-private final class BidscubeNativeMAXCallback: NSObject, AdCallback {
-    private weak var adapter: ALBidscubeMediationAdapter?
-    private weak var delegate: MANativeAdAdapterDelegate?
-
-    init(adapter: ALBidscubeMediationAdapter, delegate: MANativeAdAdapterDelegate) {
-        self.adapter = adapter
-        self.delegate = delegate
-        super.init()
-    }
-
-    func onAdLoading(_ placementId: String) {}
-
-    func onAdLoaded(_ placementId: String) {
-        guard let adapter, let media = adapter.loadedNativeView else {
-            delegate?.didFailToLoadNativeAdWithError(.invalidConfiguration)
-            return
-        }
-        let nativeAd = MABidscubeNativeAd(format: MAAdFormat.native) { builder in
-            builder.mediaView = media
-        }
-        delegate?.didLoadAd(for: nativeAd, withExtraInfo: nil)
-    }
-
-    func onAdDisplayed(_ placementId: String) {
-        delegate?.didDisplayNativeAd(withExtraInfo: nil)
-    }
-
-    func onAdClicked(_ placementId: String) {
-        delegate?.didClickNativeAd()
-    }
-
-    func onAdClosed(_ placementId: String) {}
-
-    func onAdFailed(_ placementId: String, errorCode: Int, errorMessage: String) {
-        let err = MAAdapterError(
-            adapterError: .unspecified,
-            mediatedNetworkErrorCode: errorCode,
-            mediatedNetworkErrorMessage: errorMessage
-        )
-        delegate?.didFailToLoadNativeAdWithError(err)
     }
 }
 
