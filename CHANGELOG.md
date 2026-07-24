@@ -6,6 +6,16 @@ All notable changes to the Bidscube iOS SDK and AppLovin MAX adapter are documen
 
 ---
 
+## [1.1.1] - 2026-07-24
+
+### Added
+
+- Publisher `user_id` support: `SDKConfig.Builder.userId(_:)`, `BidscubeSDK.setUserId(_:)`, and `BidscubeSDK.getUserId()`.
+- SSP ad requests include `user_id` query parameter when set (banner, video, native).
+- MAX adapter forwards server parameters `user_id` / `userId` to the SDK for postback attribution.
+
+---
+
 ## [1.1.0] - 2026-07-08
 
 ### Added

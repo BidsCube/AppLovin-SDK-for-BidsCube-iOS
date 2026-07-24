@@ -12,6 +12,8 @@ public final class SDKConfig {
     public let enableSKAdNetwork: Bool
     public let skAdNetworkId: String?
     public let skAdNetworkConversionValue: Int
+    /// Optional publisher user id; sent as `user_id` on SSP ad requests when set.
+    public let userId: String?
 
     public var baseURL: String {
         URLBuilder.baseURLString(from: adRequestAuthority)
@@ -26,7 +28,8 @@ public final class SDKConfig {
                  customVideoPlayerFactory: (any BidscubeCustomVideoPlayerFactory)?,
                  enableSKAdNetwork: Bool,
                  skAdNetworkId: String?,
-                 skAdNetworkConversionValue: Int) {
+                 skAdNetworkConversionValue: Int,
+                 userId: String?) {
         self.enableLogging = enableLogging
         self.enableDebugMode = enableDebugMode
         self.defaultAdTimeoutMs = defaultAdTimeoutMs
@@ -37,6 +40,30 @@ public final class SDKConfig {
         self.enableSKAdNetwork = enableSKAdNetwork
         self.skAdNetworkId = skAdNetworkId
         self.skAdNetworkConversionValue = skAdNetworkConversionValue
+        self.userId = Self.normalizeUserId(userId)
+    }
+
+    /// Returns a copy with an updated publisher user id.
+    public func withUserId(_ userId: String?) -> SDKConfig {
+        SDKConfig(
+            enableLogging: enableLogging,
+            enableDebugMode: enableDebugMode,
+            defaultAdTimeoutMs: defaultAdTimeoutMs,
+            defaultAdPosition: defaultAdPosition,
+            adRequestAuthority: adRequestAuthority,
+            videoPlayerType: videoPlayerType,
+            customVideoPlayerFactory: customVideoPlayerFactory,
+            enableSKAdNetwork: enableSKAdNetwork,
+            skAdNetworkId: skAdNetworkId,
+            skAdNetworkConversionValue: skAdNetworkConversionValue,
+            userId: userId
+        )
+    }
+
+    static func normalizeUserId(_ userId: String?) -> String? {
+        guard let userId else { return nil }
+        let trimmed = userId.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? nil : trimmed
     }
 
     public final class Builder {
@@ -50,6 +77,7 @@ public final class SDKConfig {
         private var enableSKAdNetwork: Bool = false
         private var skAdNetworkId: String? = nil
         private var skAdNetworkConversionValue: Int = 0
+        private var userId: String? = nil
 
         public init() {}
 
@@ -124,6 +152,13 @@ public final class SDKConfig {
             self.skAdNetworkConversionValue = max(0, min(value, 63))
             return self
         }
+
+        /// Publisher user identifier for postback attribution. Sent as `user_id` on SSP ad requests.
+        @discardableResult
+        public func userId(_ userId: String?) -> Builder {
+            self.userId = userId
+            return self
+        }
         
 
         public func build() -> SDKConfig {
@@ -137,7 +172,8 @@ public final class SDKConfig {
                 customVideoPlayerFactory: customVideoPlayerFactory,
                 enableSKAdNetwork: enableSKAdNetwork,
                 skAdNetworkId: skAdNetworkId,
-                skAdNetworkConversionValue: skAdNetworkConversionValue
+                skAdNetworkConversionValue: skAdNetworkConversionValue,
+                userId: userId
             )
         }
     }

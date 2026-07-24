@@ -34,6 +34,9 @@ public final class BidscubeSDK {
         Logger.configure(from: config)
         Logger.info("Bidscube SDK initialization started")
         Logger.info("Bidscube SDK initialized with authority=\(config.adRequestAuthority), player=\(config.videoPlayerType.rawValue)")
+        if config.userId != nil {
+            Logger.info("Publisher user id configured for ad requests")
+        }
         Logger.deviceInfo()
         
         // Initialize SKAdNetwork if enabled
@@ -106,6 +109,23 @@ public final class BidscubeSDK {
     
     public static func getConfiguration() -> SDKConfig? {
         return configuration
+    }
+
+    /// Sets or updates the publisher user id sent as `user_id` on SSP ad requests (e.g. after login).
+    public static func setUserId(_ userId: String?) {
+        guard let config = configuration else {
+            Logger.warning("setUserId called before SDK initialization; user id will be ignored until initialize(config:) is called with userId(_:)")
+            return
+        }
+        configuration = config.withUserId(userId)
+        if SDKConfig.normalizeUserId(userId) != nil {
+            Logger.info("Publisher user id updated for ad requests")
+        }
+    }
+
+    /// Current publisher user id, if set during initialization or via `setUserId(_:)`.
+    public static func getUserId() -> String? {
+        configuration?.userId
     }
 
     public static func cleanup() {
@@ -213,7 +233,8 @@ public final class BidscubeSDK {
             debug: debug,
             ctaText: ctaText,
             nativeWidth: nativeWidth,
-            nativeHeight: nativeHeight
+            nativeHeight: nativeHeight,
+            userId: config.userId
         )
     }
     public static func showImageAd(from presenter: UIViewController? = nil, placementId: String, callback: AdCallback?) {

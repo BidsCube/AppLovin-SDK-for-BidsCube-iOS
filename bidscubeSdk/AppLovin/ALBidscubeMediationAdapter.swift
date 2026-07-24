@@ -7,6 +7,20 @@ private enum BidscubeMAXParams {
     static let appId = "app_id"
     static let requestAuthority = "request_authority"
     static let sspHost = "ssp_host"
+    static let userId = "user_id"
+    static let userIdCamel = "userId"
+}
+
+private func bidscubeUserId(from serverParameters: [String: Any]) -> String? {
+    if let userId = serverParameters[BidscubeMAXParams.userId] as? String,
+       let normalized = SDKConfig.normalizeUserId(userId) {
+        return normalized
+    }
+    if let userId = serverParameters[BidscubeMAXParams.userIdCamel] as? String,
+       let normalized = SDKConfig.normalizeUserId(userId) {
+        return normalized
+    }
+    return nil
 }
 
 private func bidscubePlacementId(from parameters: MAAdapterResponseParameters) -> String {
@@ -22,17 +36,28 @@ private func bidscubeSDKConfig(from parameters: MAAdapterParameters) -> SDKConfi
     let rawAuthority = (serverParameters[BidscubeMAXParams.requestAuthority] as? String)
         ?? (serverParameters[BidscubeMAXParams.sspHost] as? String)
     let isTesting = parameters.isTesting
-    return SDKConfig.Builder()
+    var builder = SDKConfig.Builder()
         .enableLogging(isTesting)
         .enableDebugMode(isTesting)
         .defaultAdTimeout(Constants.defaultTimeoutMs)
         .defaultAdPosition(.fullScreen)
         .adRequestAuthority(rawAuthority)
         .enableSKAdNetwork(false)
-        .build()
+    if let userId = bidscubeUserId(from: serverParameters) {
+        builder = builder.userId(userId)
+    }
+    return builder.build()
+}
+
+private func applyUserIdIfNeeded(from parameters: MAAdapterParameters) {
+    guard let userId = bidscubeUserId(from: parameters.serverParameters) else { return }
+    if BidscubeSDK.isInitialized() {
+        BidscubeSDK.setUserId(userId)
+    }
 }
 
 private func ensureBidscubeInitializedIfNeeded(from parameters: MAAdapterParameters) {
+    applyUserIdIfNeeded(from: parameters)
     if BidscubeSDK.isInitialized() { return }
     BidscubeSDK.initialize(config: bidscubeSDKConfig(from: parameters))
 }

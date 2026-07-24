@@ -24,7 +24,7 @@ source 'https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS.git'
 source 'https://cdn.cocoapods.org/'
 
 target 'YourApp' do
-  pod 'BidscubeSDKAppLovin', '1.1.0'
+  pod 'BidscubeSDKAppLovin', '1.1.1'
 end
 ```
 
@@ -64,9 +64,28 @@ Follow AppLovin’s guide for custom SDK networks:
 | **iOS Adapter Class Name** | `ALBidscubeMediationAdapter` |
 | **App ID** | BidCube **Placement ID** (MAX labels this “App ID”; for this network it must be the placement ID) |
 | **Placement ID** | Optional; leave empty unless your MAX setup needs a second value |
-| **Server parameters (optional)** | `app_id`, `request_authority`, or `ssp_host` — SSP host or `host:port` |
+| **Server parameters (optional)** | `app_id`, `request_authority`, `ssp_host`, `user_id` (or `userId`) — SSP host and publisher user id for postbacks |
 
 If `request_authority` or `ssp_host` is set, the adapter uses it as the ad request authority.
+
+If `user_id` (or `userId`) is set, the SDK includes it on every ad request as the `user_id` query parameter for server-side postback attribution.
+
+### Direct SDK initialization with user id
+
+```swift
+let config = SDKConfig.Builder()
+    .adRequestAuthority("your-ssp-host.example.com")
+    .userId("publisher-user-123")
+    .build()
+
+BidscubeSDK.initialize(config: config)
+```
+
+Update after login without re-initializing:
+
+```swift
+BidscubeSDK.setUserId("publisher-user-456")
+```
 
 ## Supported ad formats
 
@@ -189,7 +208,7 @@ Quick steps for app publishers integrating Bidscube via AppLovin MAX:
    source 'https://cdn.cocoapods.org/'
 
    target 'YourApp' do
-     pod 'BidscubeSDKAppLovin', '1.1.0'
+     pod 'BidscubeSDKAppLovin', '1.1.1'
    end
    ```
 
@@ -210,7 +229,7 @@ Quick steps for app publishers integrating Bidscube via AppLovin MAX:
 
 7. **Verify** — use MAX Mediation Debugger and confirm Bidscube appears on the waterfall for your ad units.
 
-See also [`Podfile.example`](Podfile.example), [`docs/errors.md`](docs/errors.md), and [`RELEASE.md`](RELEASE.md) for publishing **1.1.0**.
+See also [`Podfile.example`](Podfile.example), [`docs/errors.md`](docs/errors.md), and [`RELEASE.md`](RELEASE.md) for publishing **1.1.1**.
 
 ## License
 
@@ -218,4 +237,4 @@ MIT. See [LICENSE](LICENSE).
 
 ## Version
 
-BidscubeSDKAppLovin **1.1.0**
+BidscubeSDKAppLovin **1.1.1**

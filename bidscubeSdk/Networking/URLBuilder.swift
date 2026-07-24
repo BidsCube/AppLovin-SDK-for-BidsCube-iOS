@@ -60,7 +60,8 @@ public struct URLBuilder {
         ctaText: String? = nil,
         includeSKAdNetworks: Bool = true,
         nativeWidth: Int? = nil,
-        nativeHeight: Int? = nil
+        nativeHeight: Int? = nil,
+        userId: String? = nil
     ) -> URL? {
         return buildAdRequestURL(
             base: Constants.baseURL,
@@ -72,7 +73,8 @@ public struct URLBuilder {
             ctaText: ctaText,
             includeSKAdNetworks: includeSKAdNetworks,
             nativeWidth: nativeWidth,
-            nativeHeight: nativeHeight
+            nativeHeight: nativeHeight,
+            userId: userId
         )
     }
 
@@ -86,7 +88,8 @@ public struct URLBuilder {
         ctaText: String? = nil,
         includeSKAdNetworks: Bool = true,
         nativeWidth: Int? = nil,
-        nativeHeight: Int? = nil
+        nativeHeight: Int? = nil,
+        userId: String? = nil
     ) -> URL? {
         guard let baseURL = buildBaseURL(from: base),
               var components = URLComponents(url: baseURL, resolvingAgainstBaseURL: false) else {
@@ -98,7 +101,8 @@ public struct URLBuilder {
             placementId: placementId,
             adType: adType,
             nativeWidth: nativeWidth,
-            nativeHeight: nativeHeight
+            nativeHeight: nativeHeight,
+            userId: userId
         )
 
         if let ctaText = ctaText {
@@ -131,11 +135,13 @@ public struct URLBuilder {
         placementId: String,
         adType: AdType,
         nativeWidth: Int?,
-        nativeHeight: Int?
+        nativeHeight: Int?,
+        userId: String?
     ) -> [URLQueryItem] {
+        let items: [URLQueryItem]
         switch adType {
         case .image:
-            return [
+            items = [
                 URLQueryItem(name: Constants.QueryParams.placementId, value: placementId),
                 URLQueryItem(name: Constants.QueryParams.contentType, value: Constants.AdTypes.image),
                 URLQueryItem(name: Constants.QueryParams.method, value: Constants.Methods.api),
@@ -153,7 +159,7 @@ public struct URLBuilder {
             ]
 
         case .video:
-            return [
+            items = [
                 URLQueryItem(name: Constants.QueryParams.contentType, value: Constants.AdTypes.video),
                 URLQueryItem(name: Constants.QueryParams.method, value: Constants.Methods.xml),
                 URLQueryItem(name: Constants.QueryParams.id, value: placementId),
@@ -175,7 +181,7 @@ public struct URLBuilder {
         case .native:
             let requestWidth = nativeWidth ?? DeviceInfo.logicalScreenWidth
             let requestHeight = nativeHeight ?? DeviceInfo.logicalScreenHeight
-            return [
+            items = [
                 URLQueryItem(name: Constants.QueryParams.contentType, value: Constants.AdTypes.native),
                 URLQueryItem(name: Constants.QueryParams.method, value: Constants.Methods.native),
                 URLQueryItem(name: Constants.QueryParams.id, value: placementId),
@@ -199,6 +205,15 @@ public struct URLBuilder {
                 URLQueryItem(name: Constants.QueryParams.height, value: String(requestHeight))
             ]
         }
+
+        return appendUserIdIfPresent(to: items, userId: userId)
+    }
+
+    private static func appendUserIdIfPresent(to queryItems: [URLQueryItem], userId: String?) -> [URLQueryItem] {
+        guard let normalized = SDKConfig.normalizeUserId(userId) else { return queryItems }
+        var items = queryItems
+        items.append(URLQueryItem(name: Constants.QueryParams.userId, value: normalized))
+        return items
     }
 
     private static func nullLiteralIfEmpty(_ value: String?) -> String {
