@@ -69,6 +69,7 @@ public final class AdViewController: UIViewController {
     private var swipeGestureRecognizer: UISwipeGestureRecognizer?
     private var doubleTapGestureRecognizer: UITapGestureRecognizer?
     private var isVideoPlaying = false
+    private var didFireAdClosed = false
     
     public init(
         placementId: String,
@@ -615,19 +616,19 @@ public final class AdViewController: UIViewController {
     }
     
     @objc private func backButtonTapped() {
-        callback?.onAdClosed(placementId)
-        
-        if let navigationController = navigationController, navigationController.viewControllers.count > 1 {
-            navigationController.popViewController(animated: true)
-        } else {
-            dismiss(animated: true)
-        }
+        dismissAdOnce()
     }
     
     @objc private func closeButtonTapped() {
-        
+        dismissAdOnce()
+    }
+
+    /// Centralized fullscreen dismissal — fires `onAdClosed` at most once.
+    public func dismissAdOnce() {
+        guard !didFireAdClosed else { return }
+        didFireAdClosed = true
         callback?.onAdClosed(placementId)
-        
+
         if let navigationController = navigationController, navigationController.viewControllers.count > 1 {
             navigationController.popViewController(animated: true)
         } else {

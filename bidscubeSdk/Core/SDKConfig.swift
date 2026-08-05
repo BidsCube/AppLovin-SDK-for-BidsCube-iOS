@@ -14,6 +14,9 @@ public final class SDKConfig {
     public let skAdNetworkConversionValue: Int
     /// Optional publisher user id; sent as `user_id` on SSP ad requests when set.
     public let userId: String?
+    /// When `true`, fullscreen video closes immediately after linear playback ends or is skipped.
+    /// Default is `false` (keep ad open for companion / last frame / manual close).
+    public let autoClose: Bool
 
     public var baseURL: String {
         URLBuilder.baseURLString(from: adRequestAuthority)
@@ -29,7 +32,8 @@ public final class SDKConfig {
                  enableSKAdNetwork: Bool,
                  skAdNetworkId: String?,
                  skAdNetworkConversionValue: Int,
-                 userId: String?) {
+                 userId: String?,
+                 autoClose: Bool) {
         self.enableLogging = enableLogging
         self.enableDebugMode = enableDebugMode
         self.defaultAdTimeoutMs = defaultAdTimeoutMs
@@ -41,6 +45,25 @@ public final class SDKConfig {
         self.skAdNetworkId = skAdNetworkId
         self.skAdNetworkConversionValue = skAdNetworkConversionValue
         self.userId = Self.normalizeUserId(userId)
+        self.autoClose = autoClose
+    }
+
+    /// Returns a copy with an updated auto-close policy.
+    public func withAutoClose(_ autoClose: Bool) -> SDKConfig {
+        SDKConfig(
+            enableLogging: enableLogging,
+            enableDebugMode: enableDebugMode,
+            defaultAdTimeoutMs: defaultAdTimeoutMs,
+            defaultAdPosition: defaultAdPosition,
+            adRequestAuthority: adRequestAuthority,
+            videoPlayerType: videoPlayerType,
+            customVideoPlayerFactory: customVideoPlayerFactory,
+            enableSKAdNetwork: enableSKAdNetwork,
+            skAdNetworkId: skAdNetworkId,
+            skAdNetworkConversionValue: skAdNetworkConversionValue,
+            userId: userId,
+            autoClose: autoClose
+        )
     }
 
     /// Returns a copy with an updated publisher user id.
@@ -56,7 +79,8 @@ public final class SDKConfig {
             enableSKAdNetwork: enableSKAdNetwork,
             skAdNetworkId: skAdNetworkId,
             skAdNetworkConversionValue: skAdNetworkConversionValue,
-            userId: userId
+            userId: userId,
+            autoClose: autoClose
         )
     }
 
@@ -78,6 +102,7 @@ public final class SDKConfig {
         private var skAdNetworkId: String? = nil
         private var skAdNetworkConversionValue: Int = 0
         private var userId: String? = nil
+        private var autoClose: Bool = false
 
         public init() {}
 
@@ -159,6 +184,13 @@ public final class SDKConfig {
             self.userId = userId
             return self
         }
+
+        /// When `true`, fullscreen video auto-closes after linear playback ends or is skipped.
+        @discardableResult
+        public func autoClose(_ value: Bool) -> Builder {
+            self.autoClose = value
+            return self
+        }
         
 
         public func build() -> SDKConfig {
@@ -173,7 +205,8 @@ public final class SDKConfig {
                 enableSKAdNetwork: enableSKAdNetwork,
                 skAdNetworkId: skAdNetworkId,
                 skAdNetworkConversionValue: skAdNetworkConversionValue,
-                userId: userId
+                userId: userId,
+                autoClose: autoClose
             )
         }
     }

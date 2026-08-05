@@ -1,7 +1,7 @@
 #!/bin/bash
 # Sync root BidscubeSDKAppLovin.podspec into the in-repo CocoaPods spec layout.
 # Enables: source 'https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS.git'
-#          pod 'BidscubeSDKAppLovin', '1.1.1'
+#          pod 'BidscubeSDKAppLovin', '1.2.0'
 # No CocoaPods Trunk required.
 
 set -euo pipefail

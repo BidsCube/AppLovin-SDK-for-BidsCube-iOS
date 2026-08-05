@@ -6,6 +6,22 @@ All notable changes to the Bidscube iOS SDK and AppLovin MAX adapter are documen
 
 ---
 
+## [1.2.0] - 2026-08-05
+
+### Added
+
+- **`SDKConfig.Builder.autoClose(_:)`** (default **`false`**): fullscreen video stays open after linear playback for VAST Companion, last frame, or manual close; `onAdClosed` fires only on user/system close. When **`true`**, ad dismisses immediately after linear video ends or is skipped.
+- VAST Companion post-video support: `StaticResource`, `HTMLResource`, `IFrameResource`, click-through, and tracking (HTML > IFrame > Static priority).
+- `VideoSkipControlOverlay` — skip countdown (`Skip in N` → `Skip`), default **15 s** or VAST `Linear@skipoffset`.
+- `FullscreenVideoSessionController` state machine and centralized fullscreen dismiss in `IMAVideoAdHandler` / `AdViewController.dismissAdOnce()`.
+- MAX adapter forwards init server parameters **`auto_close`** / **`autoClose`** to `SDKConfig.Builder.autoClose(...)`.
+
+### Tests
+
+- `FullscreenVideoSessionControllerTests`, `VastParserCompanionTests`.
+
+---
+
 ## [1.1.1] - 2026-07-24
 
 ### Added

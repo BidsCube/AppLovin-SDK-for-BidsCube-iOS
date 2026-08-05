@@ -1,6 +1,6 @@
 # Bidscube + AppLovin MAX (iOS)
 
-**SDK / adapter 1.1.1** · CocoaPod `BidscubeSDKAppLovin`
+**SDK / adapter 1.2.0** · CocoaPod `BidscubeSDKAppLovin`
 
 AppLovin MAX custom network adapter for the Bidscube iOS SDK. The adapter ships inside the same pod as the runtime — no separate SDK pod is required for mediation.
 
@@ -24,7 +24,7 @@ source 'https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS.git'
 source 'https://cdn.cocoapods.org/'
 
 target 'YourApp' do
-  pod 'BidscubeSDKAppLovin', '1.1.1'
+  pod 'BidscubeSDKAppLovin', '1.2.0'
 end
 ```
 
@@ -35,6 +35,7 @@ end
 - The adapter calls `BidscubeSDK.setDisplayViewController(_:)` with MAX’s presenting view controller before show/load.
 - Ad failures use stable codes from `AdErrorCode` (for example **204** for HTTP no-fill). See [docs/errors.md](../docs/errors.md).
 - Optional server parameter `user_id` (or `userId`) is forwarded as `user_id` on SSP ad requests for postback attribution.
+- Optional init server parameter **`auto_close`** (alias `autoClose`): `true` / `false`, default **`false`**. Passed to `SDKConfig.Builder.autoClose(...)`. When `false`, fullscreen video stays open after linear playback for VAST Companion or last frame; `onAdClosed` fires only on manual/system close.
 - Interstitial and rewarded use the **video** Bidscube path (IMA VAST by default).
 - Load caches the Bidscube response; show presents from the cached payload (no second network request).
 - Signal collection returns structured JSON via `MASignalProvider` (no device identifiers or PII).
