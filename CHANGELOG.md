@@ -6,7 +6,7 @@ All notable changes to the Bidscube iOS SDK and AppLovin MAX adapter are documen
 
 ---
 
-## [1.2.0] - 2026-08-05
+## [1.1.2] - 2026-08-05
 
 ### Added
 

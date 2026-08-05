@@ -1,6 +1,6 @@
 # Bidscube + AppLovin MAX (iOS)
 
-**SDK / adapter 1.2.0** · CocoaPod `BidscubeSDKAppLovin`
+**SDK / adapter 1.1.2** · CocoaPod `BidscubeSDKAppLovin`
 
 AppLovin MAX custom network adapter for the Bidscube iOS SDK. The adapter ships inside the same pod as the runtime — no separate SDK pod is required for mediation.
 
@@ -24,7 +24,7 @@ source 'https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS.git'
 source 'https://cdn.cocoapods.org/'
 
 target 'YourApp' do
-  pod 'BidscubeSDKAppLovin', '1.2.0'
+  pod 'BidscubeSDKAppLovin', '1.1.2'
 end
 ```
 

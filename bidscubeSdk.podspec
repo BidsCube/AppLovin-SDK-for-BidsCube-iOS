@@ -1,6 +1,6 @@
 Pod::Spec.new do |spec|
   spec.name         = "BidscubeSDK"
-  spec.version      = "1.2.0"
+  spec.version      = "1.1.2"
   spec.summary      = "[Deprecated] Use BidscubeSDKAppLovin for AppLovin MAX integration"
   spec.description  = <<-DESC
                       DEPRECATED: This pod excludes the AppLovin MAX adapter.
