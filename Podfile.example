@@ -6,7 +6,7 @@ source 'https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS.git'
 source 'https://cdn.cocoapods.org/'
 
 target 'YourApp' do
-  pod 'BidscubeSDKAppLovin', '1.1.1'
+  pod 'BidscubeSDKAppLovin', '1.2.0'
 end
 
 # BidscubeSDKAppLovin pulls AppLovinSDK and GoogleAds-IMA-iOS-SDK transitively.

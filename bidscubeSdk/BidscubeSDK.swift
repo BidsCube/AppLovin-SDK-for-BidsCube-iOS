@@ -128,6 +128,11 @@ public final class BidscubeSDK {
         configuration?.userId
     }
 
+    /// Fullscreen video auto-close policy from SDK configuration (default `false`).
+    public static func isAutoClose() -> Bool {
+        configuration?.autoClose ?? false
+    }
+
     public static func cleanup() {
         
         removeAllBanners()

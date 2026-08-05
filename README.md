@@ -24,7 +24,7 @@ source 'https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS.git'
 source 'https://cdn.cocoapods.org/'
 
 target 'YourApp' do
-  pod 'BidscubeSDKAppLovin', '1.1.1'
+  pod 'BidscubeSDKAppLovin', '1.2.0'
 end
 ```
 
@@ -70,6 +70,8 @@ If `request_authority` or `ssp_host` is set, the adapter uses it as the ad reque
 
 If `user_id` (or `userId`) is set, the SDK includes it on every ad request as the `user_id` query parameter for server-side postback attribution.
 
+Optional init server parameter **`auto_close`** (alias `autoClose`): when `true`, fullscreen video closes immediately after linear playback ends or is skipped. Default is **`false`** (keep ad open for VAST Companion, last frame, or manual close).
+
 ### Direct SDK initialization with user id
 
 ```swift
@@ -79,6 +81,12 @@ let config = SDKConfig.Builder()
     .build()
 
 BidscubeSDK.initialize(config: config)
+```
+
+Fullscreen auto-close (default `false`):
+
+```swift
+BidscubeSDK.initialize(config: SDKConfig.Builder().autoClose(false).build())
 ```
 
 Update after login without re-initializing:
@@ -208,7 +216,7 @@ Quick steps for app publishers integrating Bidscube via AppLovin MAX:
    source 'https://cdn.cocoapods.org/'
 
    target 'YourApp' do
-     pod 'BidscubeSDKAppLovin', '1.1.1'
+     pod 'BidscubeSDKAppLovin', '1.2.0'
    end
    ```
 
@@ -229,7 +237,7 @@ Quick steps for app publishers integrating Bidscube via AppLovin MAX:
 
 7. **Verify** — use MAX Mediation Debugger and confirm Bidscube appears on the waterfall for your ad units.
 
-See also [`Podfile.example`](Podfile.example), [`docs/errors.md`](docs/errors.md), and [`RELEASE.md`](RELEASE.md) for publishing **1.1.1**.
+See also [`Podfile.example`](Podfile.example), [`docs/errors.md`](docs/errors.md), and [`RELEASE.md`](RELEASE.md) for publishing **1.2.0**.
 
 ## License
 
@@ -237,4 +245,4 @@ MIT. See [LICENSE](LICENSE).
 
 ## Version
 
-BidscubeSDKAppLovin **1.1.1**
+BidscubeSDKAppLovin **1.2.0**

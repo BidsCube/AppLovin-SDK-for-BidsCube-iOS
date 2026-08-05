@@ -1,16 +1,16 @@
-# Release 1.1.1
+# Release 1.2.0
 
 ## Summary
 
-Publisher `user_id` support for SSP ad requests and postback attribution. Set at SDK init or via MAX server parameters (`user_id` / `userId`).
+Fullscreen video lifecycle: `autoClose` (default `false`), VAST Companion end cards, skip countdown (default 15 s), centralized dismiss.
 
 ## Publish checklist
 
 1. **Review diff** — `git diff` (SDK, adapter, podspecs, docs).
-2. **Verify spec layout** — `./scripts/sync-cocoapods-spec.sh` and confirm `BidscubeSDKAppLovin/1.1.1/BidscubeSDKAppLovin.podspec` exists.
+2. **Verify spec layout** — `./scripts/sync-cocoapods-spec.sh` and confirm `BidscubeSDKAppLovin/1.2.0/BidscubeSDKAppLovin.podspec` exists.
 3. **Lint** — `pod lib lint BidscubeSDKAppLovin.podspec --allow-warnings`
-4. **Commit** on `main`, including the `1.1.1` spec folder.
-5. **Tag and push** — `git tag v1.1.1 && git push max main && git push max v1.1.1`
+4. **Commit** on `main`, including the `1.2.0` spec folder.
+5. **Tag and push** — `git tag v1.2.0 && git push max main && git push max v1.2.0`
 6. **CI** — GitHub Actions `Publish SDK` runs on tag push.
 
 ### Pre-release local test
@@ -23,18 +23,20 @@ pod 'BidscubeSDKAppLovin', :path => '/path/to/AppLovin-SDK-for-BidsCube-iOS'
 
 ```ruby
 platform :ios, '15.0'
-pod 'BidscubeSDKAppLovin', '1.1.1'
+pod 'BidscubeSDKAppLovin', '1.2.0'
 ```
 
-### New: publisher user id
+### New: autoClose (default false)
 
 ```swift
-BidscubeSDK.initialize(config: SDKConfig.Builder().userId("your-user-id").build())
-// or after login:
-BidscubeSDK.setUserId("your-user-id")
+BidscubeSDK.initialize(config: SDKConfig.Builder().autoClose(false).build())
 ```
 
-MAX dashboard server parameter: `user_id` (or `userId`).
+MAX dashboard init server parameter: `auto_close` (or `autoClose`).
+
+### Skip overlay
+
+Default **15 s** countdown before Skip is enabled; overridden by VAST `Linear@skipoffset` when present.
 
 ## Related
 

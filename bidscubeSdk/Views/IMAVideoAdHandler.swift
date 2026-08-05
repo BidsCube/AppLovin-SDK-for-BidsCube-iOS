@@ -20,6 +20,11 @@ public final class IMAVideoAdHandler: UIView {
     private weak var parentViewController: UIViewController?
     
     private var closeButton: UIButton?
+    private var sessionController: FullscreenVideoSessionController?
+    private var postVideoCompanion: CompanionAd?
+    private var staticEndCard: CompanionEndCardView?
+    private var htmlEndCard: CompanionEndCardView?
+    private var skipOverlay: VideoSkipControlOverlay?
     
     public init(vastURL: String, clickURL: String? = nil) {
         self.vastURL = vastURL
@@ -68,6 +73,12 @@ public final class IMAVideoAdHandler: UIView {
     }
     
     public func cleanup() {
+        destroySkipOverlay()
+        staticEndCard?.destroy()
+        staticEndCard = nil
+        htmlEndCard?.destroy()
+        htmlEndCard = nil
+
         adsManager?.destroy()
         adsManager = nil
         
@@ -89,6 +100,7 @@ public final class IMAVideoAdHandler: UIView {
     }
     
     public func loadAd() {
+        ensureSessionController()
         if adsLoader == nil || adDisplayContainer == nil {
             Logger.player("Setting up IMA player before loading ad for placement \(placementId)")
             setupIMA()
@@ -231,30 +243,160 @@ public final class IMAVideoAdHandler: UIView {
     }
     
     @objc private func closeButtonTapped() {
-        print("🔍 IMAVideoAdHandler: Close button tapped")
-        closeAd()
+        requestUserClose()
     }
     
     @objc private func handleSwipeGesture(_ gesture: UISwipeGestureRecognizer) {
-        print("🔍 IMAVideoAdHandler: Swipe gesture detected")
-        closeAd()
+        requestUserClose()
     }
     
     @objc private func handleDoubleTap(_ gesture: UITapGestureRecognizer) {
-        print("🔍 IMAVideoAdHandler: Double tap gesture detected")
-        closeAd()
+        requestUserClose()
     }
-    
-    private func closeAd() {
+
+    private func ensureSessionController() {
+        if sessionController != nil { return }
+        sessionController = FullscreenVideoSessionController(
+            autoClose: BidscubeSDK.isAutoClose(),
+            playerManagesPostVideo: true,
+            vastXml: vastXML
+        )
+        if let vastXML {
+            postVideoCompanion = VastParser.selectPostVideoCompanion(vastXML)
+        }
+    }
+
+    private func requestUserClose() {
+        ensureSessionController()
+        let action = sessionController?.onUserClose() ?? {
+            var fallback = FullscreenPostVideoAction()
+            fallback.fireAdClosed = true
+            fallback.releasePlayer = true
+            fallback.hidePlayer = true
+            fallback.dismissDialog = true
+            return fallback
+        }()
+        applyPostVideoAction(action, trigger: "USER_CLOSE")
+    }
+
+    private func applyPostVideoAction(_ action: FullscreenPostVideoAction, trigger: String) {
+        guard !action.isNoop else {
+            Logger.player("post-video NOOP trigger=\(trigger) autoClose=\(BidscubeSDK.isAutoClose())")
+            return
+        }
+
+        Logger.player("post-video trigger=\(trigger) autoClose=\(BidscubeSDK.isAutoClose()) release=\(action.releasePlayer) hide=\(action.hidePlayer) keep=\(action.keepPlayerVisible) close=\(action.fireAdClosed)")
+
+        if action.removeSkipOverlay {
+            destroySkipOverlay()
+        }
+
+        if action.releasePlayer {
+            adsManager?.destroy()
+            adsManager = nil
+            contentPlayer = nil
+            playerLayer?.removeFromSuperlayer()
+            playerLayer = nil
+            contentPlayhead = nil
+        }
+
+        if action.hidePlayer {
+            isHidden = true
+        } else if action.keepPlayerVisible {
+            isHidden = false
+        }
+
+        if action.showStaticCompanionEndCard, let companion = postVideoCompanion, staticEndCard == nil {
+            hideHandlerCloseButton()
+            showCompanionEndCard(companion)
+        }
+
+        if action.showHtmlCompanionEndCard, let companion = postVideoCompanion, htmlEndCard == nil {
+            hideHandlerCloseButton()
+            showCompanionEndCard(companion)
+        }
+
+        if action.showManualCloseButton {
+            showCloseButton()
+            if let adViewController = findViewController() as? AdViewController {
+                adViewController.setVideoPlayingState(false)
+                adViewController.enableSwipeGestures()
+                adViewController.showBackButtonOnVideoComplete()
+            }
+        }
+
+        if action.fireAdClosed {
+            dismissFullscreenAdOnce()
+        }
+    }
+
+    private func showCompanionEndCard(_ companion: CompanionAd) {
+        guard let hostView = superview else { return }
+        let endCard = CompanionEndCardView(
+            companion: companion,
+            placementId: placementId,
+            callback: callback,
+            onRequestClose: { [weak self] in
+                self?.requestUserClose()
+            }
+        )
+        hostView.addSubview(endCard)
+        NSLayoutConstraint.activate([
+            endCard.topAnchor.constraint(equalTo: hostView.topAnchor),
+            endCard.leadingAnchor.constraint(equalTo: hostView.leadingAnchor),
+            endCard.trailingAnchor.constraint(equalTo: hostView.trailingAnchor),
+            endCard.bottomAnchor.constraint(equalTo: hostView.bottomAnchor)
+        ])
+        if companion.isStaticImage {
+            staticEndCard = endCard
+        } else {
+            htmlEndCard = endCard
+        }
+    }
+
+    private func dismissFullscreenAdOnce() {
+        staticEndCard?.destroy()
+        staticEndCard = nil
+        htmlEndCard?.destroy()
+        htmlEndCard = nil
+        cleanup()
+
+        if let adViewController = findViewController() as? AdViewController {
+            adViewController.dismissAdOnce()
+            return
+        }
+
         callback?.onAdClosed(placementId)
-        
         if let viewController = findViewController() {
             if viewController.presentingViewController != nil {
-                viewController.dismiss(animated: true, completion: nil)
+                viewController.dismiss(animated: true)
             } else if let navigationController = viewController.navigationController {
                 navigationController.popViewController(animated: true)
             }
         }
+    }
+
+    private func hideHandlerCloseButton() {
+        closeButton?.isHidden = true
+    }
+
+    private func attachSkipOverlayIfNeeded() {
+        guard skipOverlay == nil else { return }
+        let overlay = VideoSkipControlOverlay(vastXml: vastXML, delegate: self)
+        overlay.attach(to: self)
+        skipOverlay = overlay
+        if let closeButton {
+            bringSubviewToFront(closeButton)
+        }
+    }
+
+    private func destroySkipOverlay() {
+        skipOverlay?.destroy()
+        skipOverlay = nil
+    }
+    
+    private func closeAd() {
+        requestUserClose()
     }
     
     private func showCloseButton() {
@@ -454,6 +596,7 @@ extension IMAVideoAdHandler: IMAAdsManagerDelegate {
             Logger.player("IMA player started playback for placement \(placementId)")
             callback?.onVideoAdStarted(placementId)
             hideCloseButton()
+            attachSkipOverlayIfNeeded()
             
             
             if let adViewController = findViewController() as? AdViewController {
@@ -463,26 +606,29 @@ extension IMAVideoAdHandler: IMAAdsManagerDelegate {
             
         case .COMPLETE:
             Logger.player("IMA player completed playback for placement \(placementId)")
-            callback?.onVideoAdCompleted(placementId)
-            showCloseButton()
-            
-            
-            if let adViewController = findViewController() as? AdViewController {
-                adViewController.setVideoPlayingState(false)
-                adViewController.enableSwipeGestures()
-                adViewController.showBackButtonOnVideoComplete()
+            ensureSessionController()
+            if sessionController?.shouldFireLinearCompleted() == true {
+                callback?.onVideoAdCompleted(placementId)
+            }
+            if let sessionController {
+                applyPostVideoAction(sessionController.onLinearCompleted(), trigger: "COMPLETED")
             }
             
         case .SKIPPED:
             Logger.player("IMA player skipped playback for placement \(placementId)")
-            callback?.onVideoAdSkipped(placementId)
-            showCloseButton()
-            
-            
-            if let adViewController = findViewController() as? AdViewController {
-                adViewController.setVideoPlayingState(false)
-                adViewController.enableSwipeGestures()
-                adViewController.showBackButtonOnVideoComplete()
+            ensureSessionController()
+            if sessionController?.shouldFireSkipped() == true {
+                callback?.onVideoAdSkipped(placementId)
+            }
+            if let sessionController {
+                applyPostVideoAction(sessionController.onSkipped(), trigger: "SKIPPED")
+            }
+
+        case .ALL_ADS_COMPLETED:
+            Logger.player("IMA all ads completed for placement \(placementId)")
+            ensureSessionController()
+            if sessionController?.shouldFireAdSessionCompleted() == true, let sessionController {
+                applyPostVideoAction(sessionController.onAdSessionCompleted(), trigger: "ALL_ADS_COMPLETED")
             }
             
         case .CLICKED:
@@ -514,7 +660,9 @@ extension IMAVideoAdHandler: IMAAdsManagerDelegate {
     
     public func adsManager(_ adsManager: IMAAdsManager, didReceive error: IMAAdError) {
         Logger.error("IMA player error for placement \(placementId): \(error.message ?? "Unknown error")", prefix: Constants.LogPrefixes.player)
-        callback?.onAdFailed(placementId, errorCode: error.code.rawValue, errorMessage: error.message!)
+        ensureSessionController()
+        applyPostVideoAction(sessionController?.onPlaybackFailed() ?? .noop, trigger: "PLAYBACK_FAILED")
+        callback?.onAdFailed(placementId, errorCode: error.code.rawValue, errorMessage: error.message ?? "Unknown error")
     }
     
     public func adsManagerDidRequestContentPause(_ adsManager: IMAAdsManager) {
@@ -525,5 +673,15 @@ extension IMAVideoAdHandler: IMAAdsManagerDelegate {
     public func adsManagerDidRequestContentResume(_ adsManager: IMAAdsManager) {
         print("▶️ IMAVideoAdHandler: Content resume requested")
         contentPlayer?.play()
+    }
+}
+
+extension IMAVideoAdHandler: VideoSkipControlOverlay.Delegate {
+    func onSkipRequested() {
+        adsManager?.skip()
+    }
+
+    func onSkipAvailable() {
+        callback?.onVideoAdSkippable(placementId)
     }
 }

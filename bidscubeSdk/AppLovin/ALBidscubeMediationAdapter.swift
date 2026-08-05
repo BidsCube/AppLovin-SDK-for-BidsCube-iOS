@@ -9,6 +9,24 @@ private enum BidscubeMAXParams {
     static let sspHost = "ssp_host"
     static let userId = "user_id"
     static let userIdCamel = "userId"
+    static let autoClose = "auto_close"
+    static let autoCloseCamel = "autoClose"
+}
+
+private func readBooleanParameter(_ serverParameters: [String: Any], key: String) -> Bool? {
+    guard let raw = serverParameters[key] else { return nil }
+    if let value = raw as? Bool { return value }
+    guard let text = raw as? String else { return nil }
+    let normalized = text.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+    if ["true", "1", "yes"].contains(normalized) { return true }
+    if ["false", "0", "no"].contains(normalized) { return false }
+    return nil
+}
+
+private func bidscubeAutoClose(from serverParameters: [String: Any]) -> Bool {
+    if let value = readBooleanParameter(serverParameters, key: BidscubeMAXParams.autoClose) { return value }
+    if let value = readBooleanParameter(serverParameters, key: BidscubeMAXParams.autoCloseCamel) { return value }
+    return false
 }
 
 private func bidscubeUserId(from serverParameters: [String: Any]) -> String? {
@@ -46,6 +64,7 @@ private func bidscubeSDKConfig(from parameters: MAAdapterParameters) -> SDKConfi
     if let userId = bidscubeUserId(from: serverParameters) {
         builder = builder.userId(userId)
     }
+    builder = builder.autoClose(bidscubeAutoClose(from: serverParameters))
     return builder.build()
 }
 
