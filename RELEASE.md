@@ -1,4 +1,4 @@
-# Release 1.2.0
+# Release 1.1.2
 
 ## Summary
 
@@ -7,10 +7,10 @@ Fullscreen video lifecycle: `autoClose` (default `false`), VAST Companion end ca
 ## Publish checklist
 
 1. **Review diff** — `git diff` (SDK, adapter, podspecs, docs).
-2. **Verify spec layout** — `./scripts/sync-cocoapods-spec.sh` and confirm `BidscubeSDKAppLovin/1.2.0/BidscubeSDKAppLovin.podspec` exists.
+2. **Verify spec layout** — `./scripts/sync-cocoapods-spec.sh` and confirm `BidscubeSDKAppLovin/1.1.2/BidscubeSDKAppLovin.podspec` exists.
 3. **Lint** — `pod lib lint BidscubeSDKAppLovin.podspec --allow-warnings`
-4. **Commit** on `main`, including the `1.2.0` spec folder.
-5. **Tag and push** — `git tag v1.2.0 && git push max main && git push max v1.2.0`
+4. **Commit** on `main`, including the `1.1.2` spec folder.
+5. **Tag and push** — `git tag v1.1.2 && git push max main && git push max v1.1.2`
 6. **CI** — GitHub Actions `Publish SDK` runs on tag push.
 
 ### Pre-release local test
@@ -23,7 +23,7 @@ pod 'BidscubeSDKAppLovin', :path => '/path/to/AppLovin-SDK-for-BidsCube-iOS'
 
 ```ruby
 platform :ios, '15.0'
-pod 'BidscubeSDKAppLovin', '1.2.0'
+pod 'BidscubeSDKAppLovin', '1.1.2'
 ```
 
 ### New: autoClose (default false)

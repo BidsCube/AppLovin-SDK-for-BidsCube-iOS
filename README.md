@@ -24,7 +24,7 @@ source 'https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS.git'
 source 'https://cdn.cocoapods.org/'
 
 target 'YourApp' do
-  pod 'BidscubeSDKAppLovin', '1.2.0'
+  pod 'BidscubeSDKAppLovin', '1.1.2'
 end
 ```
 
@@ -216,7 +216,7 @@ Quick steps for app publishers integrating Bidscube via AppLovin MAX:
    source 'https://cdn.cocoapods.org/'
 
    target 'YourApp' do
-     pod 'BidscubeSDKAppLovin', '1.2.0'
+     pod 'BidscubeSDKAppLovin', '1.1.2'
    end
    ```
 
@@ -237,7 +237,7 @@ Quick steps for app publishers integrating Bidscube via AppLovin MAX:
 
 7. **Verify** — use MAX Mediation Debugger and confirm Bidscube appears on the waterfall for your ad units.
 
-See also [`Podfile.example`](Podfile.example), [`docs/errors.md`](docs/errors.md), and [`RELEASE.md`](RELEASE.md) for publishing **1.2.0**.
+See also [`Podfile.example`](Podfile.example), [`docs/errors.md`](docs/errors.md), and [`RELEASE.md`](RELEASE.md) for publishing **1.1.2**.
 
 ## License
 
@@ -245,4 +245,4 @@ MIT. See [LICENSE](LICENSE).
 
 ## Version
 
-BidscubeSDKAppLovin **1.2.0**
+BidscubeSDKAppLovin **1.1.2**
