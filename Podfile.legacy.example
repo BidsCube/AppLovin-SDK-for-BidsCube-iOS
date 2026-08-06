@@ -1,0 +1,14 @@
+platform :ios, '14.0'
+use_frameworks!
+
+# Bidscube podspecs live in this repo (no CocoaPods Trunk required)
+source 'https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS.git'
+source 'https://cdn.cocoapods.org/'
+
+target 'YourApp' do
+  pod 'BidscubeSDKAppLovinLegacy', '1.1.3'
+end
+
+# Install only one Bidscube AppLovin pod. Do not install the modern and legacy variants in the same target.
+# BidscubeSDKAppLovinLegacy pulls AppLovinSDK transitively (no Google IMA).
+# Add `pod 'AppLovinSDK', '>= 13.0.0', '< 14.0'` only if you need to pin a specific MAX version.

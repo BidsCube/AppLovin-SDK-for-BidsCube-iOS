@@ -3,15 +3,15 @@ import AVFoundation
 import WebKit
 
 public final class VideoAdView: UIView {
-    private let webView = WKWebView()
+    let webView = WKWebView()
     private let loadingLabel = UILabel()
-    private var imaVideoHandler: IMAVideoAdHandler?
+    var videoHandlerStorage: UIView?
     private var customVideoPlayerView: (UIView & BidscubeCustomVideoPlayer)?
-    private var placementId: String = ""
-    private weak var callback: AdCallback?
-    private weak var parentViewController: UIViewController?
+    var placementId: String = ""
+    weak var callback: AdCallback?
+    weak var parentViewController: UIViewController?
     private var didReportLoaded = false
-    private var clickURL: String?
+    var clickURL: String?
 
     public override init(frame: CGRect) {
         super.init(frame: frame)
@@ -58,8 +58,10 @@ public final class VideoAdView: UIView {
             loadingLabel.heightAnchor.constraint(equalToConstant: 30)
         ])
         
+        #if !BIDSCUBE_LEGACY_VIDEO
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleAdClick))
         addGestureRecognizer(tapGesture)
+        #endif
         isUserInteractionEnabled = true
         
     }
@@ -79,13 +81,11 @@ public final class VideoAdView: UIView {
         customVideoPlayerView?.cleanup()
         customVideoPlayerView?.removeFromSuperview()
         customVideoPlayerView = nil
-        imaVideoHandler?.cleanup()
-        imaVideoHandler?.removeFromSuperview()
-        imaVideoHandler = nil
+        cleanupVideoHandler()
     }
     
     public func refreshIMASetup() {
-        imaVideoHandler?.refreshIMASetup()
+        refreshVideoHandlerLayout()
     }
     
     deinit {
@@ -122,35 +122,17 @@ public final class VideoAdView: UIView {
             return
         }
         
-        imaVideoHandler = IMAVideoAdHandler(vastXML: vastXML, clickURL: clickURL)
-        imaVideoHandler?.setPlacementInfo(placementId, callback: callback)
-        imaVideoHandler?.setParentViewController(parentViewController)
-        
-        if let handler = imaVideoHandler {
-            addSubview(handler)
-            handler.translatesAutoresizingMaskIntoConstraints = false
-            NSLayoutConstraint.activate([
-                handler.topAnchor.constraint(equalTo: topAnchor),
-                handler.leadingAnchor.constraint(equalTo: leadingAnchor),
-                handler.trailingAnchor.constraint(equalTo: trailingAnchor),
-                handler.bottomAnchor.constraint(equalTo: bottomAnchor)
-            ])
-            
-            handler.layoutIfNeeded()
-        }
-        
-        webView.isHidden = true
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            self.imaVideoHandler?.loadAd()
-        }
-        
+        startDefaultVideoLoad(vastXML: vastXML)
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
             self.loadingLabel.isHidden = true
         }
         
+        #if BIDSCUBE_LEGACY_VIDEO
+        Logger.player("Using legacy AVPlayer for placement \(placementId) with inline VAST XML")
+        #else
         Logger.player("Using default IMA player for placement \(placementId) with inline VAST XML")
         Logger.warning("For SwiftUI apps, consider using IMAVideoAdView instead for better view controller hierarchy", prefix: Constants.LogPrefixes.player)
+        #endif
     }
     
     public func loadVASTFromURL(_ vastURL: String, clickURL: String? = nil) {
@@ -183,29 +165,7 @@ public final class VideoAdView: UIView {
             return
         }
         
-        imaVideoHandler = IMAVideoAdHandler(vastURL: vastURL, clickURL: clickURL)
-        imaVideoHandler?.setPlacementInfo(placementId, callback: callback)
-        imaVideoHandler?.setParentViewController(parentViewController)
-        
-        if let handler = imaVideoHandler {
-            addSubview(handler)
-            handler.translatesAutoresizingMaskIntoConstraints = false
-            NSLayoutConstraint.activate([
-                handler.topAnchor.constraint(equalTo: topAnchor),
-                handler.leadingAnchor.constraint(equalTo: leadingAnchor),
-                handler.trailingAnchor.constraint(equalTo: trailingAnchor),
-                handler.bottomAnchor.constraint(equalTo: bottomAnchor)
-            ])
-            
-            handler.layoutIfNeeded()
-        }
-        
-        webView.isHidden = true
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            self.imaVideoHandler?.loadAd()
-        }
-        
+        startDefaultVideoLoad(vastURL: vastURL)
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
             self.loadingLabel.isHidden = true
         }
@@ -249,46 +209,8 @@ public final class VideoAdView: UIView {
     }
 
     private func handleVideoResponseBody(_ content: String) {
-        do {
-            if let jsonData = content.data(using: .utf8),
-               let json = try JSONSerialization.jsonObject(with: jsonData) as? [String: Any],
-               let adm = json["adm"] as? String {
-                if adm.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                    AdFailureDispatcher.deliver(
-                        placementId: placementId,
-                        format: "video",
-                        callback: callback,
-                        errorCode: AdErrorCode.emptyAdm,
-                        errorMessage: "Empty ad markup"
-                    )
-                    return
-                }
-
-                if let positionValue = json["position"] as? Int,
-                   let position = AdPosition(rawValue: positionValue) {
-                    BidscubeSDK.setResponseAdPosition(position)
-                }
-
-                if adm.hasPrefix("http") {
-                    loadVASTFromURL(adm)
-                } else {
-                    loadVASTContent(adm)
-                }
-                reportAdLoadedIfNeeded()
-                return
-            }
-        } catch {
-            AdFailureDispatcher.deliver(
-                placementId: placementId,
-                format: "video",
-                callback: callback,
-                errorCode: AdErrorCode.invalidResponse,
-                errorMessage: "Failed to parse ad server response"
-            )
-            return
-        }
-
-        if content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+        let trimmed = content.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else {
             AdFailureDispatcher.deliver(
                 placementId: placementId,
                 format: "video",
@@ -299,8 +221,45 @@ public final class VideoAdView: UIView {
             return
         }
 
-        loadVASTContent(content)
-        reportAdLoadedIfNeeded()
+        if let jsonData = trimmed.data(using: .utf8),
+           let json = try? JSONSerialization.jsonObject(with: jsonData) as? [String: Any],
+           let adm = json["adm"] as? String {
+            if adm.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                AdFailureDispatcher.deliver(
+                    placementId: placementId,
+                    format: "video",
+                    callback: callback,
+                    errorCode: AdErrorCode.emptyAdm,
+                    errorMessage: "Empty ad markup"
+                )
+                return
+            }
+
+            if let positionValue = json["position"] as? Int,
+               let position = AdPosition(rawValue: positionValue) {
+                BidscubeSDK.setResponseAdPosition(position)
+            }
+
+            if adm.hasPrefix("http") {
+                loadVASTFromURL(adm)
+            } else {
+                loadVASTContent(adm)
+            }
+            return
+        }
+
+        if trimmed.hasPrefix("<") || trimmed.contains("<VAST") {
+            loadVASTContent(trimmed)
+            return
+        }
+
+        AdFailureDispatcher.deliver(
+            placementId: placementId,
+            format: "video",
+            callback: callback,
+            errorCode: AdErrorCode.invalidResponse,
+            errorMessage: "Failed to parse ad server response"
+        )
     }
 
     private func reportAdLoadedIfNeeded() {
@@ -312,8 +271,7 @@ public final class VideoAdView: UIView {
     
     public override func layoutSubviews() {
         super.layoutSubviews()
-        print("🔍 VideoAdView: layoutSubviews - frame: \(frame)")
-        imaVideoHandler?.layoutSubviews()
+        refreshVideoHandlerLayout()
     }
     
     private func displayName(for position: AdPosition) -> String {

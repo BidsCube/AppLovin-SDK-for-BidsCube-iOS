@@ -3,5 +3,6 @@ testApp export-ignore
 testApp-ios export-ignore
 testApp-iosUITests export-ignore
 testApp-Info.plist export-ignore
+legacyIntegration export-ignore
 build export-ignore
 bidscubeSdk.xcodeproj/xcshareddata/xcschemes/testApp-ios.xcscheme export-ignore

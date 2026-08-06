@@ -17,11 +17,11 @@ let package = Package(
     dependencies: [
         .package(
             url: "https://github.com/googleads/swift-package-manager-google-interactive-media-ads-ios.git",
-            from: "3.19.0"
+            exact: "3.32.0"
         ),
         .package(
             url: "https://github.com/AppLovin/AppLovin-MAX-Swift-Package.git",
-            .upToNextMajor(from: "13.0.0")
+            exact: "13.6.2"
         ),
     ],
     targets: [
@@ -46,6 +46,7 @@ let package = Package(
                 "Views/CustomAdRenderView.swift",
                 "Views/IMAVideoAdHandler.swift.disabled",
                 "Logger/SDKLogger.swift",
+                "Video/Legacy",
                 "bidscubeSdk.docc",
             ],
             publicHeadersPath: "include",
@@ -63,7 +64,7 @@ let package = Package(
         .testTarget(
             name: "bidscubeSdkTests",
             dependencies: ["BidscubeSDKAppLovin"],
-            path: "Tests/bidscubeSdkTests"
+            path: "bidscubeSdkTests"
         ),
     ]
 )

@@ -1,6 +1,71 @@
 import Foundation
 
 enum VastParser {
+    static func decodeXMLEntities(_ raw: String) -> String {
+        var value = raw
+        let entities: [(String, String)] = [
+            ("&amp;", "&"),
+            ("&lt;", "<"),
+            ("&gt;", ">"),
+            ("&quot;", "\""),
+            ("&apos;", "'"),
+        ]
+        for (entity, character) in entities {
+            value = value.replacingOccurrences(of: entity, with: character, options: .caseInsensitive)
+        }
+        return value
+    }
+
+    static func isWrapperVAST(_ vastXml: String) -> Bool {
+        vastXml.range(of: "<Wrapper\\b", options: [.regularExpression, .caseInsensitive]) != nil
+    }
+
+    static func isInlineVAST(_ vastXml: String) -> Bool {
+        vastXml.range(of: "<InLine\\b", options: [.regularExpression, .caseInsensitive]) != nil
+    }
+
+    static func parseWrapperMetadata(from vastXml: String) -> VastWrapperMetadata {
+        let impressions = allTagTexts("Impression", in: vastXml).map(decodeXMLEntities)
+        let errors = allTagTexts("Error", in: vastXml).map(decodeXMLEntities)
+        let trackingBlock = firstTagBlock("TrackingEvents", in: vastXml) ?? ""
+        let trackingEvents = parseTrackingEvents(in: trackingBlock)
+        let videoClicks = firstTagBlock("VideoClicks", in: vastXml) ?? ""
+        let clickTracking = allTagTexts("ClickTracking", in: videoClicks).map(decodeXMLEntities)
+        let companions = parseCompanionElements(from: vastXml)
+        let companionCreativeView = companions
+            .flatMap(\.creativeViewTrackingUrls)
+            .map(decodeXMLEntities)
+        let companion = companions.max(by: { companionPriority($0.resourceType) < companionPriority($1.resourceType) })
+        return VastWrapperMetadata(
+            impressionUrls: impressions,
+            errorUrls: errors,
+            trackingEvents: trackingEvents,
+            clickTrackingUrls: clickTracking,
+            companionCreativeViewUrls: companionCreativeView,
+            companion: companion
+        )
+    }
+
+    static func selectBestCompanion(
+        inlineCompanion: CompanionAd?,
+        wrapperCompanions: [CompanionAd]
+    ) -> CompanionAd? {
+        if let inlineCompanion, isSelectableCompanion(inlineCompanion) {
+            return inlineCompanion
+        }
+        if let nearest = wrapperCompanions.last, isSelectableCompanion(nearest) {
+            return nearest
+        }
+        for companion in wrapperCompanions.dropLast().reversed() where isSelectableCompanion(companion) {
+            return companion
+        }
+        return nil
+    }
+
+    private static func isSelectableCompanion(_ companion: CompanionAd) -> Bool {
+        !companion.resource.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
     static func selectPostVideoCompanion(_ vastXml: String) -> CompanionAd? {
         guard !vastXml.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return nil }
         let companions = parseCompanionElements(from: vastXml)
@@ -219,5 +284,94 @@ enum VastParser {
             return 0
         }
         return value
+    }
+
+    static func wrapperTagURI(in vastXml: String) -> String? {
+        if let uri = firstTagText("VASTAdTagURI", in: vastXml)?
+            .trimmingCharacters(in: .whitespacesAndNewlines),
+           !uri.isEmpty {
+            return decodeXMLEntities(uri)
+        }
+        return nil
+    }
+
+    static func parseInlineAd(from vastXml: String) -> VastInlineAd? {
+        let trimmed = vastXml.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+
+        guard let mediaURLString = firstProgressiveMp4MediaFile(in: trimmed),
+              let mediaURL = URL(string: decodeXMLEntities(mediaURLString)) else {
+            return nil
+        }
+
+        let impressions = allTagTexts("Impression", in: trimmed).map(decodeXMLEntities)
+        let trackingBlock = firstTagBlock("TrackingEvents", in: trimmed) ?? ""
+        let trackingEvents = parseTrackingEvents(in: trackingBlock)
+        let videoClicks = firstTagBlock("VideoClicks", in: trimmed) ?? ""
+        let clickThrough = firstTagText("ClickThrough", in: videoClicks).map(decodeXMLEntities)
+        let clickTracking = allTagTexts("ClickTracking", in: videoClicks).map(decodeXMLEntities)
+        let errors = allTagTexts("Error", in: trimmed).map(decodeXMLEntities)
+
+        return VastInlineAd(
+            vastXml: trimmed,
+            mediaURL: mediaURL,
+            impressionUrls: impressions,
+            trackingEvents: trackingEvents,
+            clickThroughUrl: clickThrough,
+            clickTrackingUrls: clickTracking,
+            errorUrls: errors
+        )
+    }
+
+    private static func firstProgressiveMp4MediaFile(in vastXml: String) -> String? {
+        guard let regex = try? NSRegularExpression(
+            pattern: "<MediaFile\\b[^>]*>(.*?)</MediaFile>",
+            options: [.caseInsensitive, .dotMatchesLineSeparators]
+        ) else {
+            return nil
+        }
+        let range = NSRange(vastXml.startIndex..<vastXml.endIndex, in: vastXml)
+        for match in regex.matches(in: vastXml, options: [], range: range) {
+            guard let openRange = Range(match.range, in: vastXml),
+                  let bodyRange = Range(match.range(at: 1), in: vastXml) else {
+                continue
+            }
+            let openTag = String(vastXml[openRange]).components(separatedBy: ">").first ?? ""
+            let lowered = openTag.lowercased()
+            guard lowered.contains("type=\"video/mp4\"") || lowered.contains("type='video/mp4'") else {
+                continue
+            }
+            let url = extractCDATAOrText(from: String(vastXml[bodyRange]))?
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+            if let url, !url.isEmpty {
+                return url
+            }
+        }
+        return nil
+    }
+
+    private static func parseTrackingEvents(in block: String) -> [String: [String]] {
+        guard let regex = try? NSRegularExpression(
+            pattern: "<Tracking\\b[^>]*event\\s*=\\s*['\"]([^'\"]+)['\"][^>]*>(.*?)</Tracking>",
+            options: [.caseInsensitive, .dotMatchesLineSeparators]
+        ) else {
+            return [:]
+        }
+        var events: [String: [String]] = [:]
+        let range = NSRange(block.startIndex..<block.endIndex, in: block)
+        for match in regex.matches(in: block, options: [], range: range) {
+            guard let eventRange = Range(match.range(at: 1), in: block),
+                  let urlRange = Range(match.range(at: 2), in: block) else {
+                continue
+            }
+            let event = String(block[eventRange]).lowercased()
+            let url = decodeXMLEntities(
+                extractCDATAOrText(from: String(block[urlRange]))?
+                    .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            )
+            guard !url.isEmpty else { continue }
+            events[event, default: []].append(url)
+        }
+        return events
     }
 }

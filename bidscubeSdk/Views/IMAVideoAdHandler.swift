@@ -326,7 +326,7 @@ public final class IMAVideoAdHandler: UIView {
         }
 
         if action.fireAdClosed {
-            dismissFullscreenAdOnce()
+            dismissFullscreenAdOnce(notifyClosed: true)
         }
     }
 
@@ -354,7 +354,7 @@ public final class IMAVideoAdHandler: UIView {
         }
     }
 
-    private func dismissFullscreenAdOnce() {
+    private func dismissFullscreenAdOnce(notifyClosed: Bool = true) {
         staticEndCard?.destroy()
         staticEndCard = nil
         htmlEndCard?.destroy()
@@ -362,11 +362,13 @@ public final class IMAVideoAdHandler: UIView {
         cleanup()
 
         if let adViewController = findViewController() as? AdViewController {
-            adViewController.dismissAdOnce()
+            adViewController.dismissAdOnce(notifyClosed: notifyClosed)
             return
         }
 
-        callback?.onAdClosed(placementId)
+        if notifyClosed {
+            callback?.onAdClosed(placementId)
+        }
         if let viewController = findViewController() {
             if viewController.presentingViewController != nil {
                 viewController.dismiss(animated: true)
@@ -660,9 +662,20 @@ extension IMAVideoAdHandler: IMAAdsManagerDelegate {
     
     public func adsManager(_ adsManager: IMAAdsManager, didReceive error: IMAAdError) {
         Logger.error("IMA player error for placement \(placementId): \(error.message ?? "Unknown error")", prefix: Constants.LogPrefixes.player)
-        ensureSessionController()
-        applyPostVideoAction(sessionController?.onPlaybackFailed() ?? .noop, trigger: "PLAYBACK_FAILED")
         callback?.onAdFailed(placementId, errorCode: error.code.rawValue, errorMessage: error.message ?? "Unknown error")
+        self.adsManager?.destroy()
+        self.adsManager = nil
+        if BidscubeSDK.isAutoClose() {
+            dismissFullscreenAdOnce(notifyClosed: false)
+            return
+        }
+        ensureSessionController()
+        var action = FullscreenPostVideoAction()
+        action.removeSkipOverlay = true
+        action.releasePlayer = true
+        action.hidePlayer = true
+        action.showManualCloseButton = true
+        applyPostVideoAction(action, trigger: "PLAYBACK_FAILED")
     }
     
     public func adsManagerDidRequestContentPause(_ adsManager: IMAAdsManager) {

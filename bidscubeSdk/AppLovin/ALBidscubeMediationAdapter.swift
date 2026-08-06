@@ -265,6 +265,7 @@ extension ALBidscubeMediationAdapter: MAInterstitialAdapter {
 @available(iOS 13.0, *)
 private final class BidscubeInterstitialMAXCallback: NSObject, AdCallback {
     private weak var delegate: MAInterstitialAdapterDelegate?
+    private var didTerminateDisplay = false
 
     init(delegate: MAInterstitialAdapterDelegate) {
         self.delegate = delegate
@@ -288,12 +289,16 @@ private final class BidscubeInterstitialMAXCallback: NSObject, AdCallback {
     }
 
     func onAdClosed(_ placementId: String) {
+        guard !didTerminateDisplay else { return }
+        didTerminateDisplay = true
         runOnMain {
             self.delegate?.didHideInterstitialAd()
         }
     }
 
     func onAdFailed(_ placementId: String, errorCode: Int, errorMessage: String) {
+        guard !didTerminateDisplay else { return }
+        didTerminateDisplay = true
         let err = MAAdapterError(
             adapterError: MAAdapterError.adDisplayFailedError,
             mediatedNetworkErrorCode: errorCode,
@@ -367,6 +372,7 @@ private final class BidscubeRewardedMAXCallback: NSObject, AdCallback {
     private weak var delegate: MARewardedAdapterDelegate?
     private var videoCompleted = false
     private var didReward = false
+    private var didTerminateDisplay = false
 
     init(adapter: ALBidscubeMediationAdapter, delegate: MARewardedAdapterDelegate) {
         self.adapter = adapter
@@ -391,6 +397,8 @@ private final class BidscubeRewardedMAXCallback: NSObject, AdCallback {
     }
 
     func onAdClosed(_ placementId: String) {
+        guard !didTerminateDisplay else { return }
+        didTerminateDisplay = true
         runOnMain {
             self.maybeReward()
             self.delegate?.didHideRewardedAd()
@@ -398,6 +406,8 @@ private final class BidscubeRewardedMAXCallback: NSObject, AdCallback {
     }
 
     func onAdFailed(_ placementId: String, errorCode: Int, errorMessage: String) {
+        guard !didTerminateDisplay else { return }
+        didTerminateDisplay = true
         let err = MAAdapterError(
             adapterError: MAAdapterError.adDisplayFailedError,
             mediatedNetworkErrorCode: errorCode,

@@ -1,5 +1,9 @@
 import Testing
+#if SWIFT_PACKAGE
+@testable import BidscubeSDKAppLovin
+#else
 @testable import BidscubeSDK
+#endif
 
 struct FullscreenVideoSessionControllerTests {
     private let vastNoCompanion = """

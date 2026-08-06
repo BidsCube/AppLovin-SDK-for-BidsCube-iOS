@@ -6,15 +6,23 @@ Repository: [https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS](https://
 
 ## Requirements
 
-- iOS 15.0+ (required by Google IMA SDK for video ads)
+| Pod | Minimum iOS | Video implementation | For |
+| --- | ---: | --- | --- |
+| `BidscubeSDKAppLovin` | iOS 15+ | Modern Google IMA | **Recommended** default |
+| `BidscubeSDKAppLovinLegacy` | iOS 14+ | Legacy AVPlayer VAST | Apps that must support iOS 14 |
+
+> **Warning:** Install only one Bidscube AppLovin pod. Do not install the modern and legacy variants in the same target.
+
 - Xcode 15+
 - Swift 5.9+
 - CocoaPods (recommended integration path)
-- AppLovin MAX SDK 13.x (included transitively by `BidscubeSDKAppLovin`)
+- AppLovin MAX SDK 13.x (included transitively)
 
 ## Installation
 
 Podspecs are hosted **in this GitHub repository** (CocoaPods spec-repo layout). **CocoaPods Trunk is not used.**
+
+### Modern (recommended, iOS 15+)
 
 ```ruby
 platform :ios, '15.0'
@@ -24,9 +32,31 @@ source 'https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS.git'
 source 'https://cdn.cocoapods.org/'
 
 target 'YourApp' do
-  pod 'BidscubeSDKAppLovin', '1.1.2'
+  pod 'BidscubeSDKAppLovin', '1.1.3'
 end
 ```
+
+See [`Podfile.example`](Podfile.example).
+
+`BidscubeSDKAppLovin` pulls `AppLovinSDK` (`~> 13.6.0`) and `GoogleAds-IMA-iOS-SDK` (`~> 3.32.0`, i.e. `>= 3.32.0` and `< 3.33.0`) transitively.
+
+### Legacy (iOS 14+)
+
+```ruby
+platform :ios, '14.0'
+use_frameworks!
+
+source 'https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS.git'
+source 'https://cdn.cocoapods.org/'
+
+target 'YourApp' do
+  pod 'BidscubeSDKAppLovinLegacy', '1.1.3'
+end
+```
+
+See [`Podfile.legacy.example`](Podfile.legacy.example).
+
+`BidscubeSDKAppLovinLegacy` uses the same module (`BidscubeSDK`) and MAX adapter (`ALBidscubeMediationAdapter`) with an AVPlayer-based VAST player. It does **not** depend on Google IMA.
 
 ```bash
 pod install --repo-update
@@ -34,13 +64,16 @@ pod install --repo-update
 
 Open the generated `.xcworkspace` in Xcode.
 
-`BidscubeSDKAppLovin` pulls `AppLovinSDK` and `GoogleAds-IMA-iOS-SDK` transitively. You do not need a separate `pod 'AppLovinSDK'` unless you want to pin a specific MAX version.
-
-See also [`Podfile.example`](Podfile.example).
-
 ### Swift Package Manager
 
-SPM support is experimental. AppLovin does not officially distribute MAX mediation adapters via SPM, so **CocoaPods is the recommended integration method** for `BidscubeSDKAppLovin`.
+SPM support is experimental and **modern iOS 15+ only**. For legacy iOS 14+, use CocoaPods (`BidscubeSDKAppLovinLegacy`). AppLovin does not officially distribute MAX mediation adapters via SPM, so **CocoaPods is the recommended integration method**.
+
+CocoaPods uses pessimistic version constraints (`~>`), while `Package.swift` pins **exact** dependency versions:
+
+| Dependency | CocoaPods (`BidscubeSDKAppLovin`) | Swift Package Manager |
+| --- | --- | --- |
+| Google IMA | `~> 3.32.0` (`>= 3.32.0`, `< 3.33.0`) | `3.32.0` (exact) |
+| AppLovin MAX | `~> 13.6.0` (`>= 13.6.0`, `< 13.7.0`) | `13.6.2` (exact) |
 
 ---
 
@@ -332,7 +365,7 @@ The in-repo [`testApp/`](testApp/) folder is a legacy internal SwiftUI sample. P
 
 ### AppLovin MAX
 
-1. Add pod `BidscubeSDKAppLovin` `1.1.2` → `pod install --repo-update`
+1. Add pod `BidscubeSDKAppLovin` `1.1.3` (or `BidscubeSDKAppLovinLegacy` `1.1.3` for iOS 14) → `pod install --repo-update`
 2. Dashboard: custom network `ALBidscubeMediationAdapter`, enable on ad units, **App ID** = placement ID
 3. Initialize MAX with your SDK key
 4. Load ads with `MAAdView` / `MAInterstitialAd` / `MARewardedAd`
@@ -340,7 +373,7 @@ The in-repo [`testApp/`](testApp/) folder is a legacy internal SwiftUI sample. P
 
 ### Direct SDK
 
-1. Add pod `BidscubeSDKAppLovin` `1.1.2` → `pod install --repo-update`
+1. Add pod `BidscubeSDKAppLovin` `1.1.3` (or `BidscubeSDKAppLovinLegacy` `1.1.3` for iOS 14) → `pod install --repo-update`
 2. Call `BidscubeSDK.initialize(config:)` at startup
 3. Implement `AdCallback`
 4. Call `setDisplayViewController` before fullscreen show
@@ -354,4 +387,4 @@ MIT. See [LICENSE](LICENSE).
 
 ## Version
 
-BidscubeSDKAppLovin **1.1.2**
+BidscubeSDKAppLovin **1.1.3** · BidscubeSDKAppLovinLegacy **1.1.3**

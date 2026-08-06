@@ -1,58 +1,6 @@
 import UIKit
 
 
-private class AdCallbackWrapper: AdCallback {
-    private let originalCallback: AdCallback?
-    private let errorHandler: (String, Int, String) -> Void
-    private let successHandler: (String) -> Void
-    
-    init(originalCallback: AdCallback?, 
-         errorHandler: @escaping (String, Int, String) -> Void,
-         successHandler: @escaping (String) -> Void) {
-        self.originalCallback = originalCallback
-        self.errorHandler = errorHandler
-        self.successHandler = successHandler
-    }
-    
-    func onAdLoading(_ placementId: String) {
-        originalCallback?.onAdLoading(placementId)
-    }
-    
-    func onAdLoaded(_ placementId: String) {
-        successHandler(placementId)
-        originalCallback?.onAdLoaded(placementId)
-    }
-    
-    func onAdDisplayed(_ placementId: String) {
-        originalCallback?.onAdDisplayed(placementId)
-    }
-    
-    func onAdFailed(_ placementId: String, errorCode: Int, errorMessage: String) {
-        errorHandler(placementId, errorCode, errorMessage)
-        originalCallback?.onAdFailed(placementId, errorCode: errorCode, errorMessage: errorMessage)
-    }
-    
-    func onAdClicked(_ placementId: String) {
-        originalCallback?.onAdClicked(placementId)
-    }
-    
-    func onAdClosed(_ placementId: String) {
-        originalCallback?.onAdClosed(placementId)
-    }
-    
-    func onVideoAdStarted(_ placementId: String) {
-        originalCallback?.onVideoAdStarted(placementId)
-    }
-    
-    func onVideoAdCompleted(_ placementId: String) {
-        originalCallback?.onVideoAdCompleted(placementId)
-    }
-    
-    func onVideoAdSkipped(_ placementId: String) {
-        originalCallback?.onVideoAdSkipped(placementId)
-    }
-}
-
 public final class AdViewController: UIViewController {
     
     private let placementId: String
@@ -65,11 +13,11 @@ public final class AdViewController: UIViewController {
     private var positionLabel: UILabel!
     private var currentPosition: AdPosition = .unknown
     private var loadingTimeoutTimer: Timer?
-    private var hasAdLoaded = false
+    private let sessionCoordinator = AdSessionCoordinator()
     private var swipeGestureRecognizer: UISwipeGestureRecognizer?
     private var doubleTapGestureRecognizer: UITapGestureRecognizer?
     private var isVideoPlaying = false
-    private var didFireAdClosed = false
+    private var didDismissUI = false
     
     public init(
         placementId: String,
@@ -178,22 +126,22 @@ public final class AdViewController: UIViewController {
     }
     
     private func loadAd() {
-        callback?.onAdLoading(placementId)
-        
-        
-        let timeoutDuration: TimeInterval = (adType == .video) ? 10.0 : 5.0
+        sessionCoordinator.deliverLoading(placementId, to: callback)
+
+        let timeoutMs = BidscubeSDK.getConfiguration()?.defaultAdTimeoutMs ?? Constants.defaultTimeoutMs
+        let timeoutDuration = TimeInterval(timeoutMs) / 1000.0
         loadingTimeoutTimer = Timer.scheduledTimer(withTimeInterval: timeoutDuration, repeats: false) { [weak self] _ in
             self?.handleLoadingTimeout()
         }
-        
-        
-        let errorHandlingCallback = AdCallbackWrapper(
-            originalCallback: callback,
-            errorHandler: { [weak self] placementId, errorCode, errorMessage in
-                self?.handleAdError(placementId, errorCode: errorCode, errorMessage: errorMessage)
+
+        let sessionCallback = AdSessionCallbackBridge(
+            coordinator: sessionCoordinator,
+            downstream: callback,
+            onLoaded: { [weak self] _ in
+                self?.handleAdSuccess()
             },
-            successHandler: { [weak self] placementId in
-                self?.handleAdSuccess(placementId)
+            onFailed: { [weak self] placementId, errorCode, errorMessage in
+                self?.presentAdErrorUI(placementId: placementId, errorCode: errorCode, errorMessage: errorMessage)
             }
         )
         
@@ -201,33 +149,39 @@ public final class AdViewController: UIViewController {
         case .image:
             if let cachedResponseBody {
                 let view = ImageAdView()
-                view.setPlacementInfo(placementId, callback: errorHandlingCallback)
+                view.setPlacementInfo(placementId, callback: sessionCallback)
                 view.loadAdFromCachedResponseBody(cachedResponseBody)
                 adView = view
             } else {
-                adView = BidscubeSDK.getImageAdView(placementId, errorHandlingCallback)
+                adView = BidscubeSDK.getImageAdView(placementId, sessionCallback)
             }
         case .video:
             if let cachedResponseBody {
                 let view = VideoAdView()
-                view.setPlacementInfo(placementId, callback: errorHandlingCallback)
+                view.setPlacementInfo(placementId, callback: sessionCallback)
                 view.setParentViewController(self)
                 view.loadAdFromCachedResponseBody(cachedResponseBody)
                 adView = view
             } else {
-                adView = BidscubeSDK.getVideoAdView(placementId, errorHandlingCallback)
+                adView = BidscubeSDK.getVideoAdView(placementId, sessionCallback)
             }
         case .native:
             adView = BidscubeSDK.getNativeAdView(
                 placementId,
                 width: Int(DeviceInfo.logicalScreenWidth),
                 height: Int(DeviceInfo.logicalScreenHeight),
-                errorHandlingCallback
+                sessionCallback
             )
         }
         
         guard let adView = adView else {
-            handleAdError(placementId, errorCode: -1, errorMessage: "Failed to create ad view")
+            sessionCoordinator.deliverFailed(
+                placementId,
+                errorCode: -1,
+                errorMessage: "Failed to create ad view",
+                to: callback
+            )
+            presentAdErrorUI(placementId: placementId, errorCode: -1, errorMessage: "Failed to create ad view")
             return
         }
         
@@ -246,38 +200,50 @@ public final class AdViewController: UIViewController {
     }
     
     private func handleLoadingTimeout() {
-        guard !hasAdLoaded else { return }
-        
+        guard sessionCoordinator.state == .loading else { return }
+
         print("🔍 AdViewController: Ad loading timeout")
-        handleAdError(placementId, errorCode: -2, errorMessage: "Ad loading timeout")
-    }
-    
-    private func handleAdSuccess(_ placementId: String) {
-        hasAdLoaded = true
         loadingTimeoutTimer?.invalidate()
         loadingTimeoutTimer = nil
-        
+        if let videoAdView = adView as? VideoAdView {
+            videoAdView.cleanup()
+        }
+        sessionCoordinator.deliverFailed(
+            placementId,
+            errorCode: AdErrorCode.networkError,
+            errorMessage: "Ad loading timeout",
+            to: callback
+        )
+        presentAdErrorUI(
+            placementId: placementId,
+            errorCode: AdErrorCode.networkError,
+            errorMessage: "Ad loading timeout"
+        )
+    }
+
+    private func handleAdSuccess() {
+        loadingTimeoutTimer?.invalidate()
+        loadingTimeoutTimer = nil
         print("🔍 AdViewController: Ad loaded successfully")
     }
-    
-    private func handleAdError(_ placementId: String, errorCode: Int, errorMessage: String) {
-        print("🔍 AdViewController: Ad failed - \(errorMessage)")
-        
-        
+
+    private func invalidateActiveAdLoad() {
         loadingTimeoutTimer?.invalidate()
         loadingTimeoutTimer = nil
-        
-        
+        if let videoAdView = adView as? VideoAdView {
+            videoAdView.cleanup()
+        }
+    }
+
+    private func presentAdErrorUI(placementId: String, errorCode: Int, errorMessage: String) {
+        print("🔍 AdViewController: Ad failed - \(errorMessage)")
+        loadingTimeoutTimer?.invalidate()
+        loadingTimeoutTimer = nil
         isVideoPlaying = false
         enableSwipeGestures()
-        
-        
         DispatchQueue.main.async {
             self.showBackButtonOnError()
         }
-        
-        
-        callback?.onAdFailed(placementId, errorCode: errorCode, errorMessage: errorMessage)
     }
     
     private func showBackButtonOnError() {
@@ -644,11 +610,14 @@ public final class AdViewController: UIViewController {
         dismissAdOnce()
     }
 
-    /// Centralized fullscreen dismissal — fires `onAdClosed` at most once.
-    public func dismissAdOnce() {
-        guard !didFireAdClosed else { return }
-        didFireAdClosed = true
-        callback?.onAdClosed(placementId)
+    /// Centralized fullscreen dismissal. When `notifyClosed` is `false`, UI is dismissed without `onAdClosed`.
+    public func dismissAdOnce(notifyClosed: Bool = true) {
+        guard !didDismissUI else { return }
+        didDismissUI = true
+
+        if notifyClosed {
+            sessionCoordinator.deliverClosed(placementId, to: callback)
+        }
 
         if let navigationController = navigationController, navigationController.viewControllers.count > 1 {
             navigationController.popViewController(animated: true)
@@ -656,6 +625,8 @@ public final class AdViewController: UIViewController {
             dismiss(animated: true)
         }
     }
+
+    var adSessionCoordinator: AdSessionCoordinator { sessionCoordinator }
     
     private func ensureBackButtonOnTop() {
         if !backButton.isHidden {

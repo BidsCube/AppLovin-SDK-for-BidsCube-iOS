@@ -1,13 +1,23 @@
 import Foundation
 
 enum TrackerPinger {
-    static func pingUrls(_ label: String, _ urls: [String]) {
+    static func pingUrls(
+        _ label: String,
+        _ urls: [String],
+        context: VastTrackingContext = VastTrackingContext(),
+        errorCode: Int? = nil
+    ) {
         for urlString in urls {
-            guard let url = URL(string: urlString.trimmingCharacters(in: .whitespacesAndNewlines)) else { continue }
+            let expanded = VastTrackingMacroReplacer.replace(
+                urlString.trimmingCharacters(in: .whitespacesAndNewlines),
+                context: context,
+                errorCode: errorCode
+            )
+            guard let url = URL(string: expanded) else { continue }
             var request = URLRequest(url: url)
             request.httpMethod = "GET"
             URLSession.shared.dataTask(with: request).resume()
-            Logger.network("Companion tracking ping [\(label)]: \(url.absoluteString)")
+            Logger.network("Tracking ping [\(label)]: \(url.absoluteString)")
         }
     }
 }

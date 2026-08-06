@@ -43,16 +43,47 @@ jobs:
           fi
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
+      - name: Verify version alignment
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          MODERN=$(grep -m1 'spec\.version' BidscubeSDKAppLovin.podspec | sed -n 's/.*spec\.version[^"]*"\([^"]*\)".*/\1/p')
+          LEGACY=$(grep -m1 'spec\.version' BidscubeSDKAppLovinLegacy.podspec | sed -n 's/.*spec\.version[^"]*"\([^"]*\)".*/\1/p')
+          SDK=$(grep 'sdkVersion' bidscubeSdk/Core/Constants.swift | sed -n 's/.*"\([^"]*\)".*/\1/p')
+          test "$MODERN" = "$VERSION"
+          test "$LEGACY" = "$VERSION"
+          test "$SDK" = "$VERSION"
+          test -f "BidscubeSDKAppLovin/${VERSION}/BidscubeSDKAppLovin.podspec"
+          test -f "BidscubeSDKAppLovinLegacy/${VERSION}/BidscubeSDKAppLovinLegacy.podspec"
+
       - name: Sync in-repo CocoaPods spec
         run: ./scripts/sync-cocoapods-spec.sh
 
-      - name: Verify spec layout
-        run: |
-          VERSION="${{ steps.version.outputs.version }}"
-          test -f "BidscubeSDKAppLovin/${VERSION}/BidscubeSDKAppLovin.podspec"
+      - name: Ensure sync did not modify tracked specs
+        run: git diff --exit-code
 
-      - name: Lint podspec
+      - name: Lint modern podspec
         run: pod lib lint BidscubeSDKAppLovin.podspec --allow-warnings --verbose
+
+      - name: Lint legacy podspec
+        run: pod lib lint BidscubeSDKAppLovinLegacy.podspec --allow-warnings --verbose
+
+      - name: Install pod dependencies for sample workspace
+        run: pod install
+
+      - name: Build modern sample app
+        run: |
+          xcodebuild build \
+            -workspace bidscubeSdk.xcworkspace \
+            -scheme testApp-ios \
+            -destination 'generic/platform=iOS Simulator' \
+            -quiet \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Build legacy integration
+        run: chmod +x scripts/build-legacy-integration.sh && ./scripts/build-legacy-integration.sh
+
+      - name: Run unit tests
+        run: chmod +x scripts/run-unit-tests.sh && ./scripts/run-unit-tests.sh
 
       - name: Validate Package.swift
         run: |
@@ -95,12 +126,23 @@ jobs:
           Install via in-repo CocoaPods spec (no Trunk):
 
           \`\`\`ruby
+          # Modern, iOS 15+
           source 'https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS.git'
           source 'https://cdn.cocoapods.org/'
 
           platform :ios, '15.0'
-          pod 'AppLovinSDK', '>= 13.0.0', '< 14.0'
           pod 'BidscubeSDKAppLovin', '${{ steps.version.outputs.version }}'
           \`\`\`
+
+          \`\`\`ruby
+          # Legacy, iOS 14+
+          source 'https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS.git'
+          source 'https://cdn.cocoapods.org/'
+
+          platform :ios, '14.0'
+          pod 'BidscubeSDKAppLovinLegacy', '${{ steps.version.outputs.version }}'
+          \`\`\`
+
+          Install only one Bidscube AppLovin pod per target.
           EOF
           )"
