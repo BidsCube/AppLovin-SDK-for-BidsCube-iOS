@@ -12,7 +12,7 @@ AppLovin MAX custom network adapter for the Bidscube iOS SDK. The adapter ships 
 - **AppLovin MAX SDK** 13.x (pulled transitively by `BidscubeSDKAppLovin`)
 - **Xcode** 15+, Swift 5.9+
 - MAX **Adapter Class Name:** `ALBidscubeMediationAdapter`
-- Bidscube **Placement ID** in MAX **App ID** (and optional `request_authority` / `ssp_host`)
+- Bidscube **Placement ID** in MAX **App ID**
 
 ## Installation
 
@@ -28,33 +28,126 @@ target 'YourApp' do
 end
 ```
 
+```bash
+pod install --repo-update
+```
+
+Open the generated `.xcworkspace` in Xcode.
+
 `BidscubeSDKAppLovin` pulls `AppLovinSDK` and `GoogleAds-IMA-iOS-SDK` transitively.
 
-## MAX integration notes
+---
 
-- The adapter calls `BidscubeSDK.setDisplayViewController(_:)` with MAX’s presenting view controller before show/load.
-- Ad failures use stable codes from `AdErrorCode` (for example **204** for HTTP no-fill). See [docs/errors.md](../docs/errors.md).
-- Optional server parameter `user_id` (or `userId`) is forwarded as `user_id` on SSP ad requests for postback attribution.
-- Optional init server parameter **`auto_close`** (alias `autoClose`): `true` / `false`, default **`false`**. Passed to `SDKConfig.Builder.autoClose(...)`. When `false`, fullscreen video stays open after linear playback for VAST Companion or last frame; `onAdClosed` fires only on manual/system close.
-- Interstitial and rewarded use the **video** Bidscube path (IMA VAST by default).
-- Load caches the Bidscube response; show presents from the cached payload (no second network request).
-- Signal collection returns structured JSON via `MASignalProvider` (no device identifiers or PII).
+## Integration A — AppLovin MAX (recommended for mediation)
 
-## Supported formats
+Use this path when ads are loaded through MAX waterfall (`MAAdView`, `MAInterstitialAd`, `MARewardedAd`).
 
-- Banner
-- MREC
-- Leader
-- Interstitial (video)
-- Rewarded
+### 1. MAX Dashboard
 
-**Not supported:** Native MAX. Native support requires real asset mapping from Bidscube native response to `MANativeAd`.
+Follow [Integrating custom SDK networks](https://support.axon.ai/en/max/mediated-network-guides/integrating-custom-sdk-networks/):
 
-## OpenRTB
+1. **MAX → Mediation → Manage → Networks → Add Custom Network**
+   - Type: **SDK**
+   - Name: **Bidscube**
+   - **iOS Adapter Class Name:** `ALBidscubeMediationAdapter`
+2. **MAX → Ad Units** — enable **Bidscube** on each ad unit (banner, MREC, interstitial, rewarded).
+3. Set **App ID** = your **Bidscube Placement ID** (MAX label; required for this network).
 
-OpenRTB 2.6-style podded video response parsing is not implemented in this package yet.
-The adapter does not build or POST OpenRTB bid requests.
+| Field | Value |
+|---|---|
+| **iOS Adapter Class Name** | `ALBidscubeMediationAdapter` |
+| **App ID** | Bidscube **Placement ID** |
+| **Placement ID** | Optional; leave empty unless your MAX setup needs a second value |
+
+**Optional server parameters** (network or ad unit level):
+
+| Parameter | Description |
+|---|---|
+| `request_authority` / `ssp_host` | SSP host override (`host` or `host:port`) |
+| `user_id` / `userId` | Publisher user id for postback attribution |
+| `auto_close` / `autoClose` | `true` / `false`, default `false` — close fullscreen video immediately after linear playback |
+
+### 2. Initialize AppLovin MAX
+
+You do **not** need `BidscubeSDK.initialize(...)` for standard MAX mediation — the adapter initializes the Bidscube runtime when MAX loads the custom network.
+
+```swift
+import AppLovinSDK
+
+let initConfig = ALSdkInitializationConfiguration(sdkKey: "YOUR_SDK_KEY") { builder in
+    builder.mediationProvider = ALMediationProviderMAX
+}
+ALSdk.shared().initialize(with: initConfig) { _ in
+    // MAX ready — load ads with standard MAX APIs
+}
+```
+
+### 3. Load and show ads
+
+Use your usual MAX APIs. The adapter handles Bidscube load/show internally.
+
+```swift
+import AppLovinSDK
+
+// Banner / MREC
+let bannerView = MAAdView(adUnitIdentifier: "YOUR_BANNER_AD_UNIT_ID")
+bannerView.delegate = self
+bannerView.loadAd()
+
+// Interstitial
+let interstitial = MAInterstitialAd(adUnitIdentifier: "YOUR_INTERSTITIAL_AD_UNIT_ID")
+interstitial.delegate = self
+interstitial.load()
+// interstitial.show() when ready
+
+// Rewarded
+let rewarded = MARewardedAd.shared(withAdUnitIdentifier: "YOUR_REWARDED_AD_UNIT_ID")
+rewarded.delegate = self
+rewarded.load()
+// rewarded.show() when ready
+```
+
+### 4. Verify
+
+- Open **Mediation Debugger** from the AppLovin SDK.
+- Confirm **Bidscube** appears in the waterfall for your ad units.
+- When Bidscube wins, logs show `network=Bidscube`.
+
+### Supported MAX formats
+
+| Format | Supported |
+|---|---|
+| Banner | yes |
+| MREC / Leader | yes |
+| Interstitial (video) | yes |
+| Rewarded (video) | yes |
+| Native | **no** — use direct SDK API (see [Main README](../README.md#integration-b--direct-bidscube-sdk)) |
+
+### MAX adapter behavior
+
+- Interstitial and rewarded use the **video** Bidscube path (IMA VAST).
+- Load caches the Bidscube response; show presents from cache (no second network request).
+- `BidscubeSDK.setDisplayViewController(_:)` is called with MAX’s presenter before show/load.
+- Signal collection via `MASignalProvider` (no device identifiers or PII).
+- Ad failures use stable codes from `AdErrorCode` (e.g. **204** = no fill). See [docs/errors.md](../docs/errors.md).
+
+---
+
+## Integration B — Direct Bidscube SDK
+
+Use this path when you call Bidscube APIs directly (`getBannerAdView`, `showVideoAd`, `getNativeAdView`, etc.) without MAX mediation.
+
+See the full guide in the [Main README — Direct SDK integration](../README.md#integration-b--direct-bidscube-sdk).
+
+You can use **both** paths in the same app: initialize Bidscube early for direct ads, and use MAX for mediated ads.
+
+---
 
 ## Limitations
 
-Native MAX is not supported in this release. Native support requires real asset mapping from Bidscube native response to `MANativeAd`.
+- **Native MAX** is not supported. Native ads require the direct SDK API.
+- OpenRTB 2.6-style podded video response parsing is not implemented in this package.
+
+## Sample app
+
+For local testing, use the sibling app **`BidscubeSDKAppLovinTestApp`** (Banner / Video / Native tabs = direct SDK; MAX tab = mediation). See the test app README in your workspace checkout.
