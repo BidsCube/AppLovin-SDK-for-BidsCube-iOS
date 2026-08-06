@@ -4,6 +4,7 @@ import SwiftUI
 @available(iOS 13.0, *)
 public extension BidscubeSDK {
     
+    #if !BIDSCUBE_LEGACY_VIDEO
     static func getIMAVideoAdView(_ placementId: String, _ callback: AdCallback?) -> some View {
         print("📱 BidscubeSDK: getIMAVideoAdView called for placement: \(placementId)")
         
@@ -25,6 +26,7 @@ public extension BidscubeSDK {
             )
         )
     }
+    #endif
     
     static func getAdViewControllerView(_ placementId: String, adType: AdType, _ callback: AdCallback?) -> some View {
         print("📱 BidscubeSDK: getAdViewControllerView called for placement: \(placementId)")

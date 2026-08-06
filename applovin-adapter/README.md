@@ -1,20 +1,32 @@
 # Bidscube + AppLovin MAX (iOS)
 
-**SDK / adapter 1.1.2** · CocoaPod `BidscubeSDKAppLovin`
+**SDK / adapter 1.1.3** · CocoaPods `BidscubeSDKAppLovin` or `BidscubeSDKAppLovinLegacy`
 
 AppLovin MAX custom network adapter for the Bidscube iOS SDK. The adapter ships inside the same pod as the runtime — no separate SDK pod is required for mediation.
 
 **Related docs:** [Main README](../README.md) · [Error codes](../docs/errors.md) · [CHANGELOG](../CHANGELOG.md) · [RELEASE](../RELEASE.md)
 
+## Pod variants
+
+| Pod | Minimum iOS | Video | Notes |
+| --- | ---: | --- | --- |
+| `BidscubeSDKAppLovin` | iOS 15+ | Google IMA | Recommended |
+| `BidscubeSDKAppLovinLegacy` | iOS 14+ | AVPlayer VAST | No Google IMA |
+
+> Install only one Bidscube AppLovin pod. Do not install the modern and legacy variants in the same target.
+
+Both pods expose module `BidscubeSDK` and adapter `ALBidscubeMediationAdapter`. Publisher Swift integration code does not change when switching pods.
+
 ## Requirements
 
-- **iOS** 15.0+
-- **AppLovin MAX SDK** 13.x (pulled transitively by `BidscubeSDKAppLovin`)
+- **AppLovin MAX SDK** 13.x (pulled transitively)
 - **Xcode** 15+, Swift 5.9+
 - MAX **Adapter Class Name:** `ALBidscubeMediationAdapter`
 - Bidscube **Placement ID** in MAX **App ID**
 
 ## Installation
+
+### Modern (iOS 15+)
 
 ```ruby
 platform :ios, '15.0'
@@ -24,7 +36,21 @@ source 'https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS.git'
 source 'https://cdn.cocoapods.org/'
 
 target 'YourApp' do
-  pod 'BidscubeSDKAppLovin', '1.1.2'
+  pod 'BidscubeSDKAppLovin', '1.1.3'
+end
+```
+
+### Legacy (iOS 14+)
+
+```ruby
+platform :ios, '14.0'
+use_frameworks!
+
+source 'https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS.git'
+source 'https://cdn.cocoapods.org/'
+
+target 'YourApp' do
+  pod 'BidscubeSDKAppLovinLegacy', '1.1.3'
 end
 ```
 
@@ -34,7 +60,7 @@ pod install --repo-update
 
 Open the generated `.xcworkspace` in Xcode.
 
-`BidscubeSDKAppLovin` pulls `AppLovinSDK` and `GoogleAds-IMA-iOS-SDK` transitively.
+`BidscubeSDKAppLovin` pulls `GoogleAds-IMA-iOS-SDK` (`~> 3.32.0`, i.e. `>= 3.32.0` and `< 3.33.0`) and `AppLovinSDK` (`~> 13.6.0`). `BidscubeSDKAppLovinLegacy` does not include Google IMA.
 
 ---
 

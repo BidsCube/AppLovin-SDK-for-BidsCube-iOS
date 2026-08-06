@@ -43,7 +43,7 @@ public final class BannerAdView: UIView {
             bannerWidth = 320
         }
         
-        backgroundColor = .lightGray
+        backgroundColor = .clear
         layer.cornerRadius = cornerRadius
         clipsToBounds = cornerRadius > 0
         
@@ -132,37 +132,9 @@ public final class BannerAdView: UIView {
     }
 
     private func handleAdResponseBody(_ body: String) {
-        do {
-            if let jsonData = body.data(using: .utf8),
-               let json = try JSONSerialization.jsonObject(with: jsonData) as? [String: Any],
-               let adm = json["adm"] as? String {
-                if adm.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                    AdFailureDispatcher.deliver(
-                        placementId: placementId,
-                        format: "banner",
-                        callback: callback,
-                        errorCode: AdErrorCode.emptyAdm,
-                        errorMessage: "Empty ad markup"
-                    )
-                    return
-                }
+        applyResponseMetadata(from: body)
 
-                if let positionValue = json["position"] as? Int,
-                   let position = AdPosition(rawValue: positionValue) {
-                    BidscubeSDK.setResponseAdPosition(position)
-                }
-
-                if #available(iOS 14.0, *),
-                   let skadnetworkData = json["skadnetwork"] as? [String: Any],
-                   let skadnetworkResponse = SKAdNetworkManager.parseSKAdNetworkResponse(from: skadnetworkData) {
-                    SKAdNetworkManager.processSKAdNetworkResponse(skadnetworkResponse)
-                }
-
-                loadAdContent(adm)
-                reportAdLoadedIfNeeded()
-                return
-            }
-        } catch {
+        guard let markup = BannerAdMarkupNormalizer.extractRenderableMarkup(from: body) else {
             AdFailureDispatcher.deliver(
                 placementId: placementId,
                 format: "banner",
@@ -173,19 +145,26 @@ public final class BannerAdView: UIView {
             return
         }
 
-        if body.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            AdFailureDispatcher.deliver(
-                placementId: placementId,
-                format: "banner",
-                callback: callback,
-                errorCode: AdErrorCode.emptyAdm,
-                errorMessage: "Empty ad markup"
-            )
+        loadAdContent(markup)
+        reportAdLoadedIfNeeded()
+    }
+
+    private func applyResponseMetadata(from body: String) {
+        guard let data = body.data(using: .utf8),
+              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
             return
         }
 
-        loadAdContent(body)
-        reportAdLoadedIfNeeded()
+        if let positionValue = json["position"] as? Int,
+           let position = AdPosition(rawValue: positionValue) {
+            BidscubeSDK.setResponseAdPosition(position)
+        }
+
+        if #available(iOS 14.0, *),
+           let skadnetworkData = json["skadnetwork"] as? [String: Any],
+           let skadnetworkResponse = SKAdNetworkManager.parseSKAdNetworkResponse(from: skadnetworkData) {
+            SKAdNetworkManager.processSKAdNetworkResponse(skadnetworkResponse)
+        }
     }
 
     private func reportAdLoadedIfNeeded() {
@@ -197,15 +176,10 @@ public final class BannerAdView: UIView {
     
     public func loadAdContent(_ htmlContent: String) {
         loadingLabel.isHidden = false
-        
-        if(htmlContent.contains("document.write(")) {
-        extractClickURLFromHTML(htmlContent)
-        
-        let cleanHTML = htmlContent
-            .replacingOccurrences(of: "document.write(", with: "")
-            .replacingOccurrences(of: ");", with: "")
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-        
+
+        let cleanHTML = BannerAdMarkupNormalizer.normalize(htmlContent)
+        extractClickURLFromHTML(cleanHTML)
+
         let fullHTML = """
         <!DOCTYPE html>
         <html>
@@ -213,14 +187,14 @@ public final class BannerAdView: UIView {
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <style>
-                body { 
-                    margin: 0; 
-                    padding: 0; 
-                    overflow: hidden; 
+                body {
+                    margin: 0;
+                    padding: 0;
+                    overflow: hidden;
                     background: transparent;
                 }
-                * { 
-                    box-sizing: border-box; 
+                * {
+                    box-sizing: border-box;
                 }
                 img {
                     max-width: 100%;
@@ -234,12 +208,9 @@ public final class BannerAdView: UIView {
         </body>
         </html>
         """
-        
-            webView.loadHTMLString(fullHTML, baseURL: nil)
-        } else {
-            webView.loadHTMLString(htmlContent, baseURL: nil)
-        }
-        
+
+        webView.loadHTMLString(fullHTML, baseURL: nil)
+
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
             self.loadingLabel.isHidden = true
         }

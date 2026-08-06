@@ -1,10 +1,12 @@
 Pod::Spec.new do |spec|
   spec.name         = "BidscubeSDK"
-  spec.version      = "1.1.2"
-  spec.summary      = "[Deprecated] Use BidscubeSDKAppLovin for AppLovin MAX integration"
+  spec.version      = "1.1.3"
+  spec.summary      = "[Deprecated] Use BidscubeSDKAppLovin or BidscubeSDKAppLovinLegacy"
   spec.description  = <<-DESC
                       DEPRECATED: This pod excludes the AppLovin MAX adapter.
-                      For mediation, use pod 'BidscubeSDKAppLovin' instead.
+                      For mediation, use pod 'BidscubeSDKAppLovin' (iOS 15+) or
+                      pod 'BidscubeSDKAppLovinLegacy' (iOS 14+).
+                      This pod is no longer published in new integrations.
                       DESC
 
   spec.homepage     = "https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS"
@@ -31,11 +33,12 @@ Pod::Spec.new do |spec|
     "bidscubeSdk/Views/ContentView.swift",
     "bidscubeSdk/Views/CustomAdRenderView.swift",
     "bidscubeSdk/Views/IMAVideoAdHandler.swift.disabled",
-    "bidscubeSdk/Logger/SDKLogger.swift"
+    "bidscubeSdk/Logger/SDKLogger.swift",
+    "bidscubeSdk/Video/Legacy/**/*"
   ]
   spec.public_header_files = "bidscubeSdk/bidscubeSdk.h"
 
-  spec.dependency "GoogleAds-IMA-iOS-SDK", "~> 3.19"
+  spec.dependency "GoogleAds-IMA-iOS-SDK", "~> 3.32.0"
 
   spec.frameworks = "UIKit", "WebKit", "AVFoundation", "MediaPlayer"
 

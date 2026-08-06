@@ -2,7 +2,30 @@
 
 All notable changes to the Bidscube iOS SDK and AppLovin MAX adapter are documented here.
 
-## [Unreleased]
+## [1.1.3] - 2026-08-06
+
+### Added
+
+- **`BidscubeSDKAppLovinLegacy`** CocoaPod for **iOS 14+** with the same module name (`BidscubeSDK`) and MAX adapter (`ALBidscubeMediationAdapter`).
+- AVPlayer-based legacy VAST video player (`LegacyVideoAdHandler`) with wrapper redirect resolution, MP4 playback, quartile/skip/close tracking, companion end cards, and `autoClose` parity.
+- `VastResolver` and extended `VastParser.parseInlineAd` for legacy inline VAST support.
+- `Podfile.legacy.example` and in-repo `BidscubeSDKAppLovinLegacy/{version}/` podspec layout.
+- `legacyIntegration/` CocoaPods workspace with **LegacySmoke** (legacy SDK) and **BidscubeSDKAppLovinTestApp** (modern SDK) sample targets; CI build scripts and unit-test harness (`spmUnitTests/`).
+
+### Changed
+
+- Modern **`BidscubeSDKAppLovin`** remains **iOS 15+**; Google IMA dependency `~> 3.32.0` (`>= 3.32.0`, `< 3.33.0`); AppLovin SDK `~> 13.6.0`.
+- Centralized ad session callback lifecycle (`AdSessionCoordinator`) prevents duplicate `onAdFailed` and late success callbacks after failure/close.
+- Legacy VAST wrapper resolution pings accumulated Error URLs on failure; companion inheritance from inline/wrapper layers.
+- `BannerAdMarkupNormalizer` strips `document.write(...)` and nested `{ "adm": "..." }` JSON envelopes from banner/image SSP responses (including malformed nested span HTML).
+- `VideoAdView` accepts raw VAST XML responses and routes playback through `VideoAdView+Playback` (IMA for modern, legacy AVPlayer when `BIDSCUBE_LEGACY_VIDEO` is set).
+- `NativeAdView` avoids zero-size layout mode selection before the view is laid out.
+
+### Notes
+
+- Install **only one** of `BidscubeSDKAppLovin` or `BidscubeSDKAppLovinLegacy` per target.
+- Swift Package Manager supports **modern iOS 15+ only**; use CocoaPods for legacy iOS 14.
+- In-repo test apps (`testApp*`, `legacyIntegration/`) are excluded from `git archive` source packages; integration workspaces generate `Pods/` locally.
 
 ---
 

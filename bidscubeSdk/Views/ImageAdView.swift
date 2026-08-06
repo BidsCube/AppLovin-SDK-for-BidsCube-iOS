@@ -20,7 +20,7 @@ public final class ImageAdView: UIView {
     }
     
     private func setupView() {
-        backgroundColor = .lightGray
+        backgroundColor = .clear
         
         loadingLabel.text = "Loading Ad..."
         loadingLabel.textAlignment = .center
@@ -64,13 +64,9 @@ public final class ImageAdView: UIView {
     
     public func loadAdContent(_ htmlContent: String) {
         loadingLabel.isHidden = false
-        extractClickURLFromHTML(htmlContent)
-        
-        let cleanHTML = htmlContent
-            .replacingOccurrences(of: "document.write(", with: "")
-            .replacingOccurrences(of: ");", with: "")
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-        
+        let cleanHTML = BannerAdMarkupNormalizer.normalize(htmlContent)
+        extractClickURLFromHTML(cleanHTML)
+
         let fullHTML = """
         <!DOCTYPE html>
         <html>
@@ -87,9 +83,9 @@ public final class ImageAdView: UIView {
         </body>
         </html>
         """
-        
+
         webView.loadHTMLString(fullHTML, baseURL: nil)
-        
+
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
             self.loadingLabel.isHidden = true
         }
@@ -130,37 +126,9 @@ public final class ImageAdView: UIView {
     }
 
     private func handleAdResponseBody(_ body: String) {
-        do {
-            if let jsonData = body.data(using: .utf8),
-               let json = try JSONSerialization.jsonObject(with: jsonData) as? [String: Any],
-               let adm = json["adm"] as? String {
-                if adm.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                    AdFailureDispatcher.deliver(
-                        placementId: placementId,
-                        format: "image",
-                        callback: callback,
-                        errorCode: AdErrorCode.emptyAdm,
-                        errorMessage: "Empty ad markup"
-                    )
-                    return
-                }
+        applyResponseMetadata(from: body)
 
-                if let positionValue = json["position"] as? Int,
-                   let position = AdPosition(rawValue: positionValue) {
-                    BidscubeSDK.setResponseAdPosition(position)
-                }
-
-                if #available(iOS 14.0, *),
-                   let skadnetworkData = json["skadnetwork"] as? [String: Any],
-                   let skadnetworkResponse = SKAdNetworkManager.parseSKAdNetworkResponse(from: skadnetworkData) {
-                    SKAdNetworkManager.processSKAdNetworkResponse(skadnetworkResponse)
-                }
-
-                loadAdContent(adm)
-                reportAdLoadedIfNeeded()
-                return
-            }
-        } catch {
+        guard let markup = BannerAdMarkupNormalizer.extractRenderableMarkup(from: body) else {
             AdFailureDispatcher.deliver(
                 placementId: placementId,
                 format: "image",
@@ -171,19 +139,26 @@ public final class ImageAdView: UIView {
             return
         }
 
-        if body.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            AdFailureDispatcher.deliver(
-                placementId: placementId,
-                format: "image",
-                callback: callback,
-                errorCode: AdErrorCode.emptyAdm,
-                errorMessage: "Empty ad markup"
-            )
+        loadAdContent(markup)
+        reportAdLoadedIfNeeded()
+    }
+
+    private func applyResponseMetadata(from body: String) {
+        guard let data = body.data(using: .utf8),
+              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
             return
         }
 
-        loadAdContent(body)
-        reportAdLoadedIfNeeded()
+        if let positionValue = json["position"] as? Int,
+           let position = AdPosition(rawValue: positionValue) {
+            BidscubeSDK.setResponseAdPosition(position)
+        }
+
+        if #available(iOS 14.0, *),
+           let skadnetworkData = json["skadnetwork"] as? [String: Any],
+           let skadnetworkResponse = SKAdNetworkManager.parseSKAdNetworkResponse(from: skadnetworkData) {
+            SKAdNetworkManager.processSKAdNetworkResponse(skadnetworkResponse)
+        }
     }
 
     private func reportAdLoadedIfNeeded() {

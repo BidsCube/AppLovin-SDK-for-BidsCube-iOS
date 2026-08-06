@@ -1,6 +1,10 @@
 import Testing
 import UIKit
+#if SWIFT_PACKAGE
+@testable import BidscubeSDKAppLovin
+#else
 @testable import BidscubeSDK
+#endif
 
 struct bidscubeSdkTests {
     final class Delegate: AdCallback, ConsentCallback {
@@ -24,7 +28,8 @@ struct bidscubeSdkTests {
         func onConsentStatusChanged(_ hasConsent: Bool) {}
     }
 
-    @Test func initializeAndShow() async throws {
+    @Test(.disabled("Requires host UIViewController and live SSP"))
+    func initializeAndShow() async throws {
         let config = SDKConfig.Builder()
             .enableLogging(true)
             .enableDebugMode(true)

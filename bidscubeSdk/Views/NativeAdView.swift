@@ -401,48 +401,8 @@ public final class NativeAdView: UIView {
     }
 
     private func handleNativeResponseBody(_ content: String) {
-        do {
-            if let jsonData = content.data(using: .utf8),
-               let json = try JSONSerialization.jsonObject(with: jsonData) as? [String: Any],
-               let adm = json["adm"] as? String {
-                if adm.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                    AdFailureDispatcher.deliver(
-                        placementId: placementId,
-                        format: "native",
-                        callback: callback,
-                        errorCode: AdErrorCode.emptyAdm,
-                        errorMessage: "Empty ad markup"
-                    )
-                    return
-                }
-
-                if let positionValue = json["position"] as? Int,
-                   let position = AdPosition(rawValue: positionValue) {
-                    BidscubeSDK.setResponseAdPosition(position)
-                }
-
-                if #available(iOS 14.0, *),
-                   let skadnetworkData = json["skadnetwork"] as? [String: Any],
-                   let skadnetworkResponse = SKAdNetworkManager.parseSKAdNetworkResponse(from: skadnetworkData) {
-                    SKAdNetworkManager.processSKAdNetworkResponse(skadnetworkResponse)
-                }
-
-                loadNativeAdContent(adm)
-                reportAdLoadedIfNeeded()
-                return
-            }
-        } catch {
-            AdFailureDispatcher.deliver(
-                placementId: placementId,
-                format: "native",
-                callback: callback,
-                errorCode: AdErrorCode.invalidResponse,
-                errorMessage: "Failed to parse ad server response"
-            )
-            return
-        }
-
-        if content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+        let trimmed = content.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else {
             AdFailureDispatcher.deliver(
                 placementId: placementId,
                 format: "native",
@@ -453,7 +413,37 @@ public final class NativeAdView: UIView {
             return
         }
 
-        loadNativeAdContent(content)
+        if let jsonData = trimmed.data(using: .utf8),
+           let json = try? JSONSerialization.jsonObject(with: jsonData) as? [String: Any],
+           let adm = json["adm"] as? String {
+            if adm.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                AdFailureDispatcher.deliver(
+                    placementId: placementId,
+                    format: "native",
+                    callback: callback,
+                    errorCode: AdErrorCode.emptyAdm,
+                    errorMessage: "Empty ad markup"
+                )
+                return
+            }
+
+            if let positionValue = json["position"] as? Int,
+               let position = AdPosition(rawValue: positionValue) {
+                BidscubeSDK.setResponseAdPosition(position)
+            }
+
+            if #available(iOS 14.0, *),
+               let skadnetworkData = json["skadnetwork"] as? [String: Any],
+               let skadnetworkResponse = SKAdNetworkManager.parseSKAdNetworkResponse(from: skadnetworkData) {
+                SKAdNetworkManager.processSKAdNetworkResponse(skadnetworkResponse)
+            }
+
+            loadNativeAdContent(adm)
+            reportAdLoadedIfNeeded()
+            return
+        }
+
+        loadNativeAdContent(trimmed)
         reportAdLoadedIfNeeded()
     }
 
@@ -553,12 +543,14 @@ public final class NativeAdView: UIView {
     
     public override func layoutSubviews() {
         super.layoutSubviews()
-        
+
         // Ensure loading label is always on top when visible
         if !loadingLabel.isHidden {
             bringSubviewToFront(loadingLabel)
         }
-        
+
+        guard bounds.height > 0, bounds.width > 0 else { return }
+
         // Auto-adjust layout based on current size
         setLayoutModeForSize(bounds.size)
     }

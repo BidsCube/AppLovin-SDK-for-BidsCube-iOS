@@ -6,7 +6,7 @@ source 'https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS.git'
 source 'https://cdn.cocoapods.org/'
 
 target 'testApp-ios' do
-  pod 'AppLovinSDK', '>= 13.0.0', '< 14.0'
+  pod 'AppLovinSDK', '~> 13.6.0'
   # Local sources for CI/dev; published integrators use the CocoaPods spec repo tag.
   pod 'BidscubeSDKAppLovin', :path => '.'
 end

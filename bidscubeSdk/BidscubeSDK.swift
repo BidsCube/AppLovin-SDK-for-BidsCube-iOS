@@ -97,6 +97,16 @@ public final class BidscubeSDK {
     }
 
     static func makeCustomVideoPlayerView() -> (UIView & BidscubeCustomVideoPlayer)? {
+        #if BIDSCUBE_LEGACY_VIDEO
+        guard currentVideoPlayerType() == .custom else { return nil }
+        let factory = globalCustomVideoPlayerFactory ?? configuration?.customVideoPlayerFactory
+        guard let factory else {
+            Logger.warning("Custom video player type selected, but no factory provided. Falling back to legacy AVPlayer.")
+            return LegacyVideoAdHandler()
+        }
+        Logger.player("Creating custom video player from client factory (legacy pod)")
+        return factory.makeVideoPlayer()
+        #else
         guard currentVideoPlayerType() == .custom else { return nil }
         let factory = globalCustomVideoPlayerFactory ?? configuration?.customVideoPlayerFactory
         guard let factory else {
@@ -105,6 +115,7 @@ public final class BidscubeSDK {
         }
         Logger.player("Creating custom video player from client factory")
         return factory.makeVideoPlayer()
+        #endif
     }
     
     public static func getConfiguration() -> SDKConfig? {

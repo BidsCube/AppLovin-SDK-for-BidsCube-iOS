@@ -26,10 +26,14 @@ jobs:
       - name: Lint BidscubeSDKAppLovin podspec
         run: pod lib lint BidscubeSDKAppLovin.podspec --allow-warnings --verbose
 
+      - name: Lint BidscubeSDKAppLovinLegacy podspec
+        run: pod lib lint BidscubeSDKAppLovinLegacy.podspec --allow-warnings --verbose
+
       - name: Verify in-repo spec layout
         run: |
           VERSION=$(grep -m1 'spec\.version' BidscubeSDKAppLovin.podspec | sed -n 's/.*spec\.version[^"]*"\([^"]*\)".*/\1/p')
           test -f "BidscubeSDKAppLovin/${VERSION}/BidscubeSDKAppLovin.podspec"
+          test -f "BidscubeSDKAppLovinLegacy/${VERSION}/BidscubeSDKAppLovinLegacy.podspec"
 
       - name: Resolve Swift package
         run: swift package resolve
@@ -57,3 +61,41 @@ jobs:
             -destination 'generic/platform=iOS Simulator' \
             -quiet \
             CODE_SIGNING_ALLOWED=NO
+
+  legacy-integration:
+    name: Legacy CocoaPods integration
+    runs-on: macos-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+          bundler-cache: true
+
+      - name: Install CocoaPods
+        run: gem install cocoapods
+
+      - name: Build legacy integration workspace
+        run: chmod +x scripts/build-legacy-integration.sh && ./scripts/build-legacy-integration.sh
+
+  unit-tests:
+    name: Unit tests
+    runs-on: macos-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+          bundler-cache: true
+
+      - name: Install CocoaPods
+        run: gem install cocoapods
+
+      - name: Run unit tests
+        run: chmod +x scripts/run-unit-tests.sh && ./scripts/run-unit-tests.sh
