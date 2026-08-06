@@ -218,7 +218,12 @@ public final class AdViewController: UIViewController {
                 adView = BidscubeSDK.getVideoAdView(placementId, errorHandlingCallback)
             }
         case .native:
-            adView = BidscubeSDK.getNativeAdView(placementId, errorHandlingCallback)
+            adView = BidscubeSDK.getNativeAdView(
+                placementId,
+                width: Int(DeviceInfo.logicalScreenWidth),
+                height: Int(DeviceInfo.logicalScreenHeight),
+                errorHandlingCallback
+            )
         }
         
         guard let adView = adView else {
@@ -401,7 +406,19 @@ public final class AdViewController: UIViewController {
         case .dependOnScreenSize:
             setupScreenSizeDependentLayout(adView)
         case .unknown:
-            setupDefaultLayout(adView)
+            if prefersFullScreenLayoutForUnknownPosition {
+                setupFullScreenLayout(adView)
+            } else {
+                setupDefaultLayout(adView)
+            }
+        }
+    }
+
+    /// Fullscreen modal presentation should fill the screen when SSP returns position `0` (unknown).
+    private var prefersFullScreenLayoutForUnknownPosition: Bool {
+        switch adType {
+        case .video, .native, .image:
+            return true
         }
     }
     
@@ -457,6 +474,10 @@ public final class AdViewController: UIViewController {
         
         view.bringSubviewToFront(backButton)
         
+        if let videoAdView = adView as? VideoAdView {
+            videoAdView.setParentViewController(self)
+            videoAdView.refreshIMASetup()
+        }
         
         setupFullScreenGestures()
     }
