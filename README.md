@@ -32,7 +32,7 @@ source 'https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS.git'
 source 'https://cdn.cocoapods.org/'
 
 target 'YourApp' do
-  pod 'BidscubeSDKAppLovin', '1.1.3'
+  pod 'BidscubeSDKAppLovin', '1.1.4'
 end
 ```
 
@@ -387,4 +387,4 @@ MIT. See [LICENSE](LICENSE).
 
 ## Version
 
-BidscubeSDKAppLovin **1.1.3** · BidscubeSDKAppLovinLegacy **1.1.3**
+BidscubeSDKAppLovin **1.1.4** · BidscubeSDKAppLovinLegacy **1.1.3**
