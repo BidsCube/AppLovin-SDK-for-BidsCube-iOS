@@ -76,6 +76,7 @@ jobs:
             -workspace bidscubeSdk.xcworkspace \
             -scheme testApp-ios \
             -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath "$RUNNER_TEMP/DerivedData" \
             -quiet \
             CODE_SIGNING_ALLOWED=NO
 

@@ -2,6 +2,15 @@
 
 All notable changes to the Bidscube iOS SDK and AppLovin MAX adapter are documented here.
 
+## [1.1.4] - 2026-08-06
+
+### Fixed
+
+- CI sample-app build: removed duplicate local `BidscubeSDK` Xcode framework target that conflicted with the CocoaPods `BidscubeSDKAppLovin` pod (`module_name = BidscubeSDK`), which caused `ld: framework 'BidscubeSDK' not found` on GitHub Actions.
+- `testApp-ios` scheme now builds pod dependencies (`BidscubeSDKAppLovin`) before linking; CI uses a single `xcodebuild` invocation with a shared derived data path.
+
+---
+
 ## [1.1.3] - 2026-08-06
 
 ### Added
