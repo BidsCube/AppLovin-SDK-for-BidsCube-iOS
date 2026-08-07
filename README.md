@@ -32,7 +32,7 @@ source 'https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS.git'
 source 'https://cdn.cocoapods.org/'
 
 target 'YourApp' do
-  pod 'BidscubeSDKAppLovin', '1.1.4'
+  pod 'BidscubeSDKAppLovin', '1.1.5'
 end
 ```
 
@@ -50,7 +50,7 @@ source 'https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS.git'
 source 'https://cdn.cocoapods.org/'
 
 target 'YourApp' do
-  pod 'BidscubeSDKAppLovinLegacy', '1.1.3'
+  pod 'BidscubeSDKAppLovinLegacy', '1.1.5'
 end
 ```
 
@@ -306,20 +306,31 @@ BidscubeSDK.showNativeAd(
 
 ## Video behavior
 
-Interstitial, rewarded, and direct video ads use **Google IMA SDK** for VAST playback (included automatically).
+Video playback depends on which pod you install:
+
+| Pod | Video engine | Used for |
+| --- | --- | --- |
+| `BidscubeSDKAppLovin` | Google IMA (`GoogleAds-IMA-iOS-SDK`) | MAX interstitial/rewarded, direct `getVideoAdView` / `showVideoAd` |
+| `BidscubeSDKAppLovinLegacy` | AVPlayer VAST (`LegacyVideoAdHandler`) | Same public APIs; **no Google IMA** |
 
 During MAX load, the adapter fetches and caches the Bidscube response. Show presents from the cached payload without a second network request.
 
 Fullscreen video layout fills the screen edge-to-edge. Video may letterbox to preserve aspect ratio.
 
-### Custom video player (optional)
+### Modern only (`BidscubeSDKAppLovin`)
 
 ```swift
 BidscubeSDK.configureVideoPlayer(type: .ima) // default
 // or .custom with BidscubeCustomVideoPlayerFactory — see bidscubeSdk docs
 ```
 
-Call before MAX initialization if you use a custom player.
+Call before MAX initialization if you use a custom IMA-based player.
+
+### Legacy only (`BidscubeSDKAppLovinLegacy`)
+
+- MP4 progressive media and supported VAST inline/wrapper flows (no VPAID, no Google IMA).
+- `BidscubeSDK.getIMAVideoAdView` is **not** available; use `getVideoAdView` or `showVideoAd`.
+- `BidscubeSDK.configureVideoPlayer` IMA options do not apply.
 
 ---
 
@@ -334,6 +345,8 @@ Ad failures are reported through `AdCallback.onAdFailed(placementId, errorCode, 
 | Issue | Fix |
 |---|---|
 | `Unable to find a specification for 'BidscubeSDKAppLovin'` | Add `source 'https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS.git'` to Podfile, run `pod install --repo-update` |
+| `Unable to find a specification for 'BidscubeSDKAppLovinLegacy'` | Legacy pod exists from **1.1.3** onward; use **`1.1.5`** (recommended), add the Git `source` above, run `pod install --repo-update` |
+| Installing both pods in one target | Use **only one** pod per target — `BidscubeSDKAppLovin` (iOS 15+) **or** `BidscubeSDKAppLovinLegacy` (iOS 14+) |
 | MAX ads do not load | Confirm **App ID** = correct Bidscube **Placement ID**; check Mediation Debugger |
 | Direct ads not visible | Ensure ad views have explicit width/height Auto Layout constraints |
 | `Empty ad unit ID` crash (MAX) | Do not create `MAInterstitialAd` / `MARewardedAd` with empty ad unit IDs |
@@ -357,7 +370,7 @@ workspace/
 | Banner / Video / Native | Direct SDK API |
 | MAX | `MAAdView` / `MAInterstitialAd` / `MARewardedAd` via adapter |
 
-The in-repo [`testApp/`](testApp/) folder is a legacy internal SwiftUI sample. Prefer the sibling test app for publisher QA.
+The in-repo `testApp*` and `legacyIntegration/` folders are **gitignored** (local QA only). Use the sibling test app for publisher QA.
 
 ---
 
@@ -365,7 +378,7 @@ The in-repo [`testApp/`](testApp/) folder is a legacy internal SwiftUI sample. P
 
 ### AppLovin MAX
 
-1. Add pod `BidscubeSDKAppLovin` `1.1.3` (or `BidscubeSDKAppLovinLegacy` `1.1.3` for iOS 14) → `pod install --repo-update`
+1. Add pod `BidscubeSDKAppLovin` **`1.1.5`** (iOS 15+) or `BidscubeSDKAppLovinLegacy` **`1.1.5`** (iOS 14+) → `pod install --repo-update`
 2. Dashboard: custom network `ALBidscubeMediationAdapter`, enable on ad units, **App ID** = placement ID
 3. Initialize MAX with your SDK key
 4. Load ads with `MAAdView` / `MAInterstitialAd` / `MARewardedAd`
@@ -373,7 +386,7 @@ The in-repo [`testApp/`](testApp/) folder is a legacy internal SwiftUI sample. P
 
 ### Direct SDK
 
-1. Add pod `BidscubeSDKAppLovin` `1.1.3` (or `BidscubeSDKAppLovinLegacy` `1.1.3` for iOS 14) → `pod install --repo-update`
+1. Add pod `BidscubeSDKAppLovin` **`1.1.5`** (iOS 15+) or `BidscubeSDKAppLovinLegacy` **`1.1.5`** (iOS 14+) → `pod install --repo-update`
 2. Call `BidscubeSDK.initialize(config:)` at startup
 3. Implement `AdCallback`
 4. Call `setDisplayViewController` before fullscreen show
@@ -387,4 +400,11 @@ MIT. See [LICENSE](LICENSE).
 
 ## Version
 
-BidscubeSDKAppLovin **1.1.4** · BidscubeSDKAppLovinLegacy **1.1.3**
+Current release: **1.1.5** for both pods.
+
+| Pod | Version | Minimum iOS |
+| --- | ---: | ---: |
+| `BidscubeSDKAppLovin` | **1.1.5** | 15.0 |
+| `BidscubeSDKAppLovinLegacy` | **1.1.5** | 14.0 |
+
+`BidscubeSDKAppLovinLegacy` was introduced in **1.1.3**; use **1.1.5** for the latest docs and repo layout.

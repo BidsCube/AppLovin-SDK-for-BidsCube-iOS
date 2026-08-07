@@ -67,22 +67,6 @@ jobs:
       - name: Lint legacy podspec
         run: pod lib lint BidscubeSDKAppLovinLegacy.podspec --allow-warnings --verbose
 
-      - name: Install pod dependencies for sample workspace
-        run: pod install
-
-      - name: Build modern sample app
-        run: |
-          xcodebuild build \
-            -workspace bidscubeSdk.xcworkspace \
-            -scheme testApp-ios \
-            -destination 'generic/platform=iOS Simulator' \
-            -derivedDataPath "$RUNNER_TEMP/DerivedData" \
-            -quiet \
-            CODE_SIGNING_ALLOWED=NO
-
-      - name: Build legacy integration
-        run: chmod +x scripts/build-legacy-integration.sh && ./scripts/build-legacy-integration.sh
-
       - name: Run unit tests
         run: chmod +x scripts/run-unit-tests.sh && ./scripts/run-unit-tests.sh
 

@@ -41,38 +41,6 @@ jobs:
       - name: Describe Swift package
         run: swift package describe --type json > /dev/null
 
-      - name: Install pod dependencies for sample workspace
-        run: pod install
-
-      - name: Build test app (Xcode workspace)
-        run: |
-          xcodebuild build \
-            -workspace bidscubeSdk.xcworkspace \
-            -scheme testApp-ios \
-            -destination 'generic/platform=iOS Simulator' \
-            -derivedDataPath "$RUNNER_TEMP/DerivedData" \
-            -quiet \
-            CODE_SIGNING_ALLOWED=NO
-
-  legacy-integration:
-    name: Legacy CocoaPods integration
-    runs-on: macos-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Ruby
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: '3.2'
-          bundler-cache: true
-
-      - name: Install CocoaPods
-        run: gem install cocoapods
-
-      - name: Build legacy integration workspace
-        run: chmod +x scripts/build-legacy-integration.sh && ./scripts/build-legacy-integration.sh
-
   unit-tests:
     name: Unit tests
     runs-on: macos-latest

@@ -1,6 +1,6 @@
 # Bidscube + AppLovin MAX (iOS)
 
-**SDK / adapter 1.1.3** · CocoaPods `BidscubeSDKAppLovin` or `BidscubeSDKAppLovinLegacy`
+**Release 1.1.5** · CocoaPods `BidscubeSDKAppLovin` (iOS 15+) or `BidscubeSDKAppLovinLegacy` (iOS 14+)
 
 AppLovin MAX custom network adapter for the Bidscube iOS SDK. The adapter ships inside the same pod as the runtime — no separate SDK pod is required for mediation.
 
@@ -8,25 +8,30 @@ AppLovin MAX custom network adapter for the Bidscube iOS SDK. The adapter ships 
 
 ## Pod variants
 
-| Pod | Minimum iOS | Video | Notes |
-| --- | ---: | --- | --- |
-| `BidscubeSDKAppLovin` | iOS 15+ | Google IMA | Recommended |
-| `BidscubeSDKAppLovinLegacy` | iOS 14+ | AVPlayer VAST | No Google IMA |
+| Pod | Version | Minimum iOS | Video engine | Transitive deps |
+| --- | ---: | ---: | --- | --- |
+| `BidscubeSDKAppLovin` | **1.1.5** | 15.0 | Google IMA VAST | `AppLovinSDK`, `GoogleAds-IMA-iOS-SDK` |
+| `BidscubeSDKAppLovinLegacy` | **1.1.5** | 14.0 | AVPlayer VAST | `AppLovinSDK` only |
 
-> Install only one Bidscube AppLovin pod. Do not install the modern and legacy variants in the same target.
+> Install only one Bidscube AppLovin pod per target. Do not install the modern and legacy variants in the same target.
 
-Both pods expose module `BidscubeSDK` and adapter `ALBidscubeMediationAdapter`. Publisher Swift integration code does not change when switching pods.
+Both pods expose:
+
+- Swift module: **`BidscubeSDK`**
+- MAX adapter: **`ALBidscubeMediationAdapter`**
+
+Publisher Swift integration code (direct SDK API and MAX dashboard setup) does not change when switching pods. Only the video playback engine and minimum iOS version differ.
 
 ## Requirements
 
-- **AppLovin MAX SDK** 13.x (pulled transitively)
+- **AppLovin MAX SDK** 13.x (pulled transitively as `~> 13.6.0`)
 - **Xcode** 15+, Swift 5.9+
 - MAX **Adapter Class Name:** `ALBidscubeMediationAdapter`
 - Bidscube **Placement ID** in MAX **App ID**
 
 ## Installation
 
-### Modern (iOS 15+)
+### Modern (`BidscubeSDKAppLovin`, iOS 15+)
 
 ```ruby
 platform :ios, '15.0'
@@ -36,11 +41,11 @@ source 'https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS.git'
 source 'https://cdn.cocoapods.org/'
 
 target 'YourApp' do
-  pod 'BidscubeSDKAppLovin', '1.1.3'
+  pod 'BidscubeSDKAppLovin', '1.1.5'
 end
 ```
 
-### Legacy (iOS 14+)
+### Legacy (`BidscubeSDKAppLovinLegacy`, iOS 14+)
 
 ```ruby
 platform :ios, '14.0'
@@ -50,7 +55,7 @@ source 'https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS.git'
 source 'https://cdn.cocoapods.org/'
 
 target 'YourApp' do
-  pod 'BidscubeSDKAppLovinLegacy', '1.1.3'
+  pod 'BidscubeSDKAppLovinLegacy', '1.1.5'
 end
 ```
 
@@ -60,7 +65,7 @@ pod install --repo-update
 
 Open the generated `.xcworkspace` in Xcode.
 
-`BidscubeSDKAppLovin` pulls `GoogleAds-IMA-iOS-SDK` (`~> 3.32.0`, i.e. `>= 3.32.0` and `< 3.33.0`) and `AppLovinSDK` (`~> 13.6.0`). `BidscubeSDKAppLovinLegacy` does not include Google IMA.
+See also [`Podfile.example`](../Podfile.example) (modern) and [`Podfile.legacy.example`](../Podfile.legacy.example) (legacy).
 
 ---
 
@@ -151,7 +156,9 @@ rewarded.load()
 
 ### MAX adapter behavior
 
-- Interstitial and rewarded use the **video** Bidscube path (IMA VAST).
+- Interstitial and rewarded use the **video** Bidscube path:
+  - **`BidscubeSDKAppLovin`** — Google IMA VAST playback
+  - **`BidscubeSDKAppLovinLegacy`** — AVPlayer VAST playback (no Google IMA)
 - Load caches the Bidscube response; show presents from cache (no second network request).
 - `BidscubeSDK.setDisplayViewController(_:)` is called with MAX’s presenter before show/load.
 - Signal collection via `MASignalProvider` (no device identifiers or PII).
@@ -171,9 +178,25 @@ You can use **both** paths in the same app: initialize Bidscube early for direct
 
 ## Limitations
 
+### Both pods
+
 - **Native MAX** is not supported. Native ads require the direct SDK API.
 - OpenRTB 2.6-style podded video response parsing is not implemented in this package.
 
-## Sample app
+### Legacy pod only (`BidscubeSDKAppLovinLegacy`)
 
-For local testing, use the sibling app **`BidscubeSDKAppLovinTestApp`** (Banner / Video / Native tabs = direct SDK; MAX tab = mediation). See the test app README in your workspace checkout.
+- No Google IMA; VPAID and IMA-only features are not supported.
+- `BidscubeSDK.getIMAVideoAdView` is not available.
+- `BidscubeSDK.configureVideoPlayer` IMA options do not apply.
+- MP4 progressive media and supported VAST inline/wrapper flows only.
+
+## Sample apps
+
+| App | Pod | Notes |
+| --- | --- | --- |
+| Sibling `BidscubeSDKAppLovinTestApp` | `BidscubeSDKAppLovin` / `BidscubeSDKAppLovinLegacy` | Recommended publisher QA (outside this repo) |
+| Local `:path` pod in your app | either pod | Smoke-test before integrating |
+
+In-repo `testApp*` / `legacyIntegration/` projects are gitignored and kept for local development only.
+
+Native MAX is not supported by the adapter in this release.

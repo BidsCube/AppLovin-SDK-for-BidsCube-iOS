@@ -1,6 +1,6 @@
 # Post-testing improvements
 
-The following items are intentionally deferred until after publisher QA of **1.1.3**:
+The following items are intentionally deferred until after publisher QA of **1.1.5**:
 
 - HLS playback in the legacy AVPlayer path
 - Automatic media file selection by bitrate/resolution
