@@ -1,6 +1,6 @@
 # Bidscube SDK — error codes
 
-**SDK 1.1.3+**
+**SDK 1.1.3+** (both `BidscubeSDKAppLovin` and `BidscubeSDKAppLovinLegacy`; current release **1.1.5**)
 
 When an ad request or display fails, the SDK invokes `AdCallback.onAdFailed(placementId, errorCode, errorMessage)`.  
 All `errorMessage` strings are **English** and safe to log or forward to mediation adapters.

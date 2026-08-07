@@ -2,6 +2,21 @@
 
 All notable changes to the Bidscube iOS SDK and AppLovin MAX adapter are documented here.
 
+## [1.1.5] - 2026-08-07
+
+### Changed
+
+- In-repo test / integration projects (`testApp*`, `legacyIntegration/`, `bidscubeSdk.xcodeproj`) are **gitignored** — use the sibling **`BidscubeSDKAppLovinTestApp`** or a local `:path` pod install for QA.
+- CI and publish workflows validate podspecs, SwiftPM, and unit tests only (no in-repo sample-app builds).
+- Documentation aligned for **1.1.5** across README, RELEASE, and adapter docs.
+
+### Notes
+
+- No functional SDK API changes vs **1.1.4** — safe upgrade for integrators on 1.1.4.
+- AppLovin SDK dependency remains `~> 13.6.0` (modern pod also pulls Google IMA `~> 3.32.0`).
+
+---
+
 ## [1.1.4] - 2026-08-06
 
 ### Fixed
