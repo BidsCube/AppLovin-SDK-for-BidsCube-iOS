@@ -6,7 +6,7 @@ source 'https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS.git'
 source 'https://cdn.cocoapods.org/'
 
 target 'YourApp' do
-  pod 'BidscubeSDKAppLovinLegacy', '1.1.6'
+  pod 'BidscubeSDKAppLovinLegacy', '1.1.7'
 end
 
 # Install only one Bidscube AppLovin pod. Do not install the modern and legacy variants in the same target.

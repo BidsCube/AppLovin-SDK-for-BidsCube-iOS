@@ -58,7 +58,7 @@ public struct URLBuilder {
         timeoutMs: Int,
         debug: Bool,
         ctaText: String? = nil,
-        includeSKAdNetworks: Bool = true,
+        includeSKAdNetworks: Bool = false,
         nativeWidth: Int? = nil,
         nativeHeight: Int? = nil,
         userId: String? = nil
@@ -86,7 +86,7 @@ public struct URLBuilder {
         timeoutMs: Int,
         debug: Bool,
         ctaText: String? = nil,
-        includeSKAdNetworks: Bool = true,
+        includeSKAdNetworks: Bool = false,
         nativeWidth: Int? = nil,
         nativeHeight: Int? = nil,
         userId: String? = nil
