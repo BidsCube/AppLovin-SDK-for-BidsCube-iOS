@@ -21,7 +21,7 @@ let package = Package(
         ),
         .package(
             url: "https://github.com/AppLovin/AppLovin-MAX-Swift-Package.git",
-            exact: "13.6.2"
+            from: "13.2.0"
         ),
     ],
     targets: [

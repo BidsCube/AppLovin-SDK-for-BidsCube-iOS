@@ -1,4 +1,4 @@
-# Release 1.1.5
+# Release 1.1.6
 
 ## Summary
 
@@ -13,11 +13,11 @@ Both pods ship the same MAX adapter class: `ALBidscubeMediationAdapter`.
 
 > Install **only one** Bidscube AppLovin pod per target. Do not mix modern and legacy pods in the same target.
 
-### What changed in 1.1.5
+### What changed in 1.1.6
 
-- In-repo test / integration projects are **gitignored** (local QA only). Use the sibling **`BidscubeSDKAppLovinTestApp`** or a `:path` pod in your own app for smoke tests.
-- CI validates podspec lint, SwiftPM resolve, and `spmUnitTests` only.
-- Documentation updated for **1.1.5**; no functional SDK API changes vs **1.1.5**.
+- Relaxed `AppLovinSDK` CocoaPods constraint to `~> 13.2` so apps that pin **AppLovinSDK 13.2.x** (typical on **iOS 14**) no longer conflict with Bidscube pods.
+- SwiftPM AppLovin dependency uses `from: "13.2.0"` instead of an exact 13.6.2 pin.
+- No functional SDK API changes vs **1.1.5**.
 
 See [CHANGELOG.md](CHANGELOG.md) for full history.
 
@@ -25,12 +25,12 @@ See [CHANGELOG.md](CHANGELOG.md) for full history.
 
 1. **Review diff** — SDK, adapter, both root podspecs, docs, `bidscubeSdk/` sources.
 2. **Verify spec layout** — `./scripts/sync-cocoapods-spec.sh` and confirm:
-   - `BidscubeSDKAppLovin/1.1.5/BidscubeSDKAppLovin.podspec`
-   - `BidscubeSDKAppLovinLegacy/1.1.5/BidscubeSDKAppLovinLegacy.podspec`
+   - `BidscubeSDKAppLovin/1.1.6/BidscubeSDKAppLovin.podspec`
+   - `BidscubeSDKAppLovinLegacy/1.1.6/BidscubeSDKAppLovinLegacy.podspec`
 3. **Lint** — `pod lib lint BidscubeSDKAppLovin.podspec --allow-warnings` and `pod lib lint BidscubeSDKAppLovinLegacy.podspec --allow-warnings`
 4. **Unit tests** — `./scripts/run-unit-tests.sh`
-5. **Commit** on `main`, including both `1.1.5` spec folders.
-6. **Tag and push** — `git tag v1.1.5 && git push origin main && git push origin v1.1.5`
+5. **Commit** on `main`, including both `1.1.6` spec folders.
+6. **Tag and push** — `git tag v1.1.6 && git push origin main && git push origin v1.1.6`
 7. **CI** — GitHub Actions `CI` and `Publish SDK` workflows run on push/tag.
 
 ### Pre-release local test
@@ -63,11 +63,11 @@ source 'https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS.git'
 source 'https://cdn.cocoapods.org/'
 
 target 'YourApp' do
-  pod 'BidscubeSDKAppLovin', '1.1.5'
+  pod 'BidscubeSDKAppLovin', '1.1.6'
 end
 ```
 
-Pulls `AppLovinSDK` (`~> 13.6.0`) and `GoogleAds-IMA-iOS-SDK` (`~> 3.32.0`) transitively.
+Pulls `AppLovinSDK` (`~> 13.2`) and `GoogleAds-IMA-iOS-SDK` (`~> 3.32.0`) transitively.
 
 ### Legacy (iOS 14+)
 
@@ -79,25 +79,25 @@ source 'https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS.git'
 source 'https://cdn.cocoapods.org/'
 
 target 'YourApp' do
-  pod 'BidscubeSDKAppLovinLegacy', '1.1.5'
+  pod 'BidscubeSDKAppLovinLegacy', '1.1.6'
 end
 ```
 
-Pulls `AppLovinSDK` (`~> 13.6.0`) only — **no Google IMA**.
+Pulls `AppLovinSDK` (`~> 13.2`) only — **no Google IMA**. On iOS 14, pin `AppLovinSDK` **13.2.x** if needed.
 
-### From 1.1.4
+### From 1.1.5 or earlier
 
-Update the pod version and run `pod install --repo-update`. No API migration required.
+Update the pod version to **1.1.6** and run `pod install --repo-update`. No API migration required.
 
 ## Git tag
 
 ```bash
-git tag v1.1.5
+git tag v1.1.6
 git push origin main
-git push origin v1.1.5
+git push origin v1.1.6
 ```
 
 ## Post-release
 
 - Confirm GitHub Release created by `Publish SDK` workflow.
-- Notify integrators: same dual-pod layout, **1.1.5** for both modern and legacy.
+- Notify integrators: same dual-pod layout, **1.1.6** for both modern and legacy.

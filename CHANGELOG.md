@@ -2,6 +2,20 @@
 
 All notable changes to the Bidscube iOS SDK and AppLovin MAX adapter are documented here.
 
+## [1.1.6] - 2026-08-07
+
+### Fixed
+
+- Relaxed `AppLovinSDK` CocoaPods constraint from `~> 13.6.0` to `~> 13.2` (`>= 13.2.0`, `< 14.0`) so integrators who pin **AppLovinSDK 13.2.x** (common on **iOS 14** legacy targets) no longer conflict with Bidscube pods.
+- SwiftPM AppLovin dependency now uses `from: "13.2.0"` instead of an exact 13.6.2 pin.
+
+### Notes
+
+- **iOS 14 + legacy pod:** use `AppLovinSDK` **13.2.x** if your deployment target is 14.0 (AppLovin 13.6+ may require iOS 15+).
+- **iOS 15+ modern pod:** AppLovin **13.6.x** is fine; you do not need a separate `AppLovinSDK` line in the Podfile unless you want an explicit pin.
+
+---
+
 ## [1.1.5] - 2026-08-07
 
 ### Changed
