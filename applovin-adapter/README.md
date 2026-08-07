@@ -10,8 +10,8 @@ AppLovin MAX custom network adapter for the Bidscube iOS SDK. The adapter ships 
 
 | Pod | Version | Minimum iOS | Video engine | Transitive deps |
 | --- | ---: | ---: | --- | --- |
-| `BidscubeSDKAppLovin` | **1.1.5** | 15.0 | Google IMA VAST | `AppLovinSDK`, `GoogleAds-IMA-iOS-SDK` |
-| `BidscubeSDKAppLovinLegacy` | **1.1.5** | 14.0 | AVPlayer VAST | `AppLovinSDK` only |
+| `BidscubeSDKAppLovin` | **1.1.6** | 15.0 | Google IMA VAST | `AppLovinSDK`, `GoogleAds-IMA-iOS-SDK` |
+| `BidscubeSDKAppLovinLegacy` | **1.1.6** | 14.0 | AVPlayer VAST | `AppLovinSDK` only |
 
 > Install only one Bidscube AppLovin pod per target. Do not install the modern and legacy variants in the same target.
 
@@ -24,7 +24,7 @@ Publisher Swift integration code (direct SDK API and MAX dashboard setup) does n
 
 ## Requirements
 
-- **AppLovin MAX SDK** 13.x (pulled transitively as `~> 13.6.0`)
+- **AppLovin MAX SDK** 13.x (pulled transitively as `~> 13.2`, i.e. `>= 13.2.0` and `< 14.0`)
 - **Xcode** 15+, Swift 5.9+
 - MAX **Adapter Class Name:** `ALBidscubeMediationAdapter`
 - Bidscube **Placement ID** in MAX **App ID**
@@ -41,7 +41,7 @@ source 'https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS.git'
 source 'https://cdn.cocoapods.org/'
 
 target 'YourApp' do
-  pod 'BidscubeSDKAppLovin', '1.1.5'
+  pod 'BidscubeSDKAppLovin', '1.1.6'
 end
 ```
 
@@ -55,7 +55,7 @@ source 'https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS.git'
 source 'https://cdn.cocoapods.org/'
 
 target 'YourApp' do
-  pod 'BidscubeSDKAppLovinLegacy', '1.1.5'
+  pod 'BidscubeSDKAppLovinLegacy', '1.1.6'
 end
 ```
 

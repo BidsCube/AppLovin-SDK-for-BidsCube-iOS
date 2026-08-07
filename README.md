@@ -32,13 +32,15 @@ source 'https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS.git'
 source 'https://cdn.cocoapods.org/'
 
 target 'YourApp' do
-  pod 'BidscubeSDKAppLovin', '1.1.5'
+  pod 'BidscubeSDKAppLovin', '1.1.6'
 end
 ```
 
 See [`Podfile.example`](Podfile.example).
 
-`BidscubeSDKAppLovin` pulls `AppLovinSDK` (`~> 13.6.0`) and `GoogleAds-IMA-iOS-SDK` (`~> 3.32.0`, i.e. `>= 3.32.0` and `< 3.33.0`) transitively.
+`BidscubeSDKAppLovin` pulls `AppLovinSDK` (`~> 13.2`, i.e. `>= 13.2.0` and `< 14.0`) and `GoogleAds-IMA-iOS-SDK` (`~> 3.32.0`, i.e. `>= 3.32.0` and `< 3.33.0`) transitively.
+
+> **AppLovin pin:** You do **not** need `pod 'AppLovinSDK', ...` in your Podfile — Bidscube pulls it automatically. If you already pin AppLovin, use **13.2.0+**. On **iOS 14** use **13.2.x**; on **iOS 15+** you may use **13.6.x**.
 
 ### Legacy (iOS 14+)
 
@@ -50,7 +52,7 @@ source 'https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS.git'
 source 'https://cdn.cocoapods.org/'
 
 target 'YourApp' do
-  pod 'BidscubeSDKAppLovinLegacy', '1.1.5'
+  pod 'BidscubeSDKAppLovinLegacy', '1.1.6'
 end
 ```
 
@@ -73,7 +75,7 @@ CocoaPods uses pessimistic version constraints (`~>`), while `Package.swift` pin
 | Dependency | CocoaPods (`BidscubeSDKAppLovin`) | Swift Package Manager |
 | --- | --- | --- |
 | Google IMA | `~> 3.32.0` (`>= 3.32.0`, `< 3.33.0`) | `3.32.0` (exact) |
-| AppLovin MAX | `~> 13.6.0` (`>= 13.6.0`, `< 13.7.0`) | `13.6.2` (exact) |
+| AppLovin MAX | `~> 13.2` (`>= 13.2.0`, `< 14.0`) | `13.2.0+` (`from:`) |
 
 ---
 
@@ -344,6 +346,7 @@ Ad failures are reported through `AdCallback.onAdFailed(placementId, errorCode, 
 
 | Issue | Fix |
 |---|---|
+| `CocoaPods could not find compatible versions for pod "AppLovinSDK"` | Upgrade Bidscube to **`1.1.6+`**, or remove your explicit `AppLovinSDK` pin and let Bidscube resolve it. On **iOS 14** use AppLovin **13.2.x**; **13.6.x** may require iOS 15+ |
 | `Unable to find a specification for 'BidscubeSDKAppLovin'` | Add `source 'https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS.git'` to Podfile, run `pod install --repo-update` |
 | `Unable to find a specification for 'BidscubeSDKAppLovinLegacy'` | Legacy pod exists from **1.1.3** onward; use **`1.1.5`** (recommended), add the Git `source` above, run `pod install --repo-update` |
 | Installing both pods in one target | Use **only one** pod per target — `BidscubeSDKAppLovin` (iOS 15+) **or** `BidscubeSDKAppLovinLegacy` (iOS 14+) |
@@ -400,7 +403,7 @@ MIT. See [LICENSE](LICENSE).
 
 ## Version
 
-Current release: **1.1.5** for both pods.
+Current release: **1.1.6** for both pods.
 
 | Pod | Version | Minimum iOS |
 | --- | ---: | ---: |
