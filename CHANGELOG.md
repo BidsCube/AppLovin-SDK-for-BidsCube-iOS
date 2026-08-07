@@ -2,6 +2,15 @@
 
 All notable changes to the Bidscube iOS SDK and AppLovin MAX adapter are documented here.
 
+## [1.1.7] - 2026-08-07
+
+### Fixed
+
+- **HTTP 414 (Request-URI Too Large)** on MAX / mediated apps with large `SKAdNetworkItems` in `Info.plist`: `BidscubeSDK.buildRequestURL` now passes `includeSKAdNetworks: config.enableSKAdNetwork`. The MAX adapter already sets `enableSKAdNetwork(false)`, but URLs still appended every SKAdNetwork id as `skadnet` GET parameters, blowing past nginx limits on production apps (e.g. WordSpells).
+- `URLBuilder.buildAdRequestURL` default for `includeSKAdNetworks` is now `false`, matching `SDKConfig.Builder` default.
+
+---
+
 ## [1.1.6] - 2026-08-07
 
 ### Fixed

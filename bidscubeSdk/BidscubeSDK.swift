@@ -248,6 +248,7 @@ public final class BidscubeSDK {
             timeoutMs: timeout,
             debug: debug,
             ctaText: ctaText,
+            includeSKAdNetworks: config.enableSKAdNetwork,
             nativeWidth: nativeWidth,
             nativeHeight: nativeHeight,
             userId: config.userId
