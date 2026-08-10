@@ -13,6 +13,10 @@ All notable changes to the Bidscube iOS SDK and AppLovin MAX adapter are documen
 - **MAX banner / MREC / leader (Android parity):** MAX AdView loads now always use `BidscubeSDK.getImageAdView`, matching Android `BidscubeMediationAdapter` (previously banner/leader used `getBannerAdView` with position heuristics). Fails with `NOT_INITIALIZED` when the SDK is not ready.
 - **SSP HTTP timeout:** `AdHTTPClient` now uses a **10s** request timeout, matching Android `HttpProvider`, so slow/no SSP responses surface as adapter failures before MAX’s ~10s adapter deadline (`-5101`).
 
+### Added
+
+- **`BidscubeMAX` logging completeness:** ad load failures (`AdFailureDispatcher`), image/banner SDK path (`Logger.imageAd`), SSP round-trip seconds (`SSP round-trip: X.XXXs`), and AdView adapter callbacks (`onAdLoading`, `onAdDisplayed`, missing placement).
+
 ---
 
 ## [1.1.8] - 2026-08-10

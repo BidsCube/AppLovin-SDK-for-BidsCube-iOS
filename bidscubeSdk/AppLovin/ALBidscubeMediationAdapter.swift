@@ -553,6 +553,7 @@ extension ALBidscubeMediationAdapter: MAAdViewAdapter {
             }
 
             guard !placement.isEmpty else {
+                Logger.maxAdapter("loadAdViewAd: FAIL missing placement format=\(adFormat.label)")
                 delegate.didFailToLoadAdViewAdWithError(self.mapLoadError("Missing Bidscube placement (MAX Placement ID)."))
                 return
             }
@@ -591,7 +592,9 @@ private final class BidscubeAdViewMAXCallback: NSObject, AdCallback {
         super.init()
     }
 
-    func onAdLoading(_ placementId: String) {}
+    func onAdLoading(_ placementId: String) {
+        Logger.maxAdapter("adView loading placementId=\(placementId)")
+    }
 
     func onAdLoaded(_ placementId: String) {
         guard let adView = adViewHolder.view else { return }
@@ -602,6 +605,7 @@ private final class BidscubeAdViewMAXCallback: NSObject, AdCallback {
     }
 
     func onAdDisplayed(_ placementId: String) {
+        Logger.maxAdapter("adView displayed placementId=\(placementId)")
         runOnMain {
             self.delegate?.didDisplayAdViewAd()
         }

@@ -15,6 +15,8 @@ enum AdHTTPClient {
         url: URL,
         completion: @escaping (Result<String, BidscubeRequestError>) -> Void
     ) {
+        let startedAt = CFAbsoluteTimeGetCurrent()
+
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         request.timeoutInterval = requestTimeoutSeconds
@@ -24,6 +26,8 @@ enum AdHTTPClient {
         Logger.network("Sending GET request to: \(url.absoluteString)")
 
         session.dataTask(with: request) { data, response, error in
+            let elapsed = CFAbsoluteTimeGetCurrent() - startedAt
+            Logger.network(String(format: "SSP round-trip: %.3fs (timeout limit %.0fs)", elapsed, requestTimeoutSeconds))
             let result = parseResponse(data: data, response: response, error: error)
             DispatchQueue.main.async {
                 completion(result)

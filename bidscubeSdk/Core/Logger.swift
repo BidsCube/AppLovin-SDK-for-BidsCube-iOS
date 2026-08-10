@@ -63,6 +63,7 @@ public class Logger {
     /// Log image ad-related messages
     public static func imageAd(_ message: String) {
         info(message, prefix: Constants.LogPrefixes.imageAd)
+        maxAdapter(message)
     }
     
     /// Log video ad-related messages

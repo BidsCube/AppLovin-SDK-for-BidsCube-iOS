@@ -10,10 +10,9 @@ enum AdFailureDispatcher {
     ) {
         let code = AdErrorCode.from(error)
         let message = AdErrorCode.message(for: error)
-        Logger.error(
-            "Ad request failed (\(format)) placement=\(placementId) code=\(code) (\(AdErrorCode.describe(code))): \(message)",
-            prefix: Constants.LogPrefixes.error
-        )
+        let summary = "Ad request failed (\(format)) placement=\(placementId) code=\(code) (\(AdErrorCode.describe(code))): \(message)"
+        Logger.error(summary, prefix: Constants.LogPrefixes.error)
+        Logger.maxAdapter(summary)
         runOnMain {
             invokeAdFailed(callback, placementId: placementId, errorCode: code, errorMessage: message)
         }
