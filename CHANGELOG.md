@@ -2,6 +2,19 @@
 
 All notable changes to the Bidscube iOS SDK and AppLovin MAX adapter are documented here.
 
+## [Unreleased]
+
+### Fixed
+
+- **MAX placement id (Android parity):** iOS adapter incorrectly used server `app_id` as the SSP placement for every ad load when `app_id` was set in MAX (common Android setup). Requests then hit the wrong `id` / `placementId` → `HTTP 400 Placement not found`, while curl with the real placement id worked. Ad loads now use MAX **Placement ID** (`thirdPartyAdPlacementIdentifier`), matching [Android `BidscubeMediationAdapter`](https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-Android).
+
+### Added
+
+- **Unified MAX log tag `BidscubeMAX`** for publisher log capture (request URLs, HTTP codes, placement ids, load success/failure).
+- **MAX server parameters** `enable_logging` / `enableLogging` and `enable_debug_mode` / `enableDebugMode` / `debug` to turn Bidscube logging and verbose debug diagnostics on or off independently of MAX test mode.
+
+---
+
 ## [1.1.7] - 2026-08-07
 
 ### Fixed

@@ -32,7 +32,7 @@ source 'https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS.git'
 source 'https://cdn.cocoapods.org/'
 
 target 'YourApp' do
-  pod 'BidscubeSDKAppLovin', '1.1.7'
+  pod 'BidscubeSDKAppLovin', '1.1.8'
 end
 ```
 
@@ -52,7 +52,7 @@ source 'https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS.git'
 source 'https://cdn.cocoapods.org/'
 
 target 'YourApp' do
-  pod 'BidscubeSDKAppLovinLegacy', '1.1.7'
+  pod 'BidscubeSDKAppLovinLegacy', '1.1.8'
 end
 ```
 
@@ -101,16 +101,19 @@ Follow [Integrating custom SDK networks](https://support.axon.ai/en/max/mediated
    - Network Type: **SDK**
    - Name: **Bidscube**
    - **iOS Adapter Class Name:** `ALBidscubeMediationAdapter`
-2. **MAX → Ad Units** — enable **Bidscube** on each ad unit.
-3. Set **App ID** = your **Bidscube Placement ID**.
+2. **MAX → Ad Units** — enable **Bidscube** on each ad unit and set **Placement ID** per format (banner, interstitial, rewarded).
 
 | Field | Value |
 |---|---|
 | **iOS Adapter Class Name** | `ALBidscubeMediationAdapter` |
-| **App ID** | Bidscube **Placement ID** |
-| **Placement ID** | Optional |
+| **`app_id` (Server Parameters)** | Bidscube **application / init** identifier (optional on iOS; matches Android init) |
+| **Placement ID** | Bidscube **placement** id for that ad unit |
 
-**Optional server parameters:** `request_authority`, `ssp_host`, `user_id` / `userId`, `auto_close` / `autoClose` (default `false`).
+> Ad requests use MAX **Placement ID** (`21978`, `21488`, …), not `app_id`. Same as [Android MAX setup](https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-Android#max-parameters).
+
+**Optional server parameters:** `request_authority`, `ssp_host`, `enable_logging` / `enableLogging`, `enable_debug_mode` / `enableDebugMode` / `debug`, `user_id` / `userId`, `auto_close` / `autoClose` (default `false`).
+
+**Publisher logs:** filter console output by tag **`BidscubeMAX`** to capture ad request URLs (`Sending GET request to`), HTTP status, placement ids, and load results. Example: Xcode / Console.app search `BidscubeMAX`, or `log stream --predicate 'eventMessage CONTAINS "BidscubeMAX"'`.
 
 ### 2. Initialize MAX
 
@@ -403,7 +406,7 @@ MIT. See [LICENSE](LICENSE).
 
 ## Version
 
-Current release: **1.1.7** for both pods.
+Current release: **1.1.8** for both pods.
 
 | Pod | Version | Minimum iOS |
 | --- | ---: | ---: |

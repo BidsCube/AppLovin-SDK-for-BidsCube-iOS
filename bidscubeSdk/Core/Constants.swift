@@ -29,7 +29,7 @@ public struct Constants {
     }
     
     public static let userAgentPrefix = "BidscubeSDK-iOS"
-    public static let sdkVersion = "1.1.7"
+    public static let sdkVersion = "1.1.8"
     
     public struct ErrorCodes {
         public static let invalidURL = -1
@@ -50,6 +50,8 @@ public struct Constants {
     }
     
     public struct LogPrefixes {
+        /// Unified MAX / mediation filter tag (`log stream --predicate 'eventMessage CONTAINS "BidscubeMAX"'`).
+        public static let maxAdapter = "BidscubeMAX"
         public static let sdk = "📱 BidscubeSDK"
         public static let urlBuilder = "🔗 URLBuilder"
         public static let network = "🌐 Network"

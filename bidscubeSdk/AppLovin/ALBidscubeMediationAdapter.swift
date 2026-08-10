@@ -11,6 +11,57 @@ private enum BidscubeMAXParams {
     static let userIdCamel = "userId"
     static let autoClose = "auto_close"
     static let autoCloseCamel = "autoClose"
+    static let enableLogging = "enable_logging"
+    static let enableLoggingCamel = "enableLogging"
+    static let enableDebugMode = "enable_debug_mode"
+    static let enableDebugModeCamel = "enableDebugMode"
+    static let debug = "debug"
+}
+
+struct BidscubeMAXLoggingFlags: Equatable {
+    let enableLogging: Bool
+    let enableDebugMode: Bool
+}
+
+/// Resolves MAX server logging flags. Explicit server params override `isTesting` defaults.
+func resolveBidscubeLoggingFlags(isTesting: Bool, serverParameters: [String: Any]) -> BidscubeMAXLoggingFlags {
+    let enableLogging = readBooleanParameter(serverParameters, key: BidscubeMAXParams.enableLogging)
+        ?? readBooleanParameter(serverParameters, key: BidscubeMAXParams.enableLoggingCamel)
+        ?? isTesting
+    let enableDebugMode = readBooleanParameter(serverParameters, key: BidscubeMAXParams.enableDebugMode)
+        ?? readBooleanParameter(serverParameters, key: BidscubeMAXParams.enableDebugModeCamel)
+        ?? readBooleanParameter(serverParameters, key: BidscubeMAXParams.debug)
+        ?? isTesting
+    return BidscubeMAXLoggingFlags(enableLogging: enableLogging, enableDebugMode: enableDebugMode)
+}
+
+private func applyBidscubeLogging(from parameters: MAAdapterParameters) {
+    let flags = resolveBidscubeLoggingFlags(
+        isTesting: parameters.isTesting,
+        serverParameters: parameters.serverParameters
+    )
+    Logger.configureLogging(enableLogging: flags.enableLogging, enableDebugMode: flags.enableDebugMode)
+    Logger.maxAdapterDebug(
+        "logging=\(flags.enableLogging) debug=\(flags.enableDebugMode) isTesting=\(parameters.isTesting)"
+    )
+    if flags.enableDebugMode {
+        Logger.deviceInfo()
+    }
+}
+
+private func logBidscubeAdLoad(
+    format: String,
+    placementId: String,
+    serverAppId: String?,
+    parameters: MAAdapterParameters
+) {
+    let authority = URLBuilder.normalizedAdRequestAuthority(
+        from: (parameters.serverParameters[BidscubeMAXParams.requestAuthority] as? String)
+            ?? (parameters.serverParameters[BidscubeMAXParams.sspHost] as? String)
+    )
+    Logger.maxAdapter(
+        "load \(format) placementId=\(placementId) serverAppId=\(serverAppId ?? "nil") authority=\(authority)"
+    )
 }
 
 private func readBooleanParameter(_ serverParameters: [String: Any], key: String) -> Bool? {
@@ -41,22 +92,38 @@ private func bidscubeUserId(from serverParameters: [String: Any]) -> String? {
     return nil
 }
 
-private func bidscubePlacementId(from parameters: MAAdapterResponseParameters) -> String {
-    if let appId = parameters.serverParameters[BidscubeMAXParams.appId] as? String,
-       !appId.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-        return appId.trimmingCharacters(in: .whitespacesAndNewlines)
+/// Resolves the Bidscube placement id for ad requests.
+/// Matches Android `BidscubeMediationAdapter`: MAX **Placement ID** (`thirdPartyAdPlacementIdentifier`) is the
+/// SSP placement (`id` / `placementId`). Server `app_id` is for SDK init only, not ad load URLs.
+func resolveBidscubePlacementId(thirdPartyPlacementId: String?, serverAppId: String?) -> String {
+    let placement = (thirdPartyPlacementId ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+    if !placement.isEmpty {
+        return placement
     }
-    return parameters.thirdPartyAdPlacementIdentifier
+    // Legacy fallback when MAX Placement ID is empty (do not prefer app_id — that is the init app id on Android).
+    let legacyAppId = (serverAppId ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+    return legacyAppId
+}
+
+private func bidscubePlacementId(from parameters: MAAdapterResponseParameters) -> String {
+    let serverAppId = parameters.serverParameters[BidscubeMAXParams.appId] as? String
+    return resolveBidscubePlacementId(
+        thirdPartyPlacementId: parameters.thirdPartyAdPlacementIdentifier,
+        serverAppId: serverAppId
+    )
 }
 
 private func bidscubeSDKConfig(from parameters: MAAdapterParameters) -> SDKConfig {
     let serverParameters = parameters.serverParameters
     let rawAuthority = (serverParameters[BidscubeMAXParams.requestAuthority] as? String)
         ?? (serverParameters[BidscubeMAXParams.sspHost] as? String)
-    let isTesting = parameters.isTesting
+    let loggingFlags = resolveBidscubeLoggingFlags(
+        isTesting: parameters.isTesting,
+        serverParameters: serverParameters
+    )
     var builder = SDKConfig.Builder()
-        .enableLogging(isTesting)
-        .enableDebugMode(isTesting)
+        .enableLogging(loggingFlags.enableLogging)
+        .enableDebugMode(loggingFlags.enableDebugMode)
         .defaultAdTimeout(Constants.defaultTimeoutMs)
         .defaultAdPosition(.fullScreen)
         .adRequestAuthority(rawAuthority)
@@ -76,9 +143,11 @@ private func applyUserIdIfNeeded(from parameters: MAAdapterParameters) {
 }
 
 private func ensureBidscubeInitializedIfNeeded(from parameters: MAAdapterParameters) {
+    applyBidscubeLogging(from: parameters)
     applyUserIdIfNeeded(from: parameters)
     if BidscubeSDK.isInitialized() { return }
     BidscubeSDK.initialize(config: bidscubeSDKConfig(from: parameters))
+    Logger.maxAdapter("SDK initialized")
 }
 
 private func runOnMain(_ block: @escaping () -> Void) {
@@ -129,7 +198,9 @@ final class ALBidscubeMediationAdapter: ALMediationAdapter {
         }
         Self.didRunInitialization = true
 
+        applyBidscubeLogging(from: parameters)
         BidscubeSDK.initialize(config: bidscubeSDKConfig(from: parameters))
+        Logger.maxAdapter("initialize completed")
         Self.lastInitStatus = .initializedSuccess
         completionHandler(.initializedSuccess, nil)
     }
@@ -176,20 +247,29 @@ final class ALBidscubeMediationAdapter: ALMediationAdapter {
         completion: @escaping (BidscubeSDK.BidscubeAdPayload?, MAAdapterError?) -> Void
     ) {
         ensureBidscubeInitializedIfNeeded(from: parameters)
+        let serverAppId = parameters.serverParameters[BidscubeMAXParams.appId] as? String
+        logBidscubeAdLoad(
+            format: adType.rawValue,
+            placementId: placementId,
+            serverAppId: serverAppId,
+            parameters: parameters
+        )
         guard BidscubeSDK.isInitialized() else {
             completion(nil, .notInitialized)
             return
         }
         guard !placementId.isEmpty else {
-            completion(nil, mapLoadError("Missing Bidscube placement (MAX App ID / app_id)."))
+            completion(nil, mapLoadError("Missing Bidscube placement (MAX Placement ID)."))
             return
         }
 
         BidscubeSDK.loadAdPayload(placementId: placementId, adType: adType) { result in
             switch result {
             case .success(let payload):
+                Logger.maxAdapter("load success placementId=\(placementId) adType=\(adType.rawValue)")
                 completion(payload, nil)
             case .failure(let error):
+                Logger.maxAdapter("load failed placementId=\(placementId) code=\(error.errorCode) message=\(error.message)")
                 completion(nil, self.mapRequestError(error))
             }
         }
@@ -453,9 +533,17 @@ extension ALBidscubeMediationAdapter: MAAdViewAdapter {
             ensureBidscubeInitializedIfNeeded(from: parameters)
 
             guard !placement.isEmpty else {
-                delegate.didFailToLoadAdViewAdWithError(self.mapLoadError("Missing Bidscube placement (MAX App ID / app_id)."))
+                delegate.didFailToLoadAdViewAdWithError(self.mapLoadError("Missing Bidscube placement (MAX Placement ID)."))
                 return
             }
+
+            let serverAppId = parameters.serverParameters[BidscubeMAXParams.appId] as? String
+            logBidscubeAdLoad(
+                format: adFormat.label,
+                placementId: placement,
+                serverAppId: serverAppId,
+                parameters: parameters
+            )
 
             if let presenter = parameters.presentingViewController ?? UIApplication.shared.alsc_topViewController() {
                 BidscubeSDK.setDisplayViewController(presenter)
@@ -501,6 +589,7 @@ private final class BidscubeAdViewMAXCallback: NSObject, AdCallback {
 
     func onAdLoaded(_ placementId: String) {
         guard let adView else { return }
+        Logger.maxAdapter("banner loaded placementId=\(placementId)")
         runOnMain {
             self.delegate?.didLoadAd(forAdView: adView)
         }
@@ -525,6 +614,7 @@ private final class BidscubeAdViewMAXCallback: NSObject, AdCallback {
     }
 
     func onAdFailed(_ placementId: String, errorCode: Int, errorMessage: String) {
+        Logger.maxAdapter("banner failed placementId=\(placementId) code=\(errorCode) message=\(errorMessage)")
         let err = MAAdapterError(
             adapterError: .unspecified,
             mediatedNetworkErrorCode: errorCode,

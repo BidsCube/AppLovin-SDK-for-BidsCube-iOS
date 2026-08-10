@@ -57,6 +57,7 @@ public class Logger {
     /// Log network-related messages
     public static func network(_ message: String) {
         info(message, prefix: Constants.LogPrefixes.network)
+        maxAdapter(message)
     }
     
     /// Log image ad-related messages
@@ -74,6 +75,18 @@ public class Logger {
         info(message, prefix: Constants.LogPrefixes.appLovin)
     }
 
+    /// Unified MAX adapter tag for publisher log capture (`BidscubeMAX`).
+    public static func maxAdapter(_ message: String) {
+        guard isLoggingEnabled else { return }
+        print("[\(Constants.LogPrefixes.maxAdapter)] \(message)")
+    }
+
+    /// Verbose MAX adapter diagnostics (device info, resolved server params). Requires debug mode.
+    public static func maxAdapterDebug(_ message: String) {
+        guard isLoggingEnabled && isDebugMode else { return }
+        print("[\(Constants.LogPrefixes.maxAdapter)] [DEBUG] \(message)")
+    }
+
     /// Log player-related messages
     public static func player(_ message: String) {
         info(message, prefix: Constants.LogPrefixes.player)
@@ -87,6 +100,7 @@ public class Logger {
     /// Log URL builder messages
     public static func urlBuilder(_ message: String) {
         info(message, prefix: Constants.LogPrefixes.urlBuilder)
+        maxAdapter(message)
     }
     
     // MARK: - Error Logging
@@ -117,7 +131,15 @@ public class Logger {
     /// Log device information for debugging
     public static func deviceInfo() {
         guard isLoggingEnabled && isDebugMode else { return }
-        debug("Device Info:Bundle=\(DeviceInfo.bundleId), App=\(DeviceInfo.appName), Size=\(DeviceInfo.deviceWidth)x\(DeviceInfo.deviceHeight), Language=\(DeviceInfo.language), IFA=\(DeviceInfo.advertisingIdentifier), DNT=\(DeviceInfo.doNotTrack)")
+        let summary = "Device Info:Bundle=\(DeviceInfo.bundleId), App=\(DeviceInfo.appName), Size=\(DeviceInfo.deviceWidth)x\(DeviceInfo.deviceHeight), Language=\(DeviceInfo.language), IFA=\(DeviceInfo.advertisingIdentifier), DNT=\(DeviceInfo.doNotTrack)"
+        debug(summary)
+        maxAdapterDebug(summary)
+    }
+
+    /// Update logging flags without re-initializing the SDK (used by MAX adapter per request).
+    public static func configureLogging(enableLogging: Bool, enableDebugMode: Bool) {
+        setLoggingEnabled(enableLogging)
+        setDebugMode(enableDebugMode)
     }
 }
 

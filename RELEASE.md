@@ -1,4 +1,4 @@
-# Release 1.1.7
+# Release 1.1.8
 
 ## Summary
 
@@ -62,7 +62,7 @@ source 'https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS.git'
 source 'https://cdn.cocoapods.org/'
 
 target 'YourApp' do
-  pod 'BidscubeSDKAppLovin', '1.1.7'
+  pod 'BidscubeSDKAppLovin', '1.1.8'
 end
 ```
 
@@ -78,7 +78,7 @@ source 'https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS.git'
 source 'https://cdn.cocoapods.org/'
 
 target 'YourApp' do
-  pod 'BidscubeSDKAppLovinLegacy', '1.1.7'
+  pod 'BidscubeSDKAppLovinLegacy', '1.1.8'
 end
 ```
 
@@ -86,7 +86,7 @@ Pulls `AppLovinSDK` (`~> 13.2`) only — **no Google IMA**. On iOS 14, pin `AppL
 
 ### From 1.1.5 or earlier
 
-Update the pod version to **1.1.7** and run `pod install --repo-update`. No API migration required.
+Update the pod version to **1.1.8** and run `pod install --repo-update`. No API migration required.
 
 ## Git tag
 
@@ -99,4 +99,4 @@ git push origin v1.1.6
 ## Post-release
 
 - Confirm GitHub Release created by `Publish SDK` workflow.
-- Notify integrators: same dual-pod layout, **1.1.7** for both modern and legacy.
+- Notify integrators: same dual-pod layout, **1.1.8** for both modern and legacy.

@@ -10,8 +10,8 @@ AppLovin MAX custom network adapter for the Bidscube iOS SDK. The adapter ships 
 
 | Pod | Version | Minimum iOS | Video engine | Transitive deps |
 | --- | ---: | ---: | --- | --- |
-| `BidscubeSDKAppLovin` | **1.1.7** | 15.0 | Google IMA VAST | `AppLovinSDK`, `GoogleAds-IMA-iOS-SDK` |
-| `BidscubeSDKAppLovinLegacy` | **1.1.7** | 14.0 | AVPlayer VAST | `AppLovinSDK` only |
+| `BidscubeSDKAppLovin` | **1.1.8** | 15.0 | Google IMA VAST | `AppLovinSDK`, `GoogleAds-IMA-iOS-SDK` |
+| `BidscubeSDKAppLovinLegacy` | **1.1.8** | 14.0 | AVPlayer VAST | `AppLovinSDK` only |
 
 > Install only one Bidscube AppLovin pod per target. Do not install the modern and legacy variants in the same target.
 
@@ -41,7 +41,7 @@ source 'https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS.git'
 source 'https://cdn.cocoapods.org/'
 
 target 'YourApp' do
-  pod 'BidscubeSDKAppLovin', '1.1.7'
+  pod 'BidscubeSDKAppLovin', '1.1.8'
 end
 ```
 
@@ -55,7 +55,7 @@ source 'https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS.git'
 source 'https://cdn.cocoapods.org/'
 
 target 'YourApp' do
-  pod 'BidscubeSDKAppLovinLegacy', '1.1.7'
+  pod 'BidscubeSDKAppLovinLegacy', '1.1.8'
 end
 ```
 
@@ -82,19 +82,23 @@ Follow [Integrating custom SDK networks](https://support.axon.ai/en/max/mediated
    - Name: **Bidscube**
    - **iOS Adapter Class Name:** `ALBidscubeMediationAdapter`
 2. **MAX → Ad Units** — enable **Bidscube** on each ad unit (banner, MREC, interstitial, rewarded).
-3. Set **App ID** = your **Bidscube Placement ID** (MAX label; required for this network).
+3. Configure Bidscube on each ad unit (see **MAX parameters** below — same model as [Android](https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-Android)).
 
 | Field | Value |
 |---|---|
 | **iOS Adapter Class Name** | `ALBidscubeMediationAdapter` |
-| **App ID** | Bidscube **Placement ID** |
-| **Placement ID** | Optional; leave empty unless your MAX setup needs a second value |
+| **`app_id` (Server Parameters)** | Bidscube **application / init** identifier (optional on iOS; required on Android) |
+| **Placement ID** | Bidscube **placement** id for that MAX ad unit (used in SSP `id` / `placementId`) |
+
+> **Android parity:** ad requests use MAX **Placement ID**, not `app_id`. If you set `app_id` in server parameters (as on Android), it must **not** replace the per-ad-unit placement id.
 
 **Optional server parameters** (network or ad unit level):
 
 | Parameter | Description |
 |---|---|
 | `request_authority` / `ssp_host` | SSP host override (`host` or `host:port`) |
+| `enable_logging` / `enableLogging` | `true` / `false` — Bidscube log output (default: MAX test mode) |
+| `enable_debug_mode` / `enableDebugMode` / `debug` | `true` / `false` — verbose diagnostics incl. device info (default: MAX test mode) |
 | `user_id` / `userId` | Publisher user id for postback attribution |
 | `auto_close` / `autoClose` | `true` / `false`, default `false` — close fullscreen video immediately after linear playback |
 
@@ -143,6 +147,7 @@ rewarded.load()
 - Open **Mediation Debugger** from the AppLovin SDK.
 - Confirm **Bidscube** appears in the waterfall for your ad units.
 - When Bidscube wins, logs show `network=Bidscube`.
+- For Bidscube request URLs and SSP responses, filter device logs by **`BidscubeMAX`** (set `enable_logging=true` in MAX server parameters if not using test mode).
 
 ### Supported MAX formats
 
