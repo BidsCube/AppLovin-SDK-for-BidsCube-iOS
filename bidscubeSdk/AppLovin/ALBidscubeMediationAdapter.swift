@@ -125,7 +125,7 @@ private func bidscubeSDKConfig(from parameters: MAAdapterParameters) -> SDKConfi
         .enableLogging(loggingFlags.enableLogging)
         .enableDebugMode(loggingFlags.enableDebugMode)
         .defaultAdTimeout(Constants.defaultTimeoutMs)
-        .defaultAdPosition(.fullScreen)
+        .defaultAdPosition(.unknown)
         .adRequestAuthority(rawAuthority)
         .enableSKAdNetwork(false)
     if let userId = bidscubeUserId(from: serverParameters) {
@@ -156,6 +156,20 @@ private func runOnMain(_ block: @escaping () -> Void) {
     } else {
         DispatchQueue.main.async(execute: block)
     }
+}
+
+/// Holds the ad view reference for async callbacks (Android `adViewHolder[]` parity).
+private final class BidscubeMAXAdViewHolder {
+    var view: UIView?
+}
+
+/// Sizes the Bidscube view to the MAX ad slot (banner, MREC, leader).
+private func applyMAXAdViewSlotConstraints(to view: UIView, size: CGSize) {
+    view.translatesAutoresizingMaskIntoConstraints = false
+    NSLayoutConstraint.activate([
+        view.widthAnchor.constraint(equalToConstant: size.width),
+        view.heightAnchor.constraint(equalToConstant: size.height)
+    ])
 }
 
 // MARK: - Adapter
@@ -532,6 +546,12 @@ extension ALBidscubeMediationAdapter: MAAdViewAdapter {
             guard let self else { return }
             ensureBidscubeInitializedIfNeeded(from: parameters)
 
+            guard BidscubeSDK.isInitialized() else {
+                Logger.maxAdapter("loadAdViewAd: FAIL not initialized format=\(adFormat.label)")
+                delegate.didFailToLoadAdViewAdWithError(.notInitialized)
+                return
+            }
+
             guard !placement.isEmpty else {
                 delegate.didFailToLoadAdViewAdWithError(self.mapLoadError("Missing Bidscube placement (MAX Placement ID)."))
                 return
@@ -549,26 +569,12 @@ extension ALBidscubeMediationAdapter: MAAdViewAdapter {
                 BidscubeSDK.setDisplayViewController(presenter)
             }
 
-            let size = adFormat.size
-            let callback = BidscubeAdViewMAXCallback(delegate: delegate, adView: nil)
-            let view: UIView
-
-            if adFormat.isBannerOrLeaderAd {
-                let isLeader = adFormat.label.uppercased().contains("LEADER")
-                let position: AdPosition = isLeader ? .sidebar : .footer
-                let banner = BidscubeSDK.getBannerAdView(placement, position: position, callback: callback)
-                banner.setBannerDimensions(width: size.width, height: size.height)
-                view = banner
-            } else {
-                view = BidscubeSDK.getImageAdView(placement, callback)
-                view.translatesAutoresizingMaskIntoConstraints = false
-                NSLayoutConstraint.activate([
-                    view.widthAnchor.constraint(equalToConstant: size.width),
-                    view.heightAnchor.constraint(equalToConstant: size.height)
-                ])
-            }
-
-            callback.adView = view
+            // Android parity: all MAX AdView formats use getImageAdView + adViewHolder callback wiring.
+            let adViewHolder = BidscubeMAXAdViewHolder()
+            let callback = BidscubeAdViewMAXCallback(delegate: delegate, adViewHolder: adViewHolder)
+            adViewHolder.view = BidscubeSDK.getImageAdView(placement, callback)
+            let view = adViewHolder.view!
+            applyMAXAdViewSlotConstraints(to: view, size: adFormat.size)
             self.loadedBannerView = view
         }
     }
@@ -577,19 +583,19 @@ extension ALBidscubeMediationAdapter: MAAdViewAdapter {
 @available(iOS 13.0, *)
 private final class BidscubeAdViewMAXCallback: NSObject, AdCallback {
     private weak var delegate: MAAdViewAdapterDelegate?
-    weak var adView: UIView?
+    private let adViewHolder: BidscubeMAXAdViewHolder
 
-    init(delegate: MAAdViewAdapterDelegate, adView: UIView?) {
+    init(delegate: MAAdViewAdapterDelegate, adViewHolder: BidscubeMAXAdViewHolder) {
         self.delegate = delegate
-        self.adView = adView
+        self.adViewHolder = adViewHolder
         super.init()
     }
 
     func onAdLoading(_ placementId: String) {}
 
     func onAdLoaded(_ placementId: String) {
-        guard let adView else { return }
-        Logger.maxAdapter("banner loaded placementId=\(placementId)")
+        guard let adView = adViewHolder.view else { return }
+        Logger.maxAdapter("adView loaded placementId=\(placementId)")
         runOnMain {
             self.delegate?.didLoadAd(forAdView: adView)
         }
@@ -614,7 +620,7 @@ private final class BidscubeAdViewMAXCallback: NSObject, AdCallback {
     }
 
     func onAdFailed(_ placementId: String, errorCode: Int, errorMessage: String) {
-        Logger.maxAdapter("banner failed placementId=\(placementId) code=\(errorCode) message=\(errorMessage)")
+        Logger.maxAdapter("adView failed placementId=\(placementId) code=\(errorCode) message=\(errorMessage)")
         let err = MAAdapterError(
             adapterError: .unspecified,
             mediatedNetworkErrorCode: errorCode,

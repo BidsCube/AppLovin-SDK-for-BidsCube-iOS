@@ -1,6 +1,6 @@
 # Bidscube + AppLovin MAX (iOS)
 
-**Release 1.1.5** · CocoaPods `BidscubeSDKAppLovin` (iOS 15+) or `BidscubeSDKAppLovinLegacy` (iOS 14+)
+**Release 1.1.9** · CocoaPods `BidscubeSDKAppLovin` (iOS 15+) or `BidscubeSDKAppLovinLegacy` (iOS 14+)
 
 AppLovin MAX custom network adapter for the Bidscube iOS SDK. The adapter ships inside the same pod as the runtime — no separate SDK pod is required for mediation.
 
@@ -10,8 +10,8 @@ AppLovin MAX custom network adapter for the Bidscube iOS SDK. The adapter ships 
 
 | Pod | Version | Minimum iOS | Video engine | Transitive deps |
 | --- | ---: | ---: | --- | --- |
-| `BidscubeSDKAppLovin` | **1.1.8** | 15.0 | Google IMA VAST | `AppLovinSDK`, `GoogleAds-IMA-iOS-SDK` |
-| `BidscubeSDKAppLovinLegacy` | **1.1.8** | 14.0 | AVPlayer VAST | `AppLovinSDK` only |
+| `BidscubeSDKAppLovin` | **1.1.9** | 15.0 | Google IMA VAST | `AppLovinSDK`, `GoogleAds-IMA-iOS-SDK` |
+| `BidscubeSDKAppLovinLegacy` | **1.1.9** | 14.0 | AVPlayer VAST | `AppLovinSDK` only |
 
 > Install only one Bidscube AppLovin pod per target. Do not install the modern and legacy variants in the same target.
 
@@ -41,7 +41,7 @@ source 'https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS.git'
 source 'https://cdn.cocoapods.org/'
 
 target 'YourApp' do
-  pod 'BidscubeSDKAppLovin', '1.1.8'
+  pod 'BidscubeSDKAppLovin', '1.1.9'
 end
 ```
 
@@ -55,7 +55,7 @@ source 'https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS.git'
 source 'https://cdn.cocoapods.org/'
 
 target 'YourApp' do
-  pod 'BidscubeSDKAppLovinLegacy', '1.1.8'
+  pod 'BidscubeSDKAppLovinLegacy', '1.1.9'
 end
 ```
 
@@ -165,6 +165,7 @@ rewarded.load()
   - **`BidscubeSDKAppLovin`** — Google IMA VAST playback
   - **`BidscubeSDKAppLovinLegacy`** — AVPlayer VAST playback (no Google IMA)
 - Load caches the Bidscube response; show presents from cache (no second network request).
+- **Banner, MREC, and leader** use **`BidscubeSDK.getImageAdView`** (same as [Android MAX adapter](https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-Android)); MAX controls slot size — not `getBannerAdView` / screen attach APIs.
 - `BidscubeSDK.setDisplayViewController(_:)` is called with MAX’s presenter before show/load.
 - Signal collection via `MASignalProvider` (no device identifiers or PII).
 - Ad failures use stable codes from `AdErrorCode` (e.g. **204** = no fill). See [docs/errors.md](../docs/errors.md).

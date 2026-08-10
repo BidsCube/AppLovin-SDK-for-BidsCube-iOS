@@ -2,10 +2,12 @@ import Foundation
 
 /// Ad-server GET requests with stable error mapping (including HTTP 204 no-fill).
 enum AdHTTPClient {
+    private static let requestTimeoutSeconds = TimeInterval(Constants.adRequestTimeoutMs) / 1000.0
+
     private static let session: URLSession = {
         let config = URLSessionConfiguration.default
-        config.timeoutIntervalForRequest = 30
-        config.timeoutIntervalForResource = 30
+        config.timeoutIntervalForRequest = requestTimeoutSeconds
+        config.timeoutIntervalForResource = requestTimeoutSeconds
         return URLSession(configuration: config)
     }()
 
@@ -15,6 +17,7 @@ enum AdHTTPClient {
     ) {
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
+        request.timeoutInterval = requestTimeoutSeconds
         request.setValue("application/json", forHTTPHeaderField: "Accept")
         request.setValue(DeviceInfo.userAgent, forHTTPHeaderField: "User-Agent")
 

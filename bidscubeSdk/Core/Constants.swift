@@ -6,7 +6,10 @@ public struct Constants {
     public static let defaultAdRequestAuthority = DeviceInfo.defaultAdRequestAuthority
     public static let sdkPath = "/sdk"
     public static let baseURL = "https://\(defaultAdRequestAuthority)\(sdkPath)"
+    /// Default SDK-level ad timeout (e.g. `AdViewController` loading timer).
     public static let defaultTimeoutMs = 30000
+    /// SSP GET timeout — matches Android `HttpProvider` (10s connect + read).
+    public static let adRequestTimeoutMs = 10000
     public static let defaultAdPosition = AdPosition.unknown
     
     public struct AdTypes {
@@ -29,7 +32,7 @@ public struct Constants {
     }
     
     public static let userAgentPrefix = "BidscubeSDK-iOS"
-    public static let sdkVersion = "1.1.8"
+    public static let sdkVersion = "1.1.9"
     
     public struct ErrorCodes {
         public static let invalidURL = -1

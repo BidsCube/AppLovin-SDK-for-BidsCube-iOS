@@ -32,7 +32,7 @@ source 'https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS.git'
 source 'https://cdn.cocoapods.org/'
 
 target 'YourApp' do
-  pod 'BidscubeSDKAppLovin', '1.1.8'
+  pod 'BidscubeSDKAppLovin', '1.1.9'
 end
 ```
 
@@ -52,7 +52,7 @@ source 'https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS.git'
 source 'https://cdn.cocoapods.org/'
 
 target 'YourApp' do
-  pod 'BidscubeSDKAppLovinLegacy', '1.1.8'
+  pod 'BidscubeSDKAppLovinLegacy', '1.1.9'
 end
 ```
 
@@ -406,7 +406,7 @@ MIT. See [LICENSE](LICENSE).
 
 ## Version
 
-Current release: **1.1.8** for both pods.
+Current release: **1.1.9** for both pods.
 
 | Pod | Version | Minimum iOS |
 | --- | ---: | ---: |
