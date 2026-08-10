@@ -32,7 +32,7 @@ source 'https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS.git'
 source 'https://cdn.cocoapods.org/'
 
 target 'YourApp' do
-  pod 'BidscubeSDKAppLovin', '1.1.9'
+  pod 'BidscubeSDKAppLovin', '1.1.10'
 end
 ```
 
@@ -52,7 +52,7 @@ source 'https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS.git'
 source 'https://cdn.cocoapods.org/'
 
 target 'YourApp' do
-  pod 'BidscubeSDKAppLovinLegacy', '1.1.9'
+  pod 'BidscubeSDKAppLovinLegacy', '1.1.10'
 end
 ```
 
@@ -113,7 +113,7 @@ Follow [Integrating custom SDK networks](https://support.axon.ai/en/max/mediated
 
 **Optional server parameters:** `request_authority`, `ssp_host`, `enable_logging` / `enableLogging`, `enable_debug_mode` / `enableDebugMode` / `debug`, `user_id` / `userId`, `auto_close` / `autoClose` (default `false`).
 
-**Publisher logs:** filter console output by tag **`BidscubeMAX`** to capture ad request URLs (`Sending GET request to`), HTTP status, placement ids, and load results. Example: Xcode / Console.app search `BidscubeMAX`, or `log stream --predicate 'eventMessage CONTAINS "BidscubeMAX"'`.
+**Publisher logs:** filter console output by tag **`BidscubeMAX`** to capture ad request URLs, HTTP status, placement ids, and load results. See [Publisher logging guide](applovin-adapter/README.md#publisher-logging-bidscubemax) for `enable_logging` setup and expected log lines.
 
 ### 2. Initialize MAX
 
@@ -406,7 +406,7 @@ MIT. See [LICENSE](LICENSE).
 
 ## Version
 
-Current release: **1.1.9** for both pods.
+Current release: **1.1.10** for both pods.
 
 | Pod | Version | Minimum iOS |
 | --- | ---: | ---: |

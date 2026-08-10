@@ -11,4 +11,10 @@ final class BidscubeMAXAdViewTests: XCTestCase {
         Logger.imageAd("test-image-ad-log")
         // Smoke: no crash; publishers filter console by BidscubeMAX for this line.
     }
+
+    func testBannerAPIUsesImageAdLogger() {
+        XCTAssertEqual(Constants.sdkVersion, "1.1.10")
+        Logger.configureLogging(enableLogging: true, enableDebugMode: false)
+        Logger.imageAd("Loading banner view for placement test, position: footer")
+    }
 }

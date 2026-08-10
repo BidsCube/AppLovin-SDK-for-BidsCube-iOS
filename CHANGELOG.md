@@ -6,6 +6,19 @@ All notable changes to the Bidscube iOS SDK and AppLovin MAX adapter are documen
 
 ---
 
+## [1.1.10] - 2026-08-10
+
+### Fixed
+
+- **Publisher logging (`BidscubeMAX`):** `getBannerAdView` and all banner convenience APIs now log through `Logger.imageAd` (mirrored to `BidscubeMAX`), matching the MAX adapter `getImageAdView` path.
+- **`ImageAdView` / `BannerAdView`:** replaced unconditional `print()` diagnostics with `Logger.imageAd` / `Logger.debug` so banner HTML render, click URLs, and taps respect `enable_logging` / `enable_logging` MAX server parameters.
+
+### Added
+
+- **Publisher logging guide** in [applovin-adapter/README.md](applovin-adapter/README.md#publisher-logging-bidscubemax) — how to enable logs in MAX and direct SDK, console filter, and expected log lines per ad format.
+
+---
+
 ## [1.1.9] - 2026-08-10
 
 ### Fixed

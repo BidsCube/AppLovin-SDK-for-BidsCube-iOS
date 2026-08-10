@@ -1,6 +1,6 @@
 # Bidscube + AppLovin MAX (iOS)
 
-**Release 1.1.9** · CocoaPods `BidscubeSDKAppLovin` (iOS 15+) or `BidscubeSDKAppLovinLegacy` (iOS 14+)
+**Release 1.1.10** · CocoaPods `BidscubeSDKAppLovin` (iOS 15+) or `BidscubeSDKAppLovinLegacy` (iOS 14+)
 
 AppLovin MAX custom network adapter for the Bidscube iOS SDK. The adapter ships inside the same pod as the runtime — no separate SDK pod is required for mediation.
 
@@ -10,8 +10,8 @@ AppLovin MAX custom network adapter for the Bidscube iOS SDK. The adapter ships 
 
 | Pod | Version | Minimum iOS | Video engine | Transitive deps |
 | --- | ---: | ---: | --- | --- |
-| `BidscubeSDKAppLovin` | **1.1.9** | 15.0 | Google IMA VAST | `AppLovinSDK`, `GoogleAds-IMA-iOS-SDK` |
-| `BidscubeSDKAppLovinLegacy` | **1.1.9** | 14.0 | AVPlayer VAST | `AppLovinSDK` only |
+| `BidscubeSDKAppLovin` | **1.1.10** | 15.0 | Google IMA VAST | `AppLovinSDK`, `GoogleAds-IMA-iOS-SDK` |
+| `BidscubeSDKAppLovinLegacy` | **1.1.10** | 14.0 | AVPlayer VAST | `AppLovinSDK` only |
 
 > Install only one Bidscube AppLovin pod per target. Do not install the modern and legacy variants in the same target.
 
@@ -41,7 +41,7 @@ source 'https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS.git'
 source 'https://cdn.cocoapods.org/'
 
 target 'YourApp' do
-  pod 'BidscubeSDKAppLovin', '1.1.9'
+  pod 'BidscubeSDKAppLovin', '1.1.10'
 end
 ```
 
@@ -55,7 +55,7 @@ source 'https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS.git'
 source 'https://cdn.cocoapods.org/'
 
 target 'YourApp' do
-  pod 'BidscubeSDKAppLovinLegacy', '1.1.9'
+  pod 'BidscubeSDKAppLovinLegacy', '1.1.10'
 end
 ```
 
@@ -97,8 +97,8 @@ Follow [Integrating custom SDK networks](https://support.axon.ai/en/max/mediated
 | Parameter | Description |
 |---|---|
 | `request_authority` / `ssp_host` | SSP host override (`host` or `host:port`) |
-| `enable_logging` / `enableLogging` | `true` / `false` — Bidscube log output (default: MAX test mode) |
-| `enable_debug_mode` / `enableDebugMode` / `debug` | `true` / `false` — verbose diagnostics incl. device info (default: MAX test mode) |
+| `enable_logging` / `enableLogging` | `true` / `false` — Bidscube log output (default: MAX test mode). When `true`, all Bidscube diagnostics are duplicated under the **`BidscubeMAX`** console tag. |
+| `enable_debug_mode` / `enableDebugMode` / `debug` | `true` / `false` — verbose diagnostics incl. device info and WebView navigation (default: MAX test mode) |
 | `user_id` / `userId` | Publisher user id for postback attribution |
 | `auto_close` / `autoClose` | `true` / `false`, default `false` — close fullscreen video immediately after linear playback |
 
@@ -147,7 +147,87 @@ rewarded.load()
 - Open **Mediation Debugger** from the AppLovin SDK.
 - Confirm **Bidscube** appears in the waterfall for your ad units.
 - When Bidscube wins, logs show `network=Bidscube`.
-- For Bidscube request URLs and SSP responses, filter device logs by **`BidscubeMAX`** (set `enable_logging=true` in MAX server parameters if not using test mode).
+- For Bidscube request URLs and SSP responses, filter device logs by **`BidscubeMAX`** (set `enable_logging=true` in MAX server parameters if not using test mode). See [Publisher logging](#publisher-logging-bidscubemax) below.
+
+### Publisher logging (`BidscubeMAX`)
+
+All Bidscube MAX adapter and banner/image network diagnostics are written to a **single console tag** so publishers can filter Xcode / `log` output without reading the full SDK stream.
+
+#### Enable logging
+
+**AppLovin MAX (recommended)** — add to Bidscube custom network or ad unit **Server parameters**:
+
+| Parameter | Value |
+|-----------|--------|
+| `enable_logging` | `true` |
+
+Optional verbose device / WebView details:
+
+| Parameter | Value |
+|-----------|--------|
+| `enable_debug_mode` | `true` |
+
+When MAX **test mode** is on and these parameters are omitted, logging defaults to **on** (same as test ads).
+
+**Direct Bidscube SDK** (no MAX):
+
+```swift
+let config = SDKConfig.Builder()
+    .enableLogging(true)
+    .enableDebugMode(false) // set true for device info + WebView navigation
+    .build()
+BidscubeSDK.initialize(config: config)
+```
+
+#### Console filter
+
+In **Xcode → Debug area → Console**, filter by:
+
+```
+BidscubeMAX
+```
+
+On device via Terminal:
+
+```bash
+log stream --predicate 'eventMessage CONTAINS "BidscubeMAX"'
+```
+
+#### Expected log lines (banner / MREC / leader)
+
+When Bidscube wins a MAX AdView auction:
+
+```
+[BidscubeMAX] load BANNER placementId=YOUR_PLACEMENT …
+[BidscubeMAX] Loading image/banner view for placement YOUR_PLACEMENT
+[BidscubeMAX] Built image ad URL: https://…
+[BidscubeMAX] Sending GET request to: https://…
+[BidscubeMAX] SSP round-trip: 1.234s (timeout limit 10s)
+[BidscubeMAX] Response code: 200
+[BidscubeMAX] adView loading placementId=YOUR_PLACEMENT
+[BidscubeMAX] adView loaded placementId=YOUR_PLACEMENT
+[BidscubeMAX] adView displayed placementId=YOUR_PLACEMENT
+[BidscubeMAX] Rendering HTML markup for placement YOUR_PLACEMENT
+```
+
+On failure:
+
+```
+[BidscubeMAX] Ad request failed (image) placement=… code=… message=…
+[BidscubeMAX] adView failed placementId=… code=… message=…
+```
+
+#### Interstitial / rewarded (video)
+
+```
+[BidscubeMAX] load INTERSTITIAL placementId=… 
+```
+
+(video path uses `Logger.videoAd` — filter `BidscubeMAX` for URL/network lines; video player lines use `🎥 VideoAd` prefix)
+
+#### Disable logging in production
+
+Omit `enable_logging` and ensure MAX test mode is off — Bidscube logs are **silent** unless explicitly enabled.
 
 ### Supported MAX formats
 

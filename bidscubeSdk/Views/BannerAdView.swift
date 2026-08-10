@@ -176,6 +176,7 @@ public final class BannerAdView: UIView {
     
     public func loadAdContent(_ htmlContent: String) {
         loadingLabel.isHidden = false
+        Logger.imageAd("Rendering HTML markup for placement \(placementId)")
 
         let cleanHTML = BannerAdMarkupNormalizer.normalize(htmlContent)
         extractClickURLFromHTML(cleanHTML)
@@ -235,7 +236,7 @@ public final class BannerAdView: UIView {
             self.alpha = 1.0
         }
         
-        print("BannerAdView: Attached to screen at \(bannerPosition)")
+        Logger.imageAd("Attached to screen at \(displayName(for: bannerPosition))")
     }
     
     public func detachFromScreen() {
@@ -252,7 +253,7 @@ public final class BannerAdView: UIView {
             BidscubeSDK.untrackBanner(self)
         }
         
-        print("BannerAdView: Detached from screen")
+        Logger.imageAd("Detached from screen")
     }
     
     private func setupBannerConstraints(in parentView: UIView) {
@@ -347,7 +348,7 @@ public final class BannerAdView: UIView {
                         let extractedURL = String(htmlContent[swiftRange])
                         if let decodedURL = extractedURL.removingPercentEncoding {
                             self.clickURL = decodedURL
-                            print("BannerAdView: Extracted click URL from HTML: \(decodedURL)")
+                            Logger.imageAd("Extracted click URL from HTML: \(decodedURL)")
                             return
                         }
                     }
@@ -355,17 +356,17 @@ public final class BannerAdView: UIView {
             }
         }
         
-        print("BannerAdView: Could not extract click URL from HTML content")
+        Logger.debug("Could not extract click URL from HTML content", prefix: Constants.LogPrefixes.imageAd)
     }
     
     @objc private func handleTap() {
-        print("BannerAdView: Tap gesture detected")
+        Logger.debug("Tap gesture detected", prefix: Constants.LogPrefixes.imageAd)
         callback?.onAdClicked(placementId)
         if let clickURL = clickURL, let url = URL(string: clickURL) {
-            print("BannerAdView: Opening extracted click URL: \(clickURL)")
+            Logger.imageAd("Opening click URL: \(clickURL)")
             UIApplication.shared.open(url, options: [:], completionHandler: nil)
         } else {
-            print("BannerAdView: No click URL available to open")
+            Logger.debug("No click URL available to open", prefix: Constants.LogPrefixes.imageAd)
         }
     }
 }
@@ -383,17 +384,17 @@ extension BannerAdView: WKNavigationDelegate {
             return
         }
 
-        print("BannerAdView: Navigation request to: \(url.absoluteString)")
-        print("BannerAdView: Navigation type: \(navigationAction.navigationType.rawValue)")
+        Logger.debug("Navigation request to: \(url.absoluteString)", prefix: Constants.LogPrefixes.imageAd)
+        Logger.debug("Navigation type: \(navigationAction.navigationType.rawValue)", prefix: Constants.LogPrefixes.imageAd)
 
         guard navigationAction.navigationType == .linkActivated else {
-            print("BannerAdView: Non-user navigation, allowing")
+            Logger.debug("Non-user navigation, allowing", prefix: Constants.LogPrefixes.imageAd)
             decisionHandler(.allow)
             return
         }
 
         if url.absoluteString.contains("clck") || url.absoluteString.contains("click") {
-            print("BannerAdView: Detected click tracking, triggering callback")
+            Logger.imageAd("Detected click tracking, placement \(placementId)")
             callback?.onAdClicked(placementId)
 
             decisionHandler(.allow)
@@ -401,7 +402,7 @@ extension BannerAdView: WKNavigationDelegate {
         }
 
         if url.scheme?.hasPrefix("http") == true {
-            print("BannerAdView: Opening external URL: \(url.absoluteString)")
+            Logger.imageAd("Opening external URL: \(url.absoluteString)")
             callback?.onAdClicked(placementId)
             UIApplication.shared.open(url, options: [:], completionHandler: nil)
             decisionHandler(.cancel)

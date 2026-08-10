@@ -32,7 +32,7 @@ public struct Constants {
     }
     
     public static let userAgentPrefix = "BidscubeSDK-iOS"
-    public static let sdkVersion = "1.1.9"
+    public static let sdkVersion = "1.1.10"
     
     public struct ErrorCodes {
         public static let invalidURL = -1

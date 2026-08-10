@@ -64,6 +64,7 @@ public final class ImageAdView: UIView {
     
     public func loadAdContent(_ htmlContent: String) {
         loadingLabel.isHidden = false
+        Logger.imageAd("Rendering HTML markup for placement \(placementId)")
         let cleanHTML = BannerAdMarkupNormalizer.normalize(htmlContent)
         extractClickURLFromHTML(cleanHTML)
 
@@ -196,7 +197,7 @@ public final class ImageAdView: UIView {
                         let extractedURL = String(htmlContent[swiftRange])
                         if let decodedURL = extractedURL.removingPercentEncoding {
                             self.clickURL = decodedURL
-                            print("ImageAdView: Extracted click URL from HTML: \(decodedURL)")
+                            Logger.imageAd("Extracted click URL from HTML: \(decodedURL)")
                             return
                         }
                     }
@@ -204,17 +205,17 @@ public final class ImageAdView: UIView {
             }
         }
         
-        print("ImageAdView: Could not extract click URL from HTML content")
+        Logger.debug("Could not extract click URL from HTML content", prefix: Constants.LogPrefixes.imageAd)
     }
     
     @objc private func handleTap() {
-        print("ImageAdView: Tap gesture detected")
+        Logger.debug("Tap gesture detected", prefix: Constants.LogPrefixes.imageAd)
         callback?.onAdClicked(placementId)
         if let clickURL = clickURL, let url = URL(string: clickURL) {
-            print("ImageAdView: Opening extracted click URL: \(clickURL)")
+            Logger.imageAd("Opening click URL: \(clickURL)")
             UIApplication.shared.open(url, options: [:], completionHandler: nil)
         } else {
-            print("ImageAdView: No click URL available to open")
+            Logger.debug("No click URL available to open", prefix: Constants.LogPrefixes.imageAd)
         }
     }
     
@@ -231,17 +232,17 @@ extension ImageAdView: WKNavigationDelegate {
             return
         }
 
-        print("ImageAdView: Navigation request to: \(url.absoluteString)")
-        print("ImageAdView: Navigation type: \(navigationAction.navigationType.rawValue)")
+        Logger.debug("Navigation request to: \(url.absoluteString)", prefix: Constants.LogPrefixes.imageAd)
+        Logger.debug("Navigation type: \(navigationAction.navigationType.rawValue)", prefix: Constants.LogPrefixes.imageAd)
 
         guard navigationAction.navigationType == .linkActivated else {
-            print("ImageAdView: Non-user navigation, allowing")
+            Logger.debug("Non-user navigation, allowing", prefix: Constants.LogPrefixes.imageAd)
             decisionHandler(.allow)
             return
         }
 
         if url.absoluteString.contains("clck") || url.absoluteString.contains("click") {
-            print("ImageAdView: Detected click tracking, triggering callback")
+            Logger.imageAd("Detected click tracking, placement \(placementId)")
             callback?.onAdClicked(placementId)
 
             decisionHandler(.allow)
@@ -249,7 +250,7 @@ extension ImageAdView: WKNavigationDelegate {
         }
 
         if url.scheme?.hasPrefix("http") == true {
-            print("ImageAdView: Opening external URL: \(url.absoluteString)")
+            Logger.imageAd("Opening external URL: \(url.absoluteString)")
             callback?.onAdClicked(placementId)
             UIApplication.shared.open(url, options: [:], completionHandler: nil)
             decisionHandler(.cancel)

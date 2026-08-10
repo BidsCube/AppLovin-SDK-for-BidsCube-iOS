@@ -606,7 +606,7 @@ public final class BidscubeSDK {
     
     
     public static func getBannerAdView(_ placementId: String, position: AdPosition, callback: AdCallback?) -> BannerAdView {
-        Logger.info("getBannerAdView called for placement: \(placementId), position: \(position)")
+        Logger.imageAd("Loading banner view for placement \(placementId), position: \(position)")
         
         let bannerView = createOnMainThread { BannerAdView(position: position) }
         
@@ -634,7 +634,7 @@ public final class BidscubeSDK {
     
     
     public static func showHeaderBanner(_ placementId: String, in viewController: UIViewController, callback: AdCallback? = nil) {
-        Logger.info("showHeaderBanner called for placement: \(placementId)")
+        Logger.imageAd("showHeaderBanner for placement \(placementId)")
         
         let bannerView = getBannerAdView(placementId, position: .header, callback: callback)
         trackBanner(bannerView)
@@ -643,7 +643,7 @@ public final class BidscubeSDK {
     
     
     public static func showFooterBanner(_ placementId: String, in viewController: UIViewController, callback: AdCallback? = nil) {
-        Logger.info("showFooterBanner called for placement: \(placementId)")
+        Logger.imageAd("showFooterBanner for placement \(placementId)")
         
         let bannerView = getBannerAdView(placementId, position: .footer, callback: callback)
         trackBanner(bannerView)
@@ -652,7 +652,7 @@ public final class BidscubeSDK {
     
     
     public static func showSidebarBanner(_ placementId: String, in viewController: UIViewController, callback: AdCallback? = nil) {
-        Logger.info("showSidebarBanner called for placement: \(placementId)")
+        Logger.imageAd("showSidebarBanner for placement \(placementId)")
         
         let bannerView = getBannerAdView(placementId, position: .sidebar, callback: callback)
         trackBanner(bannerView)
@@ -661,7 +661,7 @@ public final class BidscubeSDK {
     
     
     public static func showCustomBanner(_ placementId: String, position: AdPosition, width: CGFloat, height: CGFloat, in viewController: UIViewController, callback: AdCallback? = nil) {
-        Logger.info("showCustomBanner called for placement: \(placementId), position: \(position), size: \(width)x\(height)")
+        Logger.imageAd("showCustomBanner placement \(placementId) position \(position) size \(width)x\(height)")
         
         let bannerView = getBannerAdView(placementId, position: position, callback: callback)
         trackBanner(bannerView)
@@ -671,7 +671,7 @@ public final class BidscubeSDK {
     
     
     public static func getBannerAdView(_ placementId: String, position: AdPosition, cornerRadius: CGFloat, callback: AdCallback?) -> BannerAdView {
-        Logger.info("getBannerAdView called for placement: \(placementId), position: \(position), cornerRadius: \(cornerRadius)")
+        Logger.imageAd("Loading banner view for placement \(placementId), position: \(position), cornerRadius: \(cornerRadius)")
         
         let bannerView = createOnMainThread { BannerAdView(position: position, cornerRadius: cornerRadius) }
         
@@ -699,7 +699,7 @@ public final class BidscubeSDK {
     
     
     public static func showBannerWithCornerRadius(_ placementId: String, position: AdPosition, cornerRadius: CGFloat, in viewController: UIViewController, callback: AdCallback? = nil) {
-        Logger.info("showBannerWithCornerRadius called for placement: \(placementId), position: \(position), cornerRadius: \(cornerRadius)")
+        Logger.imageAd("showBannerWithCornerRadius placement \(placementId) position \(position) cornerRadius \(cornerRadius)")
         
         let bannerView = getBannerAdView(placementId, position: position, cornerRadius: cornerRadius, callback: callback)
         trackBanner(bannerView)
@@ -708,7 +708,7 @@ public final class BidscubeSDK {
     
     
     public static func showCustomBanner(_ placementId: String, position: AdPosition, width: CGFloat, height: CGFloat, cornerRadius: CGFloat, in viewController: UIViewController, callback: AdCallback? = nil) {
-        Logger.info("showCustomBanner called for placement: \(placementId), position: \(position), size: \(width)x\(height), cornerRadius: \(cornerRadius)")
+        Logger.imageAd("showCustomBanner placement \(placementId) position \(position) size \(width)x\(height) cornerRadius \(cornerRadius)")
         
         let bannerView = getBannerAdView(placementId, position: position, cornerRadius: cornerRadius, callback: callback)
         trackBanner(bannerView)
