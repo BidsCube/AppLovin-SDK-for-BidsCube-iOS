@@ -14,6 +14,7 @@ public final class AdViewController: UIViewController {
     private var currentPosition: AdPosition = .unknown
     private var loadingTimeoutTimer: Timer?
     private let sessionCoordinator = AdSessionCoordinator()
+    private var sessionCallbackBridge: AdSessionCallbackBridge?
     private var swipeGestureRecognizer: UISwipeGestureRecognizer?
     private var doubleTapGestureRecognizer: UITapGestureRecognizer?
     private var isVideoPlaying = false
@@ -142,8 +143,21 @@ public final class AdViewController: UIViewController {
             },
             onFailed: { [weak self] placementId, errorCode, errorMessage in
                 self?.presentAdErrorUI(placementId: placementId, errorCode: errorCode, errorMessage: errorMessage)
+            },
+            onPlaybackStarted: { [weak self] _ in
+                self?.cancelLoadingTimeoutIfNeeded(reason: "playback_started")
+            },
+            onLifecycleViolation: { [weak self] placementId, reason in
+                FullscreenLifecycleDiagnostics.log(
+                    "AdViewController",
+                    "lifecycle_violation reason=\(reason)",
+                    placementId: placementId,
+                    sessionId: self?.sessionCoordinator.sessionId,
+                    controller: self
+                )
             }
         )
+        sessionCallbackBridge = sessionCallback
         
         switch adType {
         case .image:
@@ -201,8 +215,18 @@ public final class AdViewController: UIViewController {
     
     private func handleLoadingTimeout() {
         guard sessionCoordinator.state == .loading else { return }
+        guard !isVideoPlaying else {
+            cancelLoadingTimeoutIfNeeded(reason: "timeout_skipped_video_playing")
+            return
+        }
 
-        print("🔍 AdViewController: Ad loading timeout")
+        FullscreenLifecycleDiagnostics.log(
+            "AdViewController",
+            "loading timeout fired while state=\(sessionCoordinator.state)",
+            placementId: placementId,
+            sessionId: sessionCoordinator.sessionId,
+            controller: self
+        )
         loadingTimeoutTimer?.invalidate()
         loadingTimeoutTimer = nil
         if let videoAdView = adView as? VideoAdView {
@@ -221,9 +245,21 @@ public final class AdViewController: UIViewController {
         )
     }
 
-    private func handleAdSuccess() {
+    func cancelLoadingTimeoutIfNeeded(reason: String) {
+        guard loadingTimeoutTimer != nil else { return }
         loadingTimeoutTimer?.invalidate()
         loadingTimeoutTimer = nil
+        FullscreenLifecycleDiagnostics.log(
+            "AdViewController",
+            "loading timeout cancelled reason=\(reason)",
+            placementId: placementId,
+            sessionId: sessionCoordinator.sessionId,
+            controller: self
+        )
+    }
+
+    private func handleAdSuccess() {
+        cancelLoadingTimeoutIfNeeded(reason: "creative_loaded")
         print("🔍 AdViewController: Ad loaded successfully")
     }
 
@@ -612,21 +648,122 @@ public final class AdViewController: UIViewController {
 
     /// Centralized fullscreen dismissal. When `notifyClosed` is `false`, UI is dismissed without `onAdClosed`.
     public func dismissAdOnce(notifyClosed: Bool = true) {
-        guard !didDismissUI else { return }
-        didDismissUI = true
+        let performDismiss = { [self] in
+            guard !didDismissUI else { return }
+            didDismissUI = true
 
-        if notifyClosed {
-            sessionCoordinator.deliverClosed(placementId, to: callback)
+            let retainedCallback = callback
+            let placement = placementId
+            let formatLabel = (retainedCallback as? BidscubeMAXFullscreenLifecycleLogging)?.maxFullscreenAdFormatLabel
+
+            FullscreenLifecycleDiagnostics.log(
+                "AdViewController",
+                "dismissal_requested",
+                placementId: placement,
+                sessionId: sessionCoordinator.sessionId,
+                controller: self
+            )
+
+            if let formatLabel {
+                Logger.maxAdapter("\(formatLabel) dismissal started placementId=\(placement)")
+            }
+
+            FullscreenDismissal.perform(on: self, animated: true) { result in
+                switch result {
+                case .dismissed, .alreadyDismissed:
+                    if let formatLabel {
+                        Logger.maxAdapter("\(formatLabel) dismissal completed placementId=\(placement)")
+                    }
+                    FullscreenLifecycleDiagnostics.log(
+                        "AdViewController",
+                        "dismissal_verified result=\(result)",
+                        placementId: placement,
+                        sessionId: sessionCoordinator.sessionId,
+                        controller: self
+                    )
+                    if notifyClosed {
+                        sessionCoordinator.deliverClosed(placement, to: retainedCallback)
+                        FullscreenLifecycleDiagnostics.log(
+                            "AdViewController",
+                            "onAdClosed_delivered",
+                            placementId: placement,
+                            sessionId: sessionCoordinator.sessionId,
+                            controller: self
+                        )
+                    }
+                case .cancelled:
+                    didDismissUI = false
+                    FullscreenLifecycleDiagnostics.log(
+                        "AdViewController",
+                        "dismissal_cancelled",
+                        placementId: placement,
+                        sessionId: sessionCoordinator.sessionId,
+                        controller: self
+                    )
+                case .stillVisible, .noDismissPath:
+                    didDismissUI = false
+                    FullscreenLifecycleDiagnostics.log(
+                        "AdViewController",
+                        "dismissal_failed_still_visible result=\(result)",
+                        placementId: placement,
+                        sessionId: sessionCoordinator.sessionId,
+                        controller: self
+                    )
+                }
+            }
         }
 
-        if let navigationController = navigationController, navigationController.viewControllers.count > 1 {
-            navigationController.popViewController(animated: true)
+        if Thread.isMainThread {
+            performDismiss()
         } else {
-            dismiss(animated: true)
+            DispatchQueue.main.async(execute: performDismiss)
         }
     }
 
     var adSessionCoordinator: AdSessionCoordinator { sessionCoordinator }
+
+    /// Test seam — not part of public SDK API.
+    var bidscubeSessionCallbackBridgeForTesting: AdSessionCallbackBridge? {
+        sessionCallbackBridge
+    }
+
+    func bidscubeInvalidateLoadingTimeoutForTesting() {
+        loadingTimeoutTimer?.invalidate()
+        loadingTimeoutTimer = nil
+    }
+
+    /// Creates the session bridge without SSP/network work — internal test seam only.
+    func bidscubeEstablishSessionBridgeForTesting() {
+        guard sessionCallbackBridge == nil else { return }
+        sessionCoordinator.deliverLoading(placementId, to: callback)
+        let sessionCallback = AdSessionCallbackBridge(
+            coordinator: sessionCoordinator,
+            downstream: callback,
+            onLoaded: { [weak self] _ in
+                self?.handleAdSuccess()
+            },
+            onFailed: { [weak self] placementId, errorCode, errorMessage in
+                self?.presentAdErrorUI(
+                    placementId: placementId,
+                    errorCode: errorCode,
+                    errorMessage: errorMessage
+                )
+            },
+            onPlaybackStarted: { [weak self] _ in
+                self?.cancelLoadingTimeoutIfNeeded(reason: "playback_started")
+            },
+            onLifecycleViolation: { [weak self] placementId, reason in
+                FullscreenLifecycleDiagnostics.log(
+                    "AdViewController",
+                    "lifecycle_violation reason=\(reason)",
+                    placementId: placementId,
+                    sessionId: self?.sessionCoordinator.sessionId,
+                    controller: self
+                )
+            }
+        )
+        sessionCallbackBridge = sessionCallback
+    }
     
     private func ensureBackButtonOnTop() {
         if !backButton.isHidden {

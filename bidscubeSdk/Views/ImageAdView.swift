@@ -8,6 +8,7 @@ public final class ImageAdView: UIView {
     private var placementId: String = ""
     private weak var callback: AdCallback?
     private var didReportLoaded = false
+    private var activeLoadToken = UUID()
     
     public init() {
         super.init(frame: .zero)
@@ -104,13 +105,15 @@ public final class ImageAdView: UIView {
         handleAdResponseBody(body)
     }
 
-    public func loadAdFromURL(_ url: URL) {
+    public func loadAdFromURL(_ url: URL, timeoutMs: Int = Constants.adRequestTimeoutMs) {
         loadingLabel.isHidden = false
         loadingLabel.text = "Loading Ad..."
         didReportLoaded = false
+        let loadToken = UUID()
+        activeLoadToken = loadToken
 
-        AdHTTPClient.fetchBody(url: url) { [weak self] result in
-            guard let self = self else { return }
+        AdHTTPClient.fetchBody(url: url, timeoutMs: timeoutMs) { [weak self] result in
+            guard let self, self.activeLoadToken == loadToken else { return }
             switch result {
             case .failure(let error):
                 self.loadingLabel.text = AdErrorCode.message(for: error)

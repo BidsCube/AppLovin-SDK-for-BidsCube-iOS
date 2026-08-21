@@ -22,6 +22,7 @@ private final class RecordingAdCallback: AdCallback {
 }
 
 @Suite(.serialized)
+@MainActor
 struct AdSessionCoordinatorTests {
     private let placement = "test-placement"
 

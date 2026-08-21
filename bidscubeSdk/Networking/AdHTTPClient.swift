@@ -2,20 +2,25 @@ import Foundation
 
 /// Ad-server GET requests with stable error mapping (including HTTP 204 no-fill).
 enum AdHTTPClient {
-    private static let requestTimeoutSeconds = TimeInterval(Constants.adRequestTimeoutMs) / 1000.0
+    private static let defaultRequestTimeoutSeconds = TimeInterval(Constants.adRequestTimeoutMs) / 1000.0
+    internal static var lastRequestTimeoutMsForTesting: Int?
 
-    private static let session: URLSession = {
+    private static func session(for timeoutMs: Int) -> URLSession {
+        let timeoutSeconds = TimeInterval(timeoutMs) / 1000.0
         let config = URLSessionConfiguration.default
-        config.timeoutIntervalForRequest = requestTimeoutSeconds
-        config.timeoutIntervalForResource = requestTimeoutSeconds
+        config.timeoutIntervalForRequest = timeoutSeconds
+        config.timeoutIntervalForResource = timeoutSeconds
         return URLSession(configuration: config)
-    }()
+    }
 
     static func fetchBody(
         url: URL,
+        timeoutMs: Int = Constants.adRequestTimeoutMs,
         completion: @escaping (Result<String, BidscubeRequestError>) -> Void
     ) {
         let startedAt = CFAbsoluteTimeGetCurrent()
+        let requestTimeoutSeconds = TimeInterval(timeoutMs) / 1000.0
+        lastRequestTimeoutMsForTesting = timeoutMs
 
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
@@ -25,7 +30,7 @@ enum AdHTTPClient {
 
         Logger.network("Sending GET request to: \(url.absoluteString)")
 
-        session.dataTask(with: request) { data, response, error in
+        session(for: timeoutMs).dataTask(with: request) { data, response, error in
             let elapsed = CFAbsoluteTimeGetCurrent() - startedAt
             Logger.network(String(format: "SSP round-trip: %.3fs (timeout limit %.0fs)", elapsed, requestTimeoutSeconds))
             let result = parseResponse(data: data, response: response, error: error)

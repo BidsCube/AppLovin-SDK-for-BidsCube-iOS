@@ -277,7 +277,11 @@ public final class BidscubeSDK {
     }
 
     public static func getImageAdView(_ placementId: String, _ callback: AdCallback?) -> UIView {
-        Logger.imageAd("Loading image/banner view for placement \(placementId)")
+        getImageAdView(placementId, callback, requestTimeoutMs: Constants.adRequestTimeoutMs)
+    }
+
+    static func getImageAdView(_ placementId: String, _ callback: AdCallback?, requestTimeoutMs: Int) -> UIView {
+        Logger.imageAd("Loading image/banner view for placement \(placementId) timeoutMs=\(requestTimeoutMs)")
         
         
         let effectivePosition = getEffectiveAdPosition()
@@ -307,10 +311,10 @@ public final class BidscubeSDK {
         
         if let imageAdView = view as? ImageAdView {
             imageAdView.setPlacementInfo(placementId, callback: callback)
-            imageAdView.loadAdFromURL(url)
+            imageAdView.loadAdFromURL(url, timeoutMs: requestTimeoutMs)
         } else if let bannerAdView = view as? BannerAdView {
             bannerAdView.setPlacementInfo(placementId, callback: callback)
-            bannerAdView.loadAdFromURL(url)
+            bannerAdView.loadAdFromURL(url, timeoutMs: requestTimeoutMs)
         }
         
         return view
@@ -464,6 +468,7 @@ public final class BidscubeSDK {
     public static func loadAdPayload(
         placementId: String,
         adType: AdType,
+        requestTimeoutMs: Int = Constants.adRequestTimeoutMs,
         completion: @escaping (Result<BidscubeAdPayload, BidscubeRequestError>) -> Void
     ) {
         guard isInitialized() else {
@@ -488,7 +493,7 @@ public final class BidscubeSDK {
             return
         }
 
-        AdHTTPClient.fetchBody(url: url) { result in
+        AdHTTPClient.fetchBody(url: url, timeoutMs: requestTimeoutMs) { result in
             switch result {
             case .success(let body):
                 completion(.success(BidscubeAdPayload(

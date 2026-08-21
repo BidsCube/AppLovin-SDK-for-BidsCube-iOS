@@ -10,6 +10,8 @@ public struct Constants {
     public static let defaultTimeoutMs = 30000
     /// SSP GET timeout — matches Android `HttpProvider` (10s connect + read).
     public static let adRequestTimeoutMs = 10000
+    /// MAX adapter SSP timeout — must finish before AppLovin adapter timeout (~10s, error -5101).
+    public static let maxAdapterAdRequestTimeoutMs = 8000
     public static let defaultAdPosition = AdPosition.unknown
     
     public struct AdTypes {
@@ -32,7 +34,7 @@ public struct Constants {
     }
     
     public static let userAgentPrefix = "BidscubeSDK-iOS"
-    public static let sdkVersion = "1.1.10"
+    public static let sdkVersion = "1.1.11"
     
     public struct ErrorCodes {
         public static let invalidURL = -1

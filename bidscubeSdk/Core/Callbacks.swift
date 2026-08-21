@@ -20,6 +20,11 @@ public protocol AdCallback: AnyObject {
     func onAdRenderOverride(adm: String, position: AdPosition)
 }
 
+/// Optional MAX adapter hook for fullscreen dismissal diagnostics (`BidscubeMAX` log tag).
+public protocol BidscubeMAXFullscreenLifecycleLogging: AnyObject {
+    var maxFullscreenAdFormatLabel: String { get }
+}
+
 public extension AdCallback {
     func onVideoAdStarted(_ placementId: String) {}
     func onVideoAdCompleted(_ placementId: String) {}

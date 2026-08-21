@@ -141,68 +141,93 @@ final class AdSessionCallbackBridge: AdCallback {
     private let downstream: AdCallback?
     private let onLoaded: ((String) -> Void)?
     private let onFailed: ((String, Int, String) -> Void)?
+    private let onPlaybackStarted: ((String) -> Void)?
+    private let onLifecycleViolation: ((String, String) -> Void)?
 
     init(
         coordinator: AdSessionCoordinator,
         downstream: AdCallback?,
         onLoaded: ((String) -> Void)? = nil,
-        onFailed: ((String, Int, String) -> Void)? = nil
+        onFailed: ((String, Int, String) -> Void)? = nil,
+        onPlaybackStarted: ((String) -> Void)? = nil,
+        onLifecycleViolation: ((String, String) -> Void)? = nil
     ) {
         self.coordinator = coordinator
         self.downstream = downstream
         self.onLoaded = onLoaded
         self.onFailed = onFailed
+        self.onPlaybackStarted = onPlaybackStarted
+        self.onLifecycleViolation = onLifecycleViolation
+    }
+
+    private func onMain(_ work: @escaping () -> Void) {
+        if Thread.isMainThread {
+            work()
+        } else {
+            DispatchQueue.main.async(execute: work)
+        }
     }
 
     func onAdLoading(_ placementId: String) {
-        coordinator.deliverLoading(placementId, to: downstream)
+        onMain { self.coordinator.deliverLoading(placementId, to: self.downstream) }
     }
 
     func onAdLoaded(_ placementId: String) {
-        if coordinator.deliverLoaded(placementId, to: downstream) {
-            onLoaded?(placementId)
+        onMain {
+            if self.coordinator.deliverLoaded(placementId, to: self.downstream) {
+                self.onLoaded?(placementId)
+            }
         }
     }
 
     func onAdDisplayed(_ placementId: String) {
-        coordinator.deliverDisplayed(placementId, to: downstream)
+        onMain { self.coordinator.deliverDisplayed(placementId, to: self.downstream) }
     }
 
     func onAdClicked(_ placementId: String) {
-        coordinator.deliverClicked(placementId, to: downstream)
+        onMain { self.coordinator.deliverClicked(placementId, to: self.downstream) }
     }
 
     func onAdClosed(_ placementId: String) {
-        coordinator.deliverClosed(placementId, to: downstream)
+        onMain { self.coordinator.deliverClosed(placementId, to: self.downstream) }
     }
 
     func onAdFailed(_ placementId: String, errorCode: Int, errorMessage: String) {
-        if coordinator.deliverFailed(placementId, errorCode: errorCode, errorMessage: errorMessage, to: downstream) {
-            onFailed?(placementId, errorCode, errorMessage)
+        onMain {
+            if self.coordinator.deliverFailed(placementId, errorCode: errorCode, errorMessage: errorMessage, to: self.downstream) {
+                self.onFailed?(placementId, errorCode, errorMessage)
+            }
         }
     }
 
     func onVideoAdStarted(_ placementId: String) {
-        coordinator.deliverVideoStarted(placementId, to: downstream)
+        onMain {
+            let delivered = self.coordinator.deliverVideoStarted(placementId, to: self.downstream)
+            if delivered {
+                self.onPlaybackStarted?(placementId)
+            } else {
+                self.onLifecycleViolation?(placementId, "videoStarted before loaded")
+            }
+        }
     }
 
     func onVideoAdCompleted(_ placementId: String) {
-        coordinator.deliverVideoCompleted(placementId, to: downstream)
+        onMain { self.coordinator.deliverVideoCompleted(placementId, to: self.downstream) }
     }
 
     func onVideoAdSkipped(_ placementId: String) {
-        coordinator.deliverVideoSkipped(placementId, to: downstream)
+        onMain { self.coordinator.deliverVideoSkipped(placementId, to: self.downstream) }
     }
 
     func onVideoAdSkippable(_ placementId: String) {
-        coordinator.deliverVideoSkippable(placementId, to: downstream)
+        onMain { self.coordinator.deliverVideoSkippable(placementId, to: self.downstream) }
     }
 
     func onInstallButtonClicked(_ placementId: String, buttonText: String) {
-        downstream?.onInstallButtonClicked(placementId, buttonText: buttonText)
+        onMain { self.downstream?.onInstallButtonClicked(placementId, buttonText: buttonText) }
     }
 
     func onAdRenderOverride(adm: String, position: AdPosition) {
-        downstream?.onAdRenderOverride(adm: adm, position: position)
+        onMain { self.downstream?.onAdRenderOverride(adm: adm, position: position) }
     }
 }

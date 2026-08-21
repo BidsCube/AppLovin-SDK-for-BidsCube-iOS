@@ -19,12 +19,20 @@ public final class IMAVideoAdHandler: UIView {
     private weak var callback: AdCallback?
     private weak var parentViewController: UIViewController?
     
-    private var closeButton: UIButton?
+    private var navigationChrome: FullscreenVideoChromeControls?
     private var sessionController: FullscreenVideoSessionController?
     private var postVideoCompanion: CompanionAd?
     private var staticEndCard: CompanionEndCardView?
     private var htmlEndCard: CompanionEndCardView?
     private var skipOverlay: VideoSkipControlOverlay?
+    private var didDismissUI = false
+    private let handlerInstanceId = UUID()
+    private weak var boundViewController: UIViewController?
+    private var isPlaybackActive = false
+    private var hasRequestedAds = false
+    private var activeContainerId: String?
+    private var containerCreatedCount = 0
+    private var requestAdsCount = 0
     
     public init(vastURL: String, clickURL: String? = nil) {
         self.vastURL = vastURL
@@ -56,42 +64,142 @@ public final class IMAVideoAdHandler: UIView {
     }
     
     public func refreshIMASetup() {
-        print("🔄 IMAVideoAdHandler: Refreshing IMA setup due to view controller hierarchy change")
-        
-        adsManager?.destroy()
-        adsManager = nil
-        adDisplayContainer = nil
-        
-        let viewController: UIViewController? = findStableViewController() ?? createFallbackViewController()
-        
-        if let vc = viewController {
-            adDisplayContainer = IMAAdDisplayContainer(adContainer: self, viewController: vc)
-            print(" IMAVideoAdHandler: Recreated ad display container with view controller: \(type(of: vc))")
+        rebindViewControllerIfNeeded()
+    }
+
+    /// Idempotent hierarchy rebind — never replaces container after `requestAds`.
+    func rebindViewControllerIfNeeded() {
+        if hasRequestedAds || isPlaybackActive || adsManager != nil {
+            playerLayer?.frame = bounds
+            logDiagnostics("rebind blocked hasRequestedAds=\(hasRequestedAds) playback=\(isPlaybackActive) manager=\(adsManager != nil)")
+            return
+        }
+
+        if adDisplayContainer != nil, boundViewController != nil {
+            playerLayer?.frame = bounds
+            return
+        }
+
+        guard let viewController = findStableViewController() else {
+            logDiagnostics("rebind failed: no stable presenter")
+            return
+        }
+
+        createAdDisplayContainer(boundTo: viewController)
+    }
+
+    private func createAdDisplayContainer(boundTo viewController: UIViewController) {
+        guard adDisplayContainer == nil else {
+            playerLayer?.frame = bounds
+            logDiagnostics("ensureAdDisplayContainer skipped existing")
+            return
+        }
+        boundViewController = viewController
+        adDisplayContainer = IMAAdDisplayContainer(adContainer: self, viewController: viewController)
+        activeContainerId = FullscreenLifecycleDiagnostics.objectID(adDisplayContainer)
+        containerCreatedCount += 1
+        logDiagnostics("containerCreated count=\(containerCreatedCount) vc=\(type(of: viewController))")
+    }
+
+    @discardableResult
+    private func ensurePlayer() -> Bool {
+        if contentPlayer != nil {
+            playerLayer?.frame = bounds
+            return true
+        }
+        contentPlayer = AVPlayer()
+        contentPlayhead = IMAAVPlayerContentPlayhead(avPlayer: contentPlayer!)
+        playerLayer = AVPlayerLayer(player: contentPlayer)
+        playerLayer?.videoGravity = .resizeAspect
+        playerLayer?.frame = bounds
+        if let layer = playerLayer {
+            self.layer.addSublayer(layer)
+        }
+        return true
+    }
+
+    @discardableResult
+    private func ensureAdDisplayContainer() -> Bool {
+        if adDisplayContainer != nil {
+            return true
+        }
+        if hasRequestedAds {
+            logDiagnostics("lifecycle_violation container_create_after_requestAds")
+            return false
+        }
+        guard let viewController = findStableViewController() else {
+            logDiagnostics(
+                "ima_presenter_unavailable viewInWindow=\(window != nil) parentAttached=\(parentViewController?.view.window != nil)"
+            )
+            return false
+        }
+        createAdDisplayContainer(boundTo: viewController)
+        return adDisplayContainer != nil
+    }
+
+    @discardableResult
+    private func ensureAdsLoader() -> Bool {
+        if adsLoader != nil {
+            return true
+        }
+        Logger.player("Initializing default IMA player for placement \(placementId)")
+        let settings = IMASettings()
+        settings.enableDebugMode = true
+        settings.maxRedirects = 5
+        settings.autoPlayAdBreaks = true
+        settings.language = "en"
+        adsLoader = IMAAdsLoader(settings: settings)
+        adsLoader?.delegate = self
+        return adsLoader != nil
+    }
+
+    private func logDiagnostics(_ message: String) {
+        let containerField = "display_container_id=\(activeContainerId ?? "nil")"
+        FullscreenLifecycleDiagnostics.log(
+            "IMA",
+            "\(containerField) \(message)",
+            placementId: placementId,
+            handler: self,
+            controller: boundViewController
+        )
+    }
+
+    private func dispatchOnMain(_ work: @escaping () -> Void) {
+        if Thread.isMainThread {
+            work()
         } else {
-            print("Error: IMAVideoAdHandler: Failed to find view controller for refreshed setup")
+            DispatchQueue.main.async(execute: work)
         }
     }
     
     public func cleanup() {
+        logDiagnostics("cleanup_before_clear")
+        isPlaybackActive = false
+        hasRequestedAds = false
         destroySkipOverlay()
         staticEndCard?.destroy()
         staticEndCard = nil
         htmlEndCard?.destroy()
         htmlEndCard = nil
 
+        adsManager?.delegate = nil
         adsManager?.destroy()
         adsManager = nil
-        
+
+        adsLoader?.delegate = nil
         adsLoader = nil
-        
+
         adDisplayContainer = nil
-        
-        contentPlayer = nil
-        playerLayer = nil
+        activeContainerId = nil
+        boundViewController = nil
+        logDiagnostics("cleanup_after_clear")
+
         contentPlayhead = nil
-        
+        playerLayer?.removeFromSuperlayer()
+        playerLayer = nil
+        contentPlayer = nil
+
         gestureRecognizers?.forEach { removeGestureRecognizer($0) }
-        
         backgroundColor = .clear
     }
     
@@ -100,23 +208,28 @@ public final class IMAVideoAdHandler: UIView {
     }
     
     public func loadAd() {
-        ensureSessionController()
-        if adsLoader == nil || adDisplayContainer == nil {
-            Logger.player("Setting up IMA player before loading ad for placement \(placementId)")
-            setupIMA()
+        guard !hasRequestedAds else {
+            logDiagnostics("lifecycle_violation_duplicate_requestAds")
+            return
         }
-        
+
+        ensureSessionController()
+        Logger.player("Setting up IMA player before loading ad for placement \(placementId)")
+        setupIMA()
+
         guard let adsLoader = adsLoader else {
             print("Error: IMAVideoAdHandler: AdsLoader not initialized")
             return
         }
-        
+
         guard let adDisplayContainer = adDisplayContainer else {
             print("Error: IMAVideoAdHandler: AdDisplayContainer not initialized")
             return
         }
-        
-        Logger.player("IMA player is ready. Starting ad load for placement \(placementId)")
+
+        hasRequestedAds = true
+        requestAdsCount += 1
+        logDiagnostics("requestAds started count=\(requestAdsCount)")
         
         if let vastURL = vastURL {
             let adsRequest = IMAAdsRequest(
@@ -152,75 +265,31 @@ public final class IMAVideoAdHandler: UIView {
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleAdClick))
         addGestureRecognizer(tapGesture)
         
-        setupCloseButton()
-    }
-    
-    private func setupCloseButton() {
-        closeButton = UIButton(type: .system)
-        closeButton?.setTitle("✕", for: .normal)
-        closeButton?.setTitleColor(.white, for: .normal)
-        closeButton?.titleLabel?.font = UIFont.systemFont(ofSize: 24, weight: .bold)
-        closeButton?.backgroundColor = UIColor.black.withAlphaComponent(0.7)
-        closeButton?.layer.cornerRadius = 20
-        closeButton?.layer.borderWidth = 2
-        closeButton?.layer.borderColor = UIColor.white.cgColor
-        closeButton?.addTarget(self, action: #selector(closeButtonTapped), for: .touchUpInside)
-        closeButton?.isHidden = true
-        
-        if let closeButton = closeButton {
-            addSubview(closeButton)
-            closeButton.translatesAutoresizingMaskIntoConstraints = false
-            
-            NSLayoutConstraint.activate([
-                closeButton.topAnchor.constraint(equalTo: topAnchor, constant: 16),
-                closeButton.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -16),
-                closeButton.widthAnchor.constraint(equalToConstant: 40),
-                closeButton.heightAnchor.constraint(equalToConstant: 40)
-            ])
-        }
-        
-        
+        setupNavigationChrome()
+
         let swipeGesture = UISwipeGestureRecognizer(target: self, action: #selector(handleSwipeGesture))
         swipeGesture.direction = .right
         addGestureRecognizer(swipeGesture)
-        
-        
+
         let doubleTapGesture = UITapGestureRecognizer(target: self, action: #selector(handleDoubleTap))
         doubleTapGesture.numberOfTapsRequired = 2
         addGestureRecognizer(doubleTapGesture)
     }
     
+    private func setupNavigationChrome() {
+        let chrome = FullscreenVideoChromeControls(
+            target: self,
+            backAction: #selector(closeButtonTapped),
+            closeAction: #selector(closeButtonTapped)
+        )
+        chrome.install(in: self)
+        navigationChrome = chrome
+    }
+    
     private func setupIMA() {
-        contentPlayer = AVPlayer()
-        contentPlayhead = IMAAVPlayerContentPlayhead(avPlayer: contentPlayer!)
-        
-        playerLayer = AVPlayerLayer(player: contentPlayer)
-        playerLayer?.videoGravity = .resizeAspect
-        playerLayer?.frame = bounds
-        if let layer = playerLayer {
-            self.layer.addSublayer(layer)
-        }
-        
-        let viewController: UIViewController? = findStableViewController() ?? createFallbackViewController()
-        
-        if let vc = viewController {
-            adDisplayContainer = IMAAdDisplayContainer(adContainer: self, viewController: vc)
-            print(" IMAVideoAdHandler: Using view controller: \(type(of: vc))")
-            print("   - VC description: \(vc.description)")
-            print("   - Parent: \(vc.parent?.description ?? "nil")")
-            print("   - Nav: \(vc.navigationController?.description ?? "nil")")
-        } else {
-            print("Error: IMAVideoAdHandler: No view controller available for IMAAdDisplayContainer")
-        }
-        
-        Logger.player("Initializing default IMA player for placement \(placementId)")
-        let settings = IMASettings()
-        settings.enableDebugMode = true
-        settings.maxRedirects = 5  
-        settings.autoPlayAdBreaks = true
-        settings.language = "en"
-        adsLoader = IMAAdsLoader(settings: settings)
-        adsLoader?.delegate = self
+        _ = ensurePlayer()
+        _ = ensureAdDisplayContainer()
+        _ = ensureAdsLoader()
     }
 
     
@@ -355,31 +424,35 @@ public final class IMAVideoAdHandler: UIView {
     }
 
     private func dismissFullscreenAdOnce(notifyClosed: Bool = true) {
-        staticEndCard?.destroy()
-        staticEndCard = nil
-        htmlEndCard?.destroy()
-        htmlEndCard = nil
-        cleanup()
+        let performDismiss = { [self] in
+            guard !didDismissUI else { return }
+            didDismissUI = true
 
-        if let adViewController = findViewController() as? AdViewController {
-            adViewController.dismissAdOnce(notifyClosed: notifyClosed)
-            return
+            staticEndCard?.destroy()
+            staticEndCard = nil
+            htmlEndCard?.destroy()
+            htmlEndCard = nil
+            cleanup()
+
+            FullscreenDismissalHelper.performFallbackDismissal(
+                from: self,
+                notifyClosed: notifyClosed,
+                placementId: placementId,
+                callback: callback,
+                onNeedsReset: { [weak self] in self?.didDismissUI = false },
+                logTag: "IMAVideoAdHandler"
+            )
         }
 
-        if notifyClosed {
-            callback?.onAdClosed(placementId)
-        }
-        if let viewController = findViewController() {
-            if viewController.presentingViewController != nil {
-                viewController.dismiss(animated: true)
-            } else if let navigationController = viewController.navigationController {
-                navigationController.popViewController(animated: true)
-            }
+        if Thread.isMainThread {
+            performDismiss()
+        } else {
+            DispatchQueue.main.async(execute: performDismiss)
         }
     }
 
     private func hideHandlerCloseButton() {
-        closeButton?.isHidden = true
+        navigationChrome?.hide()
     }
 
     private func attachSkipOverlayIfNeeded() {
@@ -387,9 +460,7 @@ public final class IMAVideoAdHandler: UIView {
         let overlay = VideoSkipControlOverlay(vastXml: vastXML, delegate: self)
         overlay.attach(to: self)
         skipOverlay = overlay
-        if let closeButton {
-            bringSubviewToFront(closeButton)
-        }
+        navigationChrome?.bringToFront(in: self)
     }
 
     private func destroySkipOverlay() {
@@ -403,23 +474,13 @@ public final class IMAVideoAdHandler: UIView {
     
     private func showCloseButton() {
         DispatchQueue.main.async {
-            self.closeButton?.isHidden = false
-            self.closeButton?.alpha = 0
-            
-            UIView.animate(withDuration: 0.3, delay: 0.5, options: .curveEaseInOut) {
-                self.closeButton?.alpha = 1.0
-            }
+            self.navigationChrome?.show()
+            self.navigationChrome?.bringToFront(in: self)
         }
     }
-    
+
     private func hideCloseButton() {
-        DispatchQueue.main.async {
-            UIView.animate(withDuration: 0.2) {
-                self.closeButton?.alpha = 0
-            } completion: { _ in
-                self.closeButton?.isHidden = true
-            }
-        }
+        navigationChrome?.hide(animated: true)
     }
     
     private func findViewController() -> UIViewController? {
@@ -481,25 +542,16 @@ public final class IMAVideoAdHandler: UIView {
         print(" IMAVideoAdHandler: Using top view controller: \(type(of: topVC))")
         return topVC
     }
-    
-    private func createFallbackViewController() -> UIViewController? {
-        let fallbackVC = UIViewController()
-        fallbackVC.view.backgroundColor = .clear
-        print(" IMAVideoAdHandler: Created fallback view controller")
-        return fallbackVC
-    }
-    
+
     private func findContentViewController() -> UIViewController? {
         var responder: UIResponder? = self
         while responder != nil {
             if let viewController = responder as? UIViewController {
                 if let navController = viewController as? UINavigationController {
                     if let topVC = navController.topViewController {
-                        print(" IMAVideoAdHandler: Found content view controller in navigation: \(type(of: topVC))")
                         return topVC
                     }
                 } else if !(viewController is UINavigationController) {
-                    print(" IMAVideoAdHandler: Found content view controller: \(type(of: viewController))")
                     return viewController
                 }
             }
@@ -509,44 +561,52 @@ public final class IMAVideoAdHandler: UIView {
     }
     
     private func findStableViewController() -> UIViewController? {
-        let candidates = [
+        let candidates: [UIViewController?] = [
             parentViewController,
             findContentViewController(),
             findViewController(),
             getRootViewController()
         ]
-        
+
         for candidate in candidates {
-            if let vc = candidate {
-                if vc.isViewLoaded && vc.view.window != nil {
-                    print(" IMAVideoAdHandler: Found stable view controller: \(type(of: vc))")
-                    return vc
-                }
-            }
+            guard let viewController = candidate else { continue }
+            guard viewController.isViewLoaded, viewController.view.window != nil else { continue }
+            logDiagnostics(
+                "stable_presenter id=\(FullscreenLifecycleDiagnostics.objectID(viewController)) window=\(FullscreenLifecycleDiagnostics.objectID(viewController.view.window))"
+            )
+            return viewController
         }
-        
-        for candidate in candidates {
-            if let vc = candidate {
-                print("⚠️ IMAVideoAdHandler: Using fallback view controller: \(type(of: vc))")
-                return vc
-            }
-        }
-        
+
+        logDiagnostics(
+            "ima_presenter_unavailable viewInWindow=\(window != nil) parentAttached=\(parentViewController?.view.window != nil)"
+        )
         return nil
     }
+}
+
+extension IMAVideoAdHandler {
+    var bidscubeTesting_containerCreatedCount: Int { containerCreatedCount }
+    var bidscubeTesting_requestAdsCount: Int { requestAdsCount }
+    var bidscubeTesting_activeContainerId: String? { activeContainerId }
+    var bidscubeTesting_hasRequestedAds: Bool { hasRequestedAds }
+    var bidscubeTesting_adDisplayContainer: IMAAdDisplayContainer? { adDisplayContainer }
+    var bidscubeTesting_adsLoader: IMAAdsLoader? { adsLoader }
+    var bidscubeTesting_playerLayer: AVPlayerLayer? { playerLayer }
 }
 
 extension IMAVideoAdHandler: IMAAdsLoaderDelegate {
     
     public func adsLoader(_ loader: IMAAdsLoader, adsLoadedWith adsLoadedData: IMAAdsLoadedData) {
         Logger.player("IMA ads loaded successfully for placement \(placementId)")
-        
-        adsManager = adsLoadedData.adsManager
-        
-        adsManager?.delegate = self
-        adsManager?.initialize(with: nil)
-        
-        callback?.onAdLoaded(placementId)
+        logDiagnostics("adsLoaded manager=\(FullscreenLifecycleDiagnostics.objectID(adsLoadedData.adsManager))")
+
+        dispatchOnMain { [weak self] in
+            guard let self else { return }
+            self.adsManager = adsLoadedData.adsManager
+            self.adsManager?.delegate = self
+            self.adsManager?.initialize(with: nil)
+            self.callback?.onAdLoaded(self.placementId)
+        }
     }
     
     public func adsLoader(_ loader: IMAAdsLoader, failedWith adErrorData: IMAAdLoadingErrorData) {
@@ -596,14 +656,19 @@ extension IMAVideoAdHandler: IMAAdsManagerDelegate {
             
         case .STARTED:
             Logger.player("IMA player started playback for placement \(placementId)")
-            callback?.onVideoAdStarted(placementId)
-            hideCloseButton()
-            attachSkipOverlayIfNeeded()
-            
-            
-            if let adViewController = findViewController() as? AdViewController {
-                adViewController.setVideoPlayingState(true)
-                adViewController.disableSwipeGestures()
+            isPlaybackActive = true
+            logDiagnostics("STARTED manager=\(FullscreenLifecycleDiagnostics.objectID(adsManager))")
+            dispatchOnMain { [weak self] in
+                guard let self else { return }
+                self.callback?.onAdDisplayed(self.placementId)
+                self.callback?.onVideoAdStarted(self.placementId)
+                self.hideCloseButton()
+                self.attachSkipOverlayIfNeeded()
+                if let adViewController = self.findViewController() as? AdViewController {
+                    adViewController.setVideoPlayingState(true)
+                    adViewController.disableSwipeGestures()
+                    adViewController.cancelLoadingTimeoutIfNeeded(reason: "IMA_STARTED")
+                }
             }
             
         case .COMPLETE:

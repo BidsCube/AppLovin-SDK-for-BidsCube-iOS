@@ -6,6 +6,21 @@ All notable changes to the Bidscube iOS SDK and AppLovin MAX adapter are documen
 
 ---
 
+## [1.1.11] - 2026-08-21
+
+### Fixed
+
+- **MAX fullscreen input lock (rewarded / interstitial):** IMA `.STARTED` now emits `onAdDisplayed` before `onVideoAdStarted`, so MAX receives `didDisplay*` before `didHide*`.
+- **Fullscreen teardown race:** `AdViewController.dismissAdOnce()` and IMA/Legacy fallback dismiss paths now deliver `onAdClosed` / `didHide*` only after UIKit modal `dismiss` or navigation `pop` completes (via `FullscreenDismissal`).
+- **MAX banner `-5101` adapter timeout:** MAX-mediated banner/MREC/leader `getImageAdView` paths now pass `maxAdapterAdRequestTimeoutMs` (**8s**) through `ImageAdView` / `BannerAdView` → `AdHTTPClient.fetchBody`. Direct SDK image/banner loads remain **10s** (`adRequestTimeoutMs`). Fullscreen interstitial/rewarded MAX loads already used the 8s payload timeout.
+
+### Added
+
+- **`BidscubeMAX` lifecycle logs:** `rewarded displayed`, `rewarded dismissal started/completed`, `rewarded hidden`, `interstitial displayed`, `interstitial dismissal started/completed`, `interstitial hidden`.
+- **Unit tests** for IMA displayed-before-started ordering, once-only close, MAX timeout, and rewarded grant policy.
+
+---
+
 ## [1.1.10] - 2026-08-10
 
 ### Fixed

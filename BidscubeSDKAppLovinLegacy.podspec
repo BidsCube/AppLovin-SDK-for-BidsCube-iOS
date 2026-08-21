@@ -1,6 +1,6 @@
 Pod::Spec.new do |spec|
   spec.name         = "BidscubeSDKAppLovinLegacy"
-  spec.version      = "1.1.10"
+  spec.version      = "1.1.11"
   spec.summary      = "Bidscube iOS SDK with AppLovin MAX adapter for iOS 14+ (AVPlayer VAST, no Google IMA)"
   spec.description  = <<-DESC
                       Legacy integration path for apps that must support iOS 14.

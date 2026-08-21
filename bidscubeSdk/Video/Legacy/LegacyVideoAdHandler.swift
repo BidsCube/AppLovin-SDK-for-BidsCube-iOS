@@ -16,7 +16,7 @@ public final class LegacyVideoAdHandler: UIView, BidscubeCustomVideoPlayer {
     private weak var parentViewController: UIViewController?
     private var fallbackClickURL: String?
 
-    private var closeButton: UIButton?
+    private var navigationChrome: FullscreenVideoChromeControls?
     private var sessionController: FullscreenVideoSessionController?
     private var postVideoCompanion: CompanionAd?
     private var staticEndCard: CompanionEndCardView?
@@ -115,7 +115,7 @@ public final class LegacyVideoAdHandler: UIView, BidscubeCustomVideoPlayer {
     private func setupView() {
         backgroundColor = .black
         isUserInteractionEnabled = true
-        setupCloseButton()
+        setupNavigationChrome()
         registerLifecycleObservers()
 
         let tap = UITapGestureRecognizer(target: self, action: #selector(handleTap))
@@ -315,6 +315,11 @@ public final class LegacyVideoAdHandler: UIView, BidscubeCustomVideoPlayer {
             self.fireTracking("start")
             self.attachSkipOverlayIfNeeded()
             self.hideCloseButton()
+            if let adViewController = self.findViewController() as? AdViewController {
+                adViewController.setVideoPlayingState(true)
+                adViewController.disableSwipeGestures()
+                adViewController.cancelLoadingTimeoutIfNeeded(reason: "LEGACY_PLAYBACK_STARTED")
+            }
         }
     }
 
@@ -476,23 +481,31 @@ public final class LegacyVideoAdHandler: UIView, BidscubeCustomVideoPlayer {
     }
 
     private func dismissFullscreenAdOnce(notifyClosed: Bool = true) {
-        guard !didDismissUI else { return }
-        didDismissUI = true
+        let performDismiss = { [self] in
+            guard !didDismissUI else { return }
+            didDismissUI = true
 
-        staticEndCard?.destroy()
-        staticEndCard = nil
-        htmlEndCard?.destroy()
-        htmlEndCard = nil
-        cleanup()
+            staticEndCard?.destroy()
+            staticEndCard = nil
+            htmlEndCard?.destroy()
+            htmlEndCard = nil
+            cleanup()
 
-        if let adViewController = findViewController() as? AdViewController {
-            adViewController.dismissAdOnce(notifyClosed: notifyClosed)
-            return
+            FullscreenDismissalHelper.performFallbackDismissal(
+                from: self,
+                notifyClosed: notifyClosed,
+                placementId: placementId,
+                callback: callback,
+                onNeedsReset: { [weak self] in self?.didDismissUI = false },
+                logTag: "LegacyVideoAdHandler"
+            )
         }
-        if notifyClosed {
-            callback?.onAdClosed(placementId)
+
+        if Thread.isMainThread {
+            performDismiss()
+        } else {
+            DispatchQueue.main.async(execute: performDismiss)
         }
-        findViewController()?.dismiss(animated: true)
     }
 
     private func cleanupPlayback(keepSession: Bool) {
@@ -523,40 +536,29 @@ public final class LegacyVideoAdHandler: UIView, BidscubeCustomVideoPlayer {
         notificationTokens.removeAll()
     }
 
-    private func setupCloseButton() {
-        let button = UIButton(type: .system)
-        button.setTitle("✕", for: .normal)
-        button.setTitleColor(.white, for: .normal)
-        button.titleLabel?.font = .systemFont(ofSize: 24, weight: .bold)
-        button.backgroundColor = UIColor.black.withAlphaComponent(0.7)
-        button.layer.cornerRadius = 20
-        button.addTarget(self, action: #selector(closeButtonTapped), for: .touchUpInside)
-        button.isHidden = true
-        button.translatesAutoresizingMaskIntoConstraints = false
-        addSubview(button)
-        NSLayoutConstraint.activate([
-            button.topAnchor.constraint(equalTo: safeAreaLayoutGuide.topAnchor, constant: 16),
-            button.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -16),
-            button.widthAnchor.constraint(equalToConstant: 40),
-            button.heightAnchor.constraint(equalToConstant: 40)
-        ])
-        closeButton = button
+    private func setupNavigationChrome() {
+        let chrome = FullscreenVideoChromeControls(
+            target: self,
+            backAction: #selector(closeButtonTapped),
+            closeAction: #selector(closeButtonTapped)
+        )
+        chrome.install(in: self)
+        navigationChrome = chrome
     }
 
     private func showCloseButton() {
         DispatchQueue.main.async {
-            self.closeButton?.isHidden = false
-            self.closeButton?.alpha = 0
-            UIView.animate(withDuration: 0.3, delay: 0.5) { self.closeButton?.alpha = 1 }
+            self.navigationChrome?.show()
+            self.navigationChrome?.bringToFront(in: self)
         }
     }
 
     private func hideCloseButton() {
-        closeButton?.isHidden = true
+        navigationChrome?.hide(animated: true)
     }
 
     private func hideHandlerCloseButton() {
-        closeButton?.isHidden = true
+        navigationChrome?.hide()
     }
 
     private func attachSkipOverlayIfNeeded() {
@@ -564,7 +566,7 @@ public final class LegacyVideoAdHandler: UIView, BidscubeCustomVideoPlayer {
         let overlay = VideoSkipControlOverlay(vastXml: vastXml, delegate: self)
         overlay.attach(to: self)
         skipOverlay = overlay
-        if let closeButton { bringSubviewToFront(closeButton) }
+        navigationChrome?.bringToFront(in: self)
     }
 
     private func destroySkipOverlay() {

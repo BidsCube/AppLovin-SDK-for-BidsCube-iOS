@@ -61,11 +61,13 @@ extension VideoAdView {
     }
 
     func refreshVideoHandlerLayout() {
-        #if BIDSCUBE_LEGACY_VIDEO
         activeVideoHandler?.layoutSubviews()
-        #else
-        (activeVideoHandler as? IMAVideoAdHandler)?.refreshIMASetup()
-        activeVideoHandler?.layoutSubviews()
+    }
+
+    /// Rebind IMA to the current view-controller hierarchy after fullscreen layout changes.
+    func rebindIMAViewControllerIfNeeded() {
+        #if !BIDSCUBE_LEGACY_VIDEO
+        (activeVideoHandler as? IMAVideoAdHandler)?.rebindViewControllerIfNeeded()
         #endif
     }
 }

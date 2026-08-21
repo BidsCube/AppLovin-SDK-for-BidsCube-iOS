@@ -277,7 +277,11 @@ final class ALBidscubeMediationAdapter: ALMediationAdapter {
             return
         }
 
-        BidscubeSDK.loadAdPayload(placementId: placementId, adType: adType) { result in
+        BidscubeSDK.loadAdPayload(
+            placementId: placementId,
+            adType: adType,
+            requestTimeoutMs: Constants.maxAdapterAdRequestTimeoutMs
+        ) { result in
             switch result {
             case .success(let payload):
                 Logger.maxAdapter("load success placementId=\(placementId) adType=\(adType.rawValue)")
@@ -357,9 +361,11 @@ extension ALBidscubeMediationAdapter: MAInterstitialAdapter {
 }
 
 @available(iOS 13.0, *)
-private final class BidscubeInterstitialMAXCallback: NSObject, AdCallback {
+private final class BidscubeInterstitialMAXCallback: NSObject, AdCallback, BidscubeMAXFullscreenLifecycleLogging {
     private weak var delegate: MAInterstitialAdapterDelegate?
     private var didTerminateDisplay = false
+
+    var maxFullscreenAdFormatLabel: String { "interstitial" }
 
     init(delegate: MAInterstitialAdapterDelegate) {
         self.delegate = delegate
@@ -371,6 +377,7 @@ private final class BidscubeInterstitialMAXCallback: NSObject, AdCallback {
     func onAdLoaded(_ placementId: String) {}
 
     func onAdDisplayed(_ placementId: String) {
+        Logger.maxAdapter("interstitial displayed placementId=\(placementId)")
         runOnMain {
             self.delegate?.didDisplayInterstitialAd()
         }
@@ -385,6 +392,7 @@ private final class BidscubeInterstitialMAXCallback: NSObject, AdCallback {
     func onAdClosed(_ placementId: String) {
         guard !didTerminateDisplay else { return }
         didTerminateDisplay = true
+        Logger.maxAdapter("interstitial hidden placementId=\(placementId)")
         runOnMain {
             self.delegate?.didHideInterstitialAd()
         }
@@ -461,12 +469,14 @@ extension ALBidscubeMediationAdapter: MARewardedAdapter {
 }
 
 @available(iOS 13.0, *)
-private final class BidscubeRewardedMAXCallback: NSObject, AdCallback {
+private final class BidscubeRewardedMAXCallback: NSObject, AdCallback, BidscubeMAXFullscreenLifecycleLogging {
     private weak var adapter: ALBidscubeMediationAdapter?
     private weak var delegate: MARewardedAdapterDelegate?
     private var videoCompleted = false
     private var didReward = false
     private var didTerminateDisplay = false
+
+    var maxFullscreenAdFormatLabel: String { "rewarded" }
 
     init(adapter: ALBidscubeMediationAdapter, delegate: MARewardedAdapterDelegate) {
         self.adapter = adapter
@@ -479,6 +489,7 @@ private final class BidscubeRewardedMAXCallback: NSObject, AdCallback {
     func onAdLoaded(_ placementId: String) {}
 
     func onAdDisplayed(_ placementId: String) {
+        Logger.maxAdapter("rewarded displayed placementId=\(placementId)")
         runOnMain {
             self.delegate?.didDisplayRewardedAd()
         }
@@ -495,6 +506,7 @@ private final class BidscubeRewardedMAXCallback: NSObject, AdCallback {
         didTerminateDisplay = true
         runOnMain {
             self.maybeReward()
+            Logger.maxAdapter("rewarded hidden placementId=\(placementId)")
             self.delegate?.didHideRewardedAd()
         }
     }
@@ -522,7 +534,11 @@ private final class BidscubeRewardedMAXCallback: NSObject, AdCallback {
 
     private func maybeReward() {
         guard !didReward else { return }
-        guard videoCompleted || adapter?.shouldAlwaysRewardUser == true else { return }
+        let alwaysReward = adapter?.shouldAlwaysRewardUser == true
+        guard RewardedGrantPolicy.shouldGrantReward(
+            videoCompleted: videoCompleted,
+            alwaysRewardUser: alwaysReward
+        ) else { return }
         guard let reward = adapter?.reward else { return }
 
         didReward = true
@@ -573,7 +589,11 @@ extension ALBidscubeMediationAdapter: MAAdViewAdapter {
             // Android parity: all MAX AdView formats use getImageAdView + adViewHolder callback wiring.
             let adViewHolder = BidscubeMAXAdViewHolder()
             let callback = BidscubeAdViewMAXCallback(delegate: delegate, adViewHolder: adViewHolder)
-            adViewHolder.view = BidscubeSDK.getImageAdView(placement, callback)
+            adViewHolder.view = BidscubeSDK.getImageAdView(
+                placement,
+                callback,
+                requestTimeoutMs: Constants.maxAdapterAdRequestTimeoutMs
+            )
             let view = adViewHolder.view!
             applyMAXAdViewSlotConstraints(to: view, size: adFormat.size)
             self.loadedBannerView = view

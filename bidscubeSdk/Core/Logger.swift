@@ -79,7 +79,9 @@ public class Logger {
     /// Unified MAX adapter tag for publisher log capture (`BidscubeMAX`).
     public static func maxAdapter(_ message: String) {
         guard isLoggingEnabled else { return }
-        print("[\(Constants.LogPrefixes.maxAdapter)] \(message)")
+        let stamp = FullscreenLifecycleDiagnostics.timestamp()
+        let thread = FullscreenLifecycleDiagnostics.threadLabel()
+        print("[\(Constants.LogPrefixes.maxAdapter)] [\(stamp)] [\(thread)] \(message)")
     }
 
     /// Verbose MAX adapter diagnostics (device info, resolved server params). Requires debug mode.

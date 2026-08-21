@@ -8,6 +8,7 @@ public final class BannerAdView: UIView {
     private var placementId: String = ""
     private weak var callback: AdCallback?
     private var didReportLoaded = false
+    private var activeLoadToken = UUID()
     private var bannerPosition: AdPosition = .header
     private var bannerHeight: CGFloat = 50
     private var bannerWidth: CGFloat = 320
@@ -109,13 +110,15 @@ public final class BannerAdView: UIView {
         self.callback = callback
     }
     
-    public func loadAdFromURL(_ url: URL) {
+    public func loadAdFromURL(_ url: URL, timeoutMs: Int = Constants.adRequestTimeoutMs) {
         loadingLabel.isHidden = false
         loadingLabel.text = "Loading Banner..."
         didReportLoaded = false
+        let loadToken = UUID()
+        activeLoadToken = loadToken
 
-        AdHTTPClient.fetchBody(url: url) { [weak self] result in
-            guard let self = self else { return }
+        AdHTTPClient.fetchBody(url: url, timeoutMs: timeoutMs) { [weak self] result in
+            guard let self, self.activeLoadToken == loadToken else { return }
             switch result {
             case .failure(let error):
                 self.loadingLabel.text = AdErrorCode.message(for: error)

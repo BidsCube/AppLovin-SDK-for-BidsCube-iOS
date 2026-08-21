@@ -10,7 +10,7 @@ final class CompanionEndCardView: UIView {
 
     private var imageView: UIImageView?
     private var webView: WKWebView?
-    private var closeButton: UIButton?
+    private var navigationChrome: FullscreenVideoChromeControls?
 
     init(
         companion: CompanionAd,
@@ -44,7 +44,7 @@ final class CompanionEndCardView: UIView {
             setupIFrame()
         }
 
-        setupCloseButton()
+        setupNavigationChrome()
         clickHandler.fireCreativeViewOnce()
     }
 
@@ -105,25 +105,15 @@ final class CompanionEndCardView: UIView {
         return webView
     }
 
-    private func setupCloseButton() {
-        let button = UIButton(type: .system)
-        button.setTitle("✕", for: .normal)
-        button.setTitleColor(.white, for: .normal)
-        button.titleLabel?.font = .systemFont(ofSize: 24, weight: .bold)
-        button.backgroundColor = UIColor.black.withAlphaComponent(0.7)
-        button.layer.cornerRadius = 20
-        button.layer.borderWidth = 2
-        button.layer.borderColor = UIColor.white.cgColor
-        button.addTarget(self, action: #selector(closeTapped), for: .touchUpInside)
-        button.translatesAutoresizingMaskIntoConstraints = false
-        addSubview(button)
-        NSLayoutConstraint.activate([
-            button.topAnchor.constraint(equalTo: safeAreaLayoutGuide.topAnchor, constant: 16),
-            button.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -16),
-            button.widthAnchor.constraint(equalToConstant: 40),
-            button.heightAnchor.constraint(equalToConstant: 40)
-        ])
-        closeButton = button
+    private func setupNavigationChrome() {
+        let chrome = FullscreenVideoChromeControls(
+            target: self,
+            backAction: #selector(closeTapped),
+            closeAction: #selector(closeTapped)
+        )
+        chrome.install(in: self)
+        chrome.show(animated: false)
+        navigationChrome = chrome
     }
 
     @objc private func handleTap() {

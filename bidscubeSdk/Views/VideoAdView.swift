@@ -85,7 +85,7 @@ public final class VideoAdView: UIView {
     }
     
     public func refreshIMASetup() {
-        refreshVideoHandlerLayout()
+        rebindIMAViewControllerIfNeeded()
     }
     
     deinit {
@@ -271,7 +271,7 @@ public final class VideoAdView: UIView {
     
     public override func layoutSubviews() {
         super.layoutSubviews()
-        refreshVideoHandlerLayout()
+        activeVideoHandler?.layoutSubviews()
     }
     
     private func displayName(for position: AdPosition) -> String {
