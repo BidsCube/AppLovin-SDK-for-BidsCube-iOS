@@ -72,6 +72,35 @@ if ! pod install --silent; then
 fi
 cd "$ROOT"
 
+TESTING_INTEROP_DYLIB="${DEVELOPER_DIR:-$(xcode-select -p)}/Platforms/iPhoneSimulator.platform/Developer/usr/lib/lib_TestingInterop.dylib"
+
+# Xcode 26 XCTest runners embed Testing.framework, but iOS simulator runtimes do not
+# ship lib_TestingInterop.dylib. Copy it into the runner bundle before launch.
+patch_ui_test_runners() {
+  local derived="$1"
+  local scheme="$2"
+  local log_file="$3"
+
+  if [ ! -f "$TESTING_INTEROP_DYLIB" ]; then
+    echo "[SmokeInfo] WARN ui_tests testing_interop_missing path=$TESTING_INTEROP_DYLIB" >> "$log_file"
+    return 0
+  fi
+
+  local patched=0
+  while IFS= read -r runner; do
+    local frameworks_dir="$runner/Frameworks"
+    mkdir -p "$frameworks_dir"
+    if cp -f "$TESTING_INTEROP_DYLIB" "$frameworks_dir/"; then
+      patched=$((patched + 1))
+      echo "[SmokeInfo] PATCH ui_tests embedded_testing_interop runner=$runner" >> "$log_file"
+    fi
+  done < <(find "$derived/Build/Products" -type d -name "${scheme}-Runner.app" 2>/dev/null)
+
+  if [ "$patched" -eq 0 ]; then
+    echo "[SmokeInfo] WARN ui_tests testing_interop_runner_not_found scheme=$scheme derived=$derived" >> "$log_file"
+  fi
+}
+
 extract_ui_failure() {
   local scheme="$1"
   local xcresult="$2"
@@ -180,7 +209,21 @@ run_ui_scheme() {
 
   if [ "$lane_rc" -eq 0 ]; then
     set +e
-    xcodebuild test \
+    xcodebuild build-for-testing \
+      -workspace "$WORKSPACE" \
+      -scheme "$scheme" \
+      -destination "platform=iOS Simulator,id=$SIMULATOR_UDID" \
+      -derivedDataPath "$derived" \
+      "${XCODE_BUILD_FLAGS[@]}" \
+      >> "$log_file" 2>&1
+    lane_rc=$?
+    set -e
+  fi
+
+  if [ "$lane_rc" -eq 0 ]; then
+    patch_ui_test_runners "$derived" "$scheme" "$log_file"
+    set +e
+    xcodebuild test-without-building \
       -workspace "$WORKSPACE" \
       -scheme "$scheme" \
       -destination "platform=iOS Simulator,id=$SIMULATOR_UDID" \
